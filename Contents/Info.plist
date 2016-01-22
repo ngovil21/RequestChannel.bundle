@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <!-- IMPORTANT NOTE. IF THERE ARE MULTIPLE VALUES FOR A KEY, THEN EACH VALUE SHOULD BE SEPARATED BY A COMMA IN ONE STRING  -->    
+        <!-- EXCEPT IF THE KEY HAS <array></array> CODE WITHIN IT.  THEN EACH VALUE FOR THAT KEY MUST BE ENTERED AS A SEPARATE STRING WITHIN THAT ARRAY -->    
+        <key>CFBundleIdentifier</key>
+            <!-- Unique PMS identifier for the plugin and its logs.  Format should always be com.plexapp.plugins.<nameofyourplugin> with no capital letters, spaces, or special characters -->
+            <string>com.plexapp.plugins.yourchannelname</string>
+        <key>PlexFrameworkVersion</key>
+            <!-- Version should always be set to 2 -->        
+            <string>2</string>
+        <!-- Below are the way in which to include or exclude clients or servers from a channel -->    
+        <!-- Not necessary in initial design. If submitted to the channel store, any values will be added in the code review stage prior to release -->    
+        <!-- Since you want to create plugins that work on most clients and servers, most often you will set it to * and use the exclusion for any that have issues -->    
+        <!-- Possible values are * for all platforms, MacOSX, Windows, Linux, Roku, Android, iOS, Safari, Firefox, Chrome, LGTV, Samsung, PlexConnect and Plex Home Theater -->
+        <key>PlexClientPlatforms</key>
+            <!-- List any client platforms supported in the plugin. -->    
+            <string>*</string>
+
+        <!-- THE REST OF THE KEYS BELOW ARE OPTIONAL -->
+        <!-- Also, you should delete any unused or empty keys in your plist file -->        
+        <key>PlexClientPlatformExclusions</key>
+            <!-- List any client platforms not supported in the plugin. -->    
+            <string></string>
+        <key>PlexPluginRegions</key>
+            <array>
+                <!-- possible string values are the proper ISO two letter code for the country -->
+                <!-- A full list of values are available at http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 -->
+                <string></string>
+            </array>
+        <!-- PLEX SERVER OPTIONAL KEYS -->
+            <!-- You are less likely to need or use the PlexServerPlatforms, since all servers should be supported by a channel -->    
+            <!-- But for example, Webkit channels are only supported by MacOSX-i386 -->    
+            <!-- Server values are * for all platforms, MacOSX-i386 -->
+        <key>PlexServerPlatforms</key>
+            <string></string>
+        <key>PlexServerPlatformsExclusions</key>
+            <!-- List any server platforms not supported in the plugin. -->    
+            <string></string>
+        <key>PlexMinimumServerVersion</key>
+            <!-- Value is minimum version of Plex that can be used. Ex. 0.9.6.3 -->    
+            <string></string>   
+        <key>PlexFrameworkFlags</key>
+            <array>
+            <!-- possible values are UseRealRTMP -->    
+                <string>UseRealRTMP</string>
+            </array>
+        <!-- DEBUG OPTIONAL KEYS -->
+        <key>PlexPluginDebug</key>
+        <array>
+                <!-- possible values are 0 and 1 -->
+                <!-- Setting it to "1" rather than "0" turns on debug logging -->
+                <string></string>
+        </array>
+        <key>PlexPluginTesterFlags</key>
+            <array>
+                <!-- possible values are NoURLServices -->    
+                <!--  Nakes the Automated Tester more accurate and won't raise an error that Channel X has no associated URL Service because it actually uses URL Service Y -->    
+                <string>NoURLServices</string>
+            </array>
+        <key>PlexPluginCodePolicy</key>
+            <!-- this allows channels to access some python methods which are otherwise blocked, as well as import external code libraries, and interact with the PMS HTTP API -->    
+            <string>Elevated</string>
+        <key>PlexPluginMode</key>
+            <!-- This one does nothing with a value of Always On, but using a value of "daemon" keeps the plugin alive in the background -->    
+            <string>AlwaysOn</string>
+            
+        <!-- THESE BELOW ARE FOR AGENTS ONLY -->    
+        <key>PlexPluginCodePolicy</key>
+            <string>Elevated</string>
+        <key>PlexAgentAttributionText</key>
+            <string>
+                Text about the agent here
+            </string>
+        <key>PlexPluginClass</key>
+            <!-- This key is used to show that the plugin is an agent -->    
+            <!-- possible values are agent -->    
+            <string></string>
+
+        <key>PlexPluginConsoleLogging</key>
+            <!-- This is used to send plugin log statements directly to stout when running PMS from the command line. Rarely used anymore-->
+            <string>0</string>
+            
+        </dict>
+</plist>
