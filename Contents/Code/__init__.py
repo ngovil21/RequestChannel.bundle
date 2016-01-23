@@ -59,3 +59,17 @@ def SearchMovie(title,query):
   #request = JSON.
 
   return oc
+
+@route(PREFIX + '/addtvshow')
+def AddNewTVShow(title):
+  oc = ObjectContainer()
+
+ # oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name or IMDB id of the movie:"))
+  return oc
+
+@route(PREFIX + '/viewrequests')
+def ViewRequests(title):
+  oc = ObjectContainer()
+
+ # oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name or IMDB id of the movie:"))
+  return oc
