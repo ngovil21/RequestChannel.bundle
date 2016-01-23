@@ -43,7 +43,7 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    if 'password' in Prefs and Prefs['password']:
+    if not Prefs['password'] == "":
         oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword, title="View Requests"), title="View Requests"))
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
