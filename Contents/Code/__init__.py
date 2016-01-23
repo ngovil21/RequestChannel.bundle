@@ -33,6 +33,8 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
+    Dict.Reset()
+
 
 
 ###################################################################################################
@@ -43,10 +45,11 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    # if not Prefs['password'] == "":
-    #     oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword, title="View Requests"), title="View Requests", prompt="Please enter the password:"))
-    # else:
-    oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
+    if Prefs['password'] == None or Prefs['password']=="":
+        oc.add(DirectoryObject(key=Callback(ViewRequests), title="View Requests"))
+    else:
+        oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests",
+                                    prompt="Please enter the password: "))
 
     return oc
 
@@ -125,7 +128,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
-        Dict[id] = {'title':title, 'year':year, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
+        Dict[id] = {'type':'movie', title':title, 'year':year, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
         Dict.Save()
         return ObjectContainer(header=TITLE, message="Movie has been requested.")
 
@@ -137,7 +140,7 @@ def AddNewTVShow(title):
 
 
 @route(PREFIX + '/viewrequests')
-def ViewRequests(title):
+def ViewRequests():
     oc = ObjectContainer()
     if not Dict:
         Log.Debug("There are no requests")
@@ -147,22 +150,55 @@ def ViewRequests(title):
         for movie_id in Dict:
             key = Dict[movie_id]
             title_year = key['title'] + " (" + key['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewMovieRequest, key=key), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
+            oc.add(DirectoryObject(key=Callback(ViewMovieRequest, id=key['id']), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
     return oc
 
 @route(PREFIX + '/viewrequestspassword')
-def ViewRequestsPassword(title,query):
+def ViewRequestsPassword(query):
     if query == Prefs['password']:
         oc = ObjectContainer(header=TITLE, message="Password is correct!")
-        oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="Continue to View Requests"))
+        oc.add(DirectoryObject(key=Callback(ViewRequests), title="Continue to View Requests"))
     else:
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Back to Main Menu"))
 
     return oc
 
-@route(PREFIX + '/viewmovierequest')
-def ViewMovieRequest(key):
-    oc = ObjectContainer()
+@route(PREFIX + '/viewrequest')
+def ViewRequest(id):
+    key = Dict[id]
+    title_year = key['title'] + " (" + key['year'] + ")"
+    oc = ObjectContainer(title2=title_year)
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year), title="Delete Request"))
+    if key['type'] == 'movie':
+        if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
+            oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id), title="Send to CouchPotato"))
+    if key['type'] == 'tv':
+        if Prefs['sonarr_url'] and Prefs['sonarr_api']:
+            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id), title="Send to Sonarr"))
 
     return oc
+
+@route(PREFIX + '/confirmdeleterequest')
+def ConfirmDeleteRequest(id, title_year=""):
+    oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
+    oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id), title="Yes"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests), title="No"))
+    return oc
+
+def DeleteRequest(id):
+    oc = ObjectContainer(header=TITLE, message="Request was deleted!")
+    Dict.pop(id)
+    oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
+    return oc
+
+@route(PREFIX + '/sendtocouchpotato')
+def SendToCouchpotato(id):
+    oc = ObjectContainer()
+    return oc
+
+@route(PREFIX + '/sendtosonarr')
+def SendToSonarr(id):
+    oc = ObjectContainer()
+    return oc
+
