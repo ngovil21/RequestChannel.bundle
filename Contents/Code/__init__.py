@@ -8,7 +8,9 @@ DATA_FILE = "Requests"
 
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
 TMDB_API_URL = "http://api.themoviedb.org/3/"
-TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500"
+TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/"
+POSTER_SIZE = "w500/"
+BACKDROP_SIZE = "original/"
 
 
 def Start():
@@ -25,15 +27,15 @@ def Start():
     # If no Requests file exists, create it
     # The request file will be where user requests will be stored
     if not Data.Exists(DATA_FILE):
-      xml = XML.Element(DATA_FILE)
-      Data.Save(DATA_FILE,xml)
+        json = JSON.Element(DATA_FILE)
+        Data.Save(DATA_FILE, json)
 
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is 
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 def MainMenu():
-    oc = ObjectContainer()
+    oc = ObjectContainer(replace_parent=True)
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
@@ -68,22 +70,41 @@ def SearchMovie(title, query):
         else:
             release_year = ""
         if key['poster_path']:
-            thumb = TMDB_IMAGE_BASE_URL + key['poster_path']
+            thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
         else:
             thumb = None
+        if key['backdrop_path']:
+            art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
+        else:
+            art = None
         title_year = key['title'] + " " + release_year
-        oc.add(PopupDirectoryObject(key=Callback(ConfirmMovieRequest,id=key['id'],title=key['title'], release_date=key['release_date'],title_year=title_year), title=title_year, thumb=thumb))
+        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
     return oc
 
 
 @route(PREFIX + '/confirmmovierequest')
-def ConfirmMovieRequest(id, title="", release_date="",title_year=""):
-    if not title_year:
-        title_year = title
+def ConfirmMovieRequest(key):
+    title_year = key['title'] + " " + "(" + key['release_date'][0:4] + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
-    oc.add(DirectoryObject(key=None, title="Yes"))
-    oc.add(DirectoryObject(key=Callback(MainMenu),title="No"))
+    oc.add(DirectoryObject(key=Callback(AddMovieRequest, key), title="Yes"))
+    oc.add(DirectoryObject(key=Callback(MainMenu), title="No"))
+
+    return oc
+
+
+@route(PREFIX + '/addmovierequest')
+def AddMovieRequest(key):
+    oc = ObjectContainer()
+
+    if Data.Exists(DATA_FILE):
+        json = Data.Load(DATA_FILE)
+        if key['id'] in json:
+            print("Movie is already requested")
+        else:
+            json = Data.Load(DATA_FILE)
+            json[id] = key
+            Data.Sace(DATA_FILE, json)
 
     return oc
 
@@ -91,14 +112,37 @@ def ConfirmMovieRequest(id, title="", release_date="",title_year=""):
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title):
     oc = ObjectContainer()
-
-    # oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name or IMDB id of the movie:"))
     return oc
 
 
 @route(PREFIX + '/viewrequests')
 def ViewRequests(title):
     oc = ObjectContainer()
+    json = Data.Load(DATA_FILE)
+    for id in sorted(json):
+        key = json[id]
+        if not key['title']:
+            key['title'] = "TMDB ID: " + id
+        if key['release_date']:
+            release_year = "(" + key['release_date'][0:4] + ")"
+        else:
+            release_year = ""
+        if key['poster_path']:
+            thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
+        else:
+            thumb = None
+        if key['backdrop_path']:
+            art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
+        else:
+            art = None
+        title_year = key['title'] + " " + release_year
+        oc.add(DirectoryObject(key=Callback(ViewmMovieRequest, key=key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
 
-    # oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name or IMDB id of the movie:"))
+    return oc
+
+
+@route(PREFIX + '/viewmovierequest')
+def ViewMovieRequest(key):
+    oc = ObjectContainer()
+
     return oc
