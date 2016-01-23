@@ -1,4 +1,3 @@
-
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -19,6 +18,8 @@ BACKDROP_SIZE = "original/"
 
 ### URL Constants for OpenMovieDataBase ###############
 OMDB_API_URL = "http://www.omdbapi.com/"
+
+
 #######################################################
 
 
@@ -36,7 +37,6 @@ def Start():
     Dict.Reset()
 
 
-
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
@@ -45,7 +45,7 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    if Prefs['password'] == None or Prefs['password']=="":
+    if Prefs['password'] == None or Prefs['password'] == "":
         oc.add(DirectoryObject(key=Callback(ViewRequests), title="View Requests"))
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests",
@@ -71,7 +71,7 @@ def SearchMovie(title, query):
             'Accept': 'application/json'
         }
         request = JSON.ObjectFromURL(url=TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&query=" + query, headers=headers)
-        #Log.Debug(JSON.StringFromObject(request))
+        # Log.Debug(JSON.StringFromObject(request))
         if 'results' in request:
             results = request['results']
             for key in results:
@@ -90,7 +90,8 @@ def SearchMovie(title, query):
                 else:
                     art = None
                 title_year = key['title'] + " (" + year + ")"
-                oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art, summary=key['overview']), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+                oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art,
+                                                    summary=key['overview']), title=title_year, thumb=thumb, summary=key['overview'], art=art))
             else:
                 Log.Debug("No Results Found")
                 return ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
@@ -102,7 +103,9 @@ def SearchMovie(title, query):
                 if not key['Title']:
                     continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
-                oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster']), title=title_year, thumb=key['Poster']))
+                oc.add(
+                    DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster']),
+                                    title=title_year, thumb=key['Poster']))
 
         else:
             Log.Debug("No Results Found")
@@ -115,7 +118,8 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
     title_year = title + " " + "(" + year + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
-    oc.add(DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary), title="Yes"))
+    oc.add(
+        DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary), title="Yes"))
     oc.add(DirectoryObject(key=Callback(MainMenu), title="No"))
 
     return oc
@@ -123,13 +127,15 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
 
 @route(PREFIX + '/addmovierequest')
 def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
-
     if id in Dict:
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
-        Dict[id] = {'type':'movie', 'title':title, 'year':year, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
+        Dict[id] = {'type': 'movie', 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
+        oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
+        oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
+
         return ObjectContainer(header=TITLE, message="Movie has been requested.")
 
 
@@ -144,14 +150,16 @@ def ViewRequests():
     oc = ObjectContainer()
     if not Dict:
         Log.Debug("There are no requests")
-        oc = ObjectContainer(header=TITLE,message="There are currently no requests.")
+        oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
     else:
         for movie_id in Dict:
             key = Dict[movie_id]
             title_year = key['title'] + " (" + key['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewMovieRequest, id=key['id']), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=key['id']), title=title_year, thumb=key['poster'], summary=key['summary'],
+                                   art=key['backdrop']))
     return oc
+
 
 @route(PREFIX + '/viewrequestspassword')
 def ViewRequestsPassword(query):
@@ -163,6 +171,7 @@ def ViewRequestsPassword(query):
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Back to Main Menu"))
 
     return oc
+
 
 @route(PREFIX + '/viewrequest')
 def ViewRequest(id):
@@ -179,6 +188,7 @@ def ViewRequest(id):
 
     return oc
 
+
 @route(PREFIX + '/confirmdeleterequest')
 def ConfirmDeleteRequest(id, title_year=""):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
@@ -186,19 +196,21 @@ def ConfirmDeleteRequest(id, title_year=""):
     oc.add(DirectoryObject(key=Callback(ViewRequests), title="No"))
     return oc
 
+
 def DeleteRequest(id):
     oc = ObjectContainer(header=TITLE, message="Request was deleted!")
     Dict.pop(id)
     oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
+
 @route(PREFIX + '/sendtocouchpotato')
 def SendToCouchpotato(id):
     oc = ObjectContainer()
     return oc
 
+
 @route(PREFIX + '/sendtosonarr')
 def SendToSonarr(id):
     oc = ObjectContainer()
     return oc
-
