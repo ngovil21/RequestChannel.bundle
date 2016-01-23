@@ -34,7 +34,7 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
-    Dict.Reset()
+    # Dict.Reset()
 
 
 ###################################################################################################
@@ -199,7 +199,9 @@ def ConfirmDeleteRequest(id, title_year=""):
 
 def DeleteRequest(id):
     oc = ObjectContainer(header=TITLE, message="Request was deleted!")
-    Dict.pop(id)
+    if id in Dict:
+        del Dict[id]
+    Dict.Save()
     oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
