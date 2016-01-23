@@ -84,7 +84,7 @@ def SearchMovie(title, query):
 
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(id, title, release_date, poster, backdrop, summary):
-    title_year = key['title'] + " " + "(" + key['release_date'][0:4] + ")"
+    title_year = title + " " + "(" + release_date[0:4] + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
     oc.add(DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, release_date=release_date, poster=poster, backdrop=backdrop, summary=summary), title="Yes"))
@@ -119,6 +119,7 @@ def AddNewTVShow(title):
 def ViewRequests(title):
     oc = ObjectContainer()
     json = Data.Load(DATA_FILE)
+    print(json)
     for movie_id in sorted(json):
         key = json[movie_id]
         if not key['title']:
