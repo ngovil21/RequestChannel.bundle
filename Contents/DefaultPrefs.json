@@ -1,2 +1,16 @@
 [
+  {
+    "id": "movie_db",
+    "label": "Movie Database",
+    "type": "enum",
+    "values": ["OMDB", "TMDB"],
+    "default": "OMDB"
+  },
+  {
+    "id": "password",
+    "label": "View Requests Password",
+    "type": "hidden",
+    "default": "",
+    "secure": "true"
+  }
 ]
