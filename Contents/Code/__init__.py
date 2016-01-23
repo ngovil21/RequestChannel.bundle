@@ -165,16 +165,8 @@ def ViewRequests(title):
             release_year = "(" + key['release_date'][0:4] + ")"
         else:
             release_year = ""
-        if key['poster_path']:
-            thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
-        else:
-            thumb = None
-        if key['backdrop_path']:
-            art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
-        else:
-            art = None
         title_year = key['title'] + " " + release_year
-        oc.add(DirectoryObject(key=Callback(ViewmMovieRequest, key=key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+        oc.add(DirectoryObject(key=Callback(ViewMovieRequest, key=key), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
 
     return oc
 
