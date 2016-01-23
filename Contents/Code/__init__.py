@@ -150,6 +150,7 @@ def ViewRequests(title):
             oc.add(DirectoryObject(key=Callback(ViewMovieRequest, key=key), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
     return oc
 
+@route(PREFIX + '/viewrequestspassword')
 def ViewRequestsPassword(title,query):
     if query == Prefs['password']:
         oc = ObjectContainer(header=TITLE, message="Password is correct!")
