@@ -12,25 +12,25 @@
     "type": "text",
     "option": "hidden",
     "default": ""
-  }
+  },
   {
     "id": "couchpotato_url",
     "label": "CouchPotato URL",
     "type": "text",
     "default": "http://127.0.0.1:5050/"
-  }
+  },
   {
     "id": "couchpotato_api",
     "label": "CouchPotato API Key",
     "type": "text",
     "default": ""
-  }
+  },
   {
     "id": "sonarr_url",
     "label": "Sonarr URL",
     "type": "text",
     "default": "http://127.0.0.1:8989/"
-  }
+  },
   {
     "id": "sonarr_api",
     "label": "Sonarr API Key",
