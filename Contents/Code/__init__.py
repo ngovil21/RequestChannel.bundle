@@ -6,7 +6,7 @@ ICON = 'icon-default.png'
 
 DATA_FILE = "Requests"
 
-MOVIE_DB = "OMDB"
+MOVIE_DB = "OpenMovieDatabase"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -44,7 +44,10 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
+    if prefs['password']:
+        oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword, title="View Requests"), title="View Requests"))
+    else:
+        oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
 
     return oc
 
@@ -61,7 +64,7 @@ def AddNewMovie(title):
 def SearchMovie(title, query):
     oc = ObjectContainer(title1=title)
     query = String.Quote(query, usePlus=True)
-    if MOVIE_DB == "TMDB":
+    if prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
         }
@@ -89,7 +92,7 @@ def SearchMovie(title, query):
             else:
                 Log.Debug("No Results Found")
                 return ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-    if MOVIE_DB == "OMDB":
+    else:  # Use OMDB By Default
         request = JSON.ObjectFromURL(url=OMDB_API_URL + "?s=" + query + "&r=json")
         if 'Search' in request:
             results = request['Search']
@@ -134,44 +137,13 @@ def AddNewTVShow(title):
     return oc
 
 
-# @route(PREFIX + '/viewrequests')
-# def ViewRequests(title):
-#     oc = ObjectContainer()
-#     if Data.Exists(DATA_FILE):
-#         Log.Debug("The file exists")
-#     else:
-#         Log.Debug("Data file does not exist!")
-#     json = Data.LoadObject(DATA_FILE)
-#     Log.Debug(JSON.StringFromObject(json))
-#     if not json:
-#         return oc
-#     for movie_id in sorted(json):
-#         key = json[movie_id]
-#         if not key['title']:
-#             key['title'] = "TMDB ID: " + movie_id
-#         if key['release_date']:
-#             release_year = "(" + key['release_date'][0:4] + ")"
-#         else:
-#             release_year = ""
-#         if key['poster_path']:
-#             thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
-#         else:
-#             thumb = None
-#         if key['backdrop_path']:
-#             art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
-#         else:
-#             art = None
-#         title_year = key['title'] + " " + release_year
-#         oc.add(DirectoryObject(key=Callback(ViewmMovieRequest, key=key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
-#
-#     return oc
-
 @route(PREFIX + '/viewrequests')
 def ViewRequests(title):
     oc = ObjectContainer()
     if not Dict:
         Log.Debug("There are no requests")
-        return oc
+        oc = ObjecContainer(header=TITLE,message="There are currently no requests.")
+        oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
     for movie_id in Dict:
         key = Dict[movie_id]
         title_year = key['title'] + " (" + key['year'] + ")"
@@ -180,6 +152,15 @@ def ViewRequests(title):
         return ObjectContainer()
     return oc
 
+def ViewRequestsPassword(title,query):
+    if query == prefs['password']:
+        oc = ObjectContainer(header=TITLE, message="Password is correct!")
+        oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="Continue to View Requests"))
+    else:
+        oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
+        oc.add(DirectoryObject(key=Callback(MainMenu), title="Back to Main Menu"))
+
+    return oc
 
 @route(PREFIX + '/viewmovierequest')
 def ViewMovieRequest(key):
