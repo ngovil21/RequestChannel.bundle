@@ -4,13 +4,13 @@
     "label": "Movie Database  ",
     "type": "enum",
     "values": ["OpenMovieDatabase", "TheMovieDatabase"],
-    "default": "OpenMovieDatabase",
+    "default": "OpenMovieDatabase"
   },
   {
     "id": "password",
     "label": "View Requests Password  ",
     "type": "text",
     "option": "hidden",
-    "default": "",
-  },
+    "default": ""
+  }
 ]
