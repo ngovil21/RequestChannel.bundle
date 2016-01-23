@@ -131,7 +131,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
-        Dict[id] = {'type': 'movie', 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict[id] = {'type': 'movie', 'id':id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
@@ -153,10 +153,10 @@ def ViewRequests():
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
     else:
-        for movie_id in Dict:
-            key = Dict[movie_id]
+        for id in Dict:
+            key = Dict[id]
             title_year = key['title'] + " (" + key['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=key['id']), title=title_year, thumb=key['poster'], summary=key['summary'],
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title=title_year, thumb=key['poster'], summary=key['summary'],
                                    art=key['backdrop']))
     return oc
 
