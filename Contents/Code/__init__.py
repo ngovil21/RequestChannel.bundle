@@ -44,7 +44,7 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    if prefs['password']:
+    if Prefs['password']:
         oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword, title="View Requests"), title="View Requests"))
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
@@ -64,7 +64,7 @@ def AddNewMovie(title):
 def SearchMovie(title, query):
     oc = ObjectContainer(title1=title)
     query = String.Quote(query, usePlus=True)
-    if prefs['movie_db'] == "TheMovieDatabase":
+    if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
         }
@@ -153,7 +153,7 @@ def ViewRequests(title):
     return oc
 
 def ViewRequestsPassword(title,query):
-    if query == prefs['password']:
+    if query == Prefs['password']:
         oc = ObjectContainer(header=TITLE, message="Password is correct!")
         oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="Continue to View Requests"))
     else:
