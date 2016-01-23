@@ -136,7 +136,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
 
-        return ObjectContainer(header=TITLE, message="Movie has been requested.")
+        return oc
 
 
 @route(PREFIX + '/addtvshow')
