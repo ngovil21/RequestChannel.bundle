@@ -62,7 +62,7 @@ def SearchMovie(title,query):
   Log.Debug(JSON.StringFromObject(request))
   results = request['results']
   for key in results:
-      if 'poster_path' in key:
+      if key['poster_path']:
           thumb = TMDB_IMAGE_BASE_URL + key['poster_path']
       else:
           thumb = None
