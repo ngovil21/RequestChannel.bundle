@@ -25,9 +25,9 @@ def Start():
 
   # If no Requests file exists, create it
   # The request file will be where user requests will be stored
-  if not Data.Exists(DATA_FILE):
-    xml = XML.Element(DATA_FILE)
-    Data.Save(DATA_FILE,xml)
+  # if not Data.Exists(DATA_FILE):
+  #   xml = XML.Element(DATA_FILE)
+  #   Data.Save(DATA_FILE,xml)
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is 
