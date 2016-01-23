@@ -26,7 +26,6 @@ def Start():
 
     # If no Requests file exists, create it
     # The request file will be where user requests will be stored
-    Data.Remove(DATA_FILE)
     if not Data.Exists(DATA_FILE):
         json = JSON.Element(DATA_FILE)
         Data.SaveObject(DATA_FILE, json)
@@ -119,6 +118,10 @@ def AddNewTVShow(title):
 @route(PREFIX + '/viewrequests')
 def ViewRequests(title):
     oc = ObjectContainer()
+    if Data.Exists(DATA_FILE):
+        Log.Debug("The file exists")
+    else:
+        Log.Debug("Data file does not exist!")
     json = Data.LoadObject(DATA_FILE)
     Log.Debug(JSON.StringFromObject(json))
     if not json:
