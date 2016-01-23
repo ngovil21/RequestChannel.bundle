@@ -1,4 +1,3 @@
-from cgitb import handler
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
