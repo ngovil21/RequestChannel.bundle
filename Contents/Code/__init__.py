@@ -78,23 +78,23 @@ def SearchMovie(title, query):
         else:
             art = None
         title_year = key['title'] + " " + release_year
-        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, key=key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], release_date=key['release_date'], poster=thumb, backdrop=art, summary=key['overview']), title=title_year, thumb=thumb, summary=key['overview'], art=art))
     return oc
 
 
 @route(PREFIX + '/confirmmovierequest')
-def ConfirmMovieRequest(key):
+def ConfirmMovieRequest(id, title, release_date, poster, backdrop, summary):
     title_year = key['title'] + " " + "(" + key['release_date'][0:4] + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
-    oc.add(DirectoryObject(key=Callback(AddMovieRequest, key=key), title="Yes"))
+    oc.add(DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, release_date=release_date, poster=poster, backdrop=backdrop, summary=summary), title="Yes"))
     oc.add(DirectoryObject(key=Callback(MainMenu), title="No"))
 
     return oc
 
 
 @route(PREFIX + '/addmovierequest')
-def AddMovieRequest(key):
+def AddMovieRequest(id, title, release_date, poster, backdrop, summary):
     oc = ObjectContainer()
 
     if Data.Exists(DATA_FILE):
@@ -103,7 +103,7 @@ def AddMovieRequest(key):
             print("Movie is already requested")
         else:
             json = Data.Load(DATA_FILE)
-            json[id] = key
+            json[id] = {'title':title, 'release_date':release_date, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
             Data.Sace(DATA_FILE, json)
 
     return oc
