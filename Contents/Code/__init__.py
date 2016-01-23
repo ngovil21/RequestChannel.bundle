@@ -131,7 +131,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
-        Dict[id] = {'type': 'movie', 'id':id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict[id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
@@ -208,7 +208,30 @@ def DeleteRequest(id):
 
 @route(PREFIX + '/sendtocouchpotato')
 def SendToCouchpotato(id):
-    oc = ObjectContainer()
+    if not id.startswith("tt"):  # Check if id is an imdb id
+        # we need to convert tmdb id to imdb
+        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/id/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
+        if 'imdb_id' in json and json['imdb_id']:
+            id = json['imdb_id']
+        else:
+            oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
+            oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
+            return oc
+    # we have an imdb id, add to couchpotato
+    if not Prefs['couchpotato_url'].startswith("http"):
+        couchpotato_url = "http://" + Prefs['couchpotato_url']
+    else:
+        couchpotato_url = Prefs['couchpotato_url']
+    if not couchpotato_url.endswith("/"):
+        couchpotato_url = couchpotato_url + "/"
+    request_url = couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/?identifier=" + id
+    Log.Debug(request_url)
+    json = JSON.ObjectFromURL(request_url)
+    if 'success' in json and json['success']:
+        oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
+    else:
+        oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
+    oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
 
