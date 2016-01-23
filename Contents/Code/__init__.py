@@ -62,7 +62,11 @@ def SearchMovie(title,query):
   Log.Debug(JSON.StringFromObject(request))
   results = request['results']
   for key in results:
-      oc.add(DirectoryObject(key=None, title=key['title']), thumb=R(TMDB_IMAGE_BASE_URL + key['post_path']))
+      if 'poster_path' in key:
+          thumb = TMDB_IMAGE_BASE_URL + key['poster_path']
+      else:
+          thumb = None
+      oc.add(DirectoryObject(key=None, title=key['title']), thumb=thumb)
   return oc
 
 @route(PREFIX + '/addtvshow')
