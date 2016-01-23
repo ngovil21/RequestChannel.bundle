@@ -1,15 +1,17 @@
 [
   {
     "id": "movie_db",
-    "label": "Movie Database",
+    "label": "Movie Database  ",
     "type": "enum",
     "values": ["OpenMovieDatabase", "TheMovieDatabase"],
     "default": "OpenMovieDatabase",
   },
   {
     "id": "password",
-    "label": "View Requests Password",
-    "type": "hidden",
+    "label": "View Requests Password  ",
+    "type": "text",
+    "option": "hidden",
     "default": "",
+    "secure": "true",
   },
 ]
