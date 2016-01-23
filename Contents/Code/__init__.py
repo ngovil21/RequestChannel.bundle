@@ -52,7 +52,7 @@ def AddNewMovie(title):
 
 @route(PREFIX + '/searchmovie')
 def SearchMovie(title, query):
-    oc = ObjectContainer()
+    oc = ObjectContainer(title1=title)
     query = String.Quote(query, usePlus=True)
     headers = {
         'Accept': 'application/json'
@@ -72,11 +72,11 @@ def SearchMovie(title, query):
         else:
             thumb = None
         title_year = key['title'] + " " + release_year
-        oc.add(PopupDirectoryObject(key=Callback(ConfirmMovieRequest,key=key['id'],title=key['title'], release_date=key['release_date'],title_year=title_year), title=title_year=, thumb=thumb))
+        oc.add(PopupDirectoryObject(key=Callback(ConfirmMovieRequest,id=key['id'],title=key['title'], release_date=key['release_date'],title_year=title_year), title=title_year=, thumb=thumb))
     return oc
 
 
-@route(PREFIX + '/addmovierequest')
+@route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(id, title="", release_date="",title_year=""):
     if not title_year:
         title_year = title
