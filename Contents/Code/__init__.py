@@ -58,7 +58,7 @@ def SearchMovie(title,query):
   headers = {
       'Accept': 'application/json'
   }
-  request = JSON.ObjectFromURL(url=TMDB_API_URL + "search/movie?api_key="+TMDB_API_KEY+"?query="+query, headers=headers)
+  request = JSON.ObjectFromURL(url=TMDB_API_URL + "search/movie?api_key="+TMDB_API_KEY+"&query="+query, headers=headers)
   Log.Debug(JSON.StringFromObject(request))
   results = request['results']
   for key in results:
