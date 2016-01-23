@@ -26,6 +26,7 @@ def Start():
 
     # If no Requests file exists, create it
     # The request file will be where user requests will be stored
+    Data.Remove(DATA_FILE)
     if not Data.Exists(DATA_FILE):
         json = JSON.Element(DATA_FILE)
         Data.SaveObject(DATA_FILE, json)
