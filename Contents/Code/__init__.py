@@ -72,7 +72,7 @@ def SearchMovie(title, query):
         else:
             thumb = None
         title_year = key['title'] + " " + release_year
-        oc.add(PopupDirectoryObject(key=Callback(ConfirmMovieRequest,id=key['id'],title=key['title'], release_date=key['release_date'],title_year=title_year), title=title_year=, thumb=thumb))
+        oc.add(PopupDirectoryObject(key=Callback(ConfirmMovieRequest,id=key['id'],title=key['title'], release_date=key['release_date'],title_year=title_year), title=title_year, thumb=thumb))
     return oc
 
 
