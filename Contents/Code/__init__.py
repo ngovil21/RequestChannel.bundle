@@ -97,14 +97,18 @@ def ConfirmMovieRequest(id, title, release_date, poster, backdrop, summary):
 def AddMovieRequest(id, title, release_date, poster, backdrop, summary):
     oc = ObjectContainer()
 
-    if Data.Exists(DATA_FILE):
-        json = Data.LoadObject(DATA_FILE)
-        if id in json:
-            print("Movie is already requested")
-        else:
-            json = Data.LoadObject(DATA_FILE)
-            json[id] = {'title':title, 'release_date':release_date, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
-            Data.SaveObject(DATA_FILE, json)
+    # if Data.Exists(DATA_FILE):
+    #     json = Data.LoadObject(DATA_FILE)
+    #     if id in json:
+    #         Log.Debug("Movie is already requested")
+    #     else:
+    #         json = Data.LoadObject(DATA_FILE)
+    #         json[id] = {'title':title, 'release_date':release_date, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
+    #         Data.SaveObject(DATA_FILE, json)
+    if id in Dict:
+        Log.Debug("Movie is already requested")
+    else:
+        Dict[id] = {'title':title, 'release_date':release_date, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
 
     return oc
 
@@ -115,19 +119,46 @@ def AddNewTVShow(title):
     return oc
 
 
+# @route(PREFIX + '/viewrequests')
+# def ViewRequests(title):
+#     oc = ObjectContainer()
+#     if Data.Exists(DATA_FILE):
+#         Log.Debug("The file exists")
+#     else:
+#         Log.Debug("Data file does not exist!")
+#     json = Data.LoadObject(DATA_FILE)
+#     Log.Debug(JSON.StringFromObject(json))
+#     if not json:
+#         return oc
+#     for movie_id in sorted(json):
+#         key = json[movie_id]
+#         if not key['title']:
+#             key['title'] = "TMDB ID: " + movie_id
+#         if key['release_date']:
+#             release_year = "(" + key['release_date'][0:4] + ")"
+#         else:
+#             release_year = ""
+#         if key['poster_path']:
+#             thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
+#         else:
+#             thumb = None
+#         if key['backdrop_path']:
+#             art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
+#         else:
+#             art = None
+#         title_year = key['title'] + " " + release_year
+#         oc.add(DirectoryObject(key=Callback(ViewmMovieRequest, key=key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+#
+#     return oc
+
 @route(PREFIX + '/viewrequests')
 def ViewRequests(title):
     oc = ObjectContainer()
-    if Data.Exists(DATA_FILE):
-        Log.Debug("The file exists")
-    else:
-        Log.Debug("Data file does not exist!")
-    json = Data.LoadObject(DATA_FILE)
-    Log.Debug(JSON.StringFromObject(json))
-    if not json:
+    if not Dict:
+        Log.Debug("There are no requests")
         return oc
-    for movie_id in sorted(json):
-        key = json[movie_id]
+    for movie_id in Dict:
+        key = Dict[movie_id]
         if not key['title']:
             key['title'] = "TMDB ID: " + movie_id
         if key['release_date']:
