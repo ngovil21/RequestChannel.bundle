@@ -28,7 +28,7 @@ def Start():
     # The request file will be where user requests will be stored
     if not Data.Exists(DATA_FILE):
         json = JSON.Element(DATA_FILE)
-        Data.Save(DATA_FILE, json)
+        Data.SaveObject(DATA_FILE, json)
 
 
 ###################################################################################################
@@ -98,13 +98,13 @@ def AddMovieRequest(id, title, release_date, poster, backdrop, summary):
     oc = ObjectContainer()
 
     if Data.Exists(DATA_FILE):
-        json = Data.Load(DATA_FILE)
+        json = Data.LoadObject(DATA_FILE)
         if id in json:
             print("Movie is already requested")
         else:
-            json = Data.Load(DATA_FILE)
+            json = Data.LoadObject(DATA_FILE)
             json[id] = {'title':title, 'release_date':release_date, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
-            Data.Sace(DATA_FILE, json)
+            Data.SaveObject(DATA_FILE, json)
 
     return oc
 
@@ -118,7 +118,7 @@ def AddNewTVShow(title):
 @route(PREFIX + '/viewrequests')
 def ViewRequests(title):
     oc = ObjectContainer()
-    json = Data.Load(DATA_FILE)
+    json = Data.LoadObject(DATA_FILE)
     print(json)
     for movie_id in sorted(json):
         key = json[movie_id]
