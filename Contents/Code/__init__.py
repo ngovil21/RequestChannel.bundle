@@ -78,7 +78,7 @@ def SearchMovie(title, query):
         else:
             art = None
         title_year = key['title'] + " " + release_year
-        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, key=key), title=title_year, thumb=thumb, summary=key['overview'], art=art))
     return oc
 
 
@@ -87,7 +87,7 @@ def ConfirmMovieRequest(key):
     title_year = key['title'] + " " + "(" + key['release_date'][0:4] + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
-    oc.add(DirectoryObject(key=Callback(AddMovieRequest, key), title="Yes"))
+    oc.add(DirectoryObject(key=Callback(AddMovieRequest, key=key), title="Yes"))
     oc.add(DirectoryObject(key=Callback(MainMenu), title="No"))
 
     return oc
@@ -119,10 +119,10 @@ def AddNewTVShow(title):
 def ViewRequests(title):
     oc = ObjectContainer()
     json = Data.Load(DATA_FILE)
-    for id in sorted(json):
-        key = json[id]
+    for movie_id in sorted(json):
+        key = json[movie_id]
         if not key['title']:
-            key['title'] = "TMDB ID: " + id
+            key['title'] = "TMDB ID: " + movie_id
         if key['release_date']:
             release_year = "(" + key['release_date'][0:4] + ")"
         else:
