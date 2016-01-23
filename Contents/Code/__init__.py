@@ -1,3 +1,5 @@
+from cgitb import handler
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -44,7 +46,7 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    if Prefs['password']:
+    if Prefs['password'] and not Prefs['passwords'] == "":
         oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword, title="View Requests"), title="View Requests"))
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
@@ -142,14 +144,13 @@ def ViewRequests(title):
     oc = ObjectContainer()
     if not Dict:
         Log.Debug("There are no requests")
-        oc = ObjecContainer(header=TITLE,message="There are currently no requests.")
+        oc = ObjectContainer(header=TITLE,message="There are currently no requests.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
-    for movie_id in Dict:
-        key = Dict[movie_id]
-        title_year = key['title'] + " (" + key['year'] + ")"
-        oc.add(DirectoryObject(key=Callback(ViewMovieRequest, key=key), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
-    if len(oc)==0:
-        return ObjectContainer()
+    else:
+        for movie_id in Dict:
+            key = Dict[movie_id]
+            title_year = key['title'] + " (" + key['year'] + ")"
+            oc.add(DirectoryObject(key=Callback(ViewMovieRequest, key=key), title=title_year, thumb=key['poster'], summary=key['summary'], art=key['backdrop']))
     return oc
 
 def ViewRequestsPassword(title,query):
