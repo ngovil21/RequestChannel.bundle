@@ -99,7 +99,7 @@ def AddMovieRequest(id, title, release_date, poster, backdrop, summary):
 
     if Data.Exists(DATA_FILE):
         json = Data.Load(DATA_FILE)
-        if key['id'] in json:
+        if id in json:
             print("Movie is already requested")
         else:
             json = Data.Load(DATA_FILE)
