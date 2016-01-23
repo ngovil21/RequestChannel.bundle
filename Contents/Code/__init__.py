@@ -18,8 +18,6 @@ BACKDROP_SIZE = "original/"
 
 ### URL Constants for OpenMovieDataBase ###############
 OMDB_API_URL = "http://www.omdbapi.com/"
-
-
 #######################################################
 
 
@@ -212,11 +210,13 @@ def SendToCouchpotato(id):
         # we need to convert tmdb id to imdb
         json = JSON.ObjectFromURL(TMDB_API_URL + "movie/id/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
-            id = json['imdb_id']
+            imdb_id = json['imdb_id']
         else:
             oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
             oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
             return oc
+    else:
+        imdb_id = id
     # we have an imdb id, add to couchpotato
     if not Prefs['couchpotato_url'].startswith("http"):
         couchpotato_url = "http://" + Prefs['couchpotato_url']
@@ -224,13 +224,16 @@ def SendToCouchpotato(id):
         couchpotato_url = Prefs['couchpotato_url']
     if not couchpotato_url.endswith("/"):
         couchpotato_url = couchpotato_url + "/"
-    request_url = couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/?identifier=" + id
+    request_url = couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/?identifier=" + imdb_id
     Log.Debug(request_url)
     json = JSON.ObjectFromURL(request_url)
     if 'success' in json and json['success']:
         oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
     else:
         oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
+    key = Dict[id]
+    title_year = key['title'] + " (" + key['year'] + ")"
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
