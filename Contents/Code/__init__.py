@@ -34,9 +34,7 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
-    # If no Requests file exists, create it
-    # The request file will be where user requests will be stored
-    Dict.Reset()
+
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
@@ -46,7 +44,7 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    if Prefs['password'] and not Prefs['passwords'] == "":
+    if 'password' in Prefs and Prefs['password']:
         oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword, title="View Requests"), title="View Requests"))
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
