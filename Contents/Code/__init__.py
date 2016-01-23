@@ -128,7 +128,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
-        Dict[id] = {'type':'movie', title':title, 'year':year, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
+        Dict[id] = {'type':'movie', 'title':title, 'year':year, 'poster':poster, 'backdrop':backdrop, 'summary':summary}
         Dict.Save()
         return ObjectContainer(header=TITLE, message="Movie has been requested.")
 
