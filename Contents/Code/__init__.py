@@ -66,7 +66,7 @@ def SearchMovie(title,query):
           thumb = TMDB_IMAGE_BASE_URL + key['poster_path']
       else:
           thumb = None
-      oc.add(DirectoryObject(key=None, title=key['title']), thumb=thumb)
+      oc.add(DirectoryObject(key=None, title=key['title'], thumb=thumb))
   return oc
 
 @route(PREFIX + '/addtvshow')
