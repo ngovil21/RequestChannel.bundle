@@ -55,9 +55,16 @@ def AddNewMovie(title):
 def SearchMovie(title,query):
   oc = ObjectContainer()
   query = String.Quote(query, usePlus=True)
-
-  #request = JSON.
-
+  headers = {
+      'Accept': 'application/json',
+      'api_key': TMDB_API_KEY,
+      'query': query
+  }
+  request = JSON.ObjectFromURL(url=TMDB_API_URL + "search/movie/", headers=headers)
+  Log.Debug(JSON.StringFromObject(request))
+  results = request['results']
+  for key in results:
+      oc.add(DirectoryObject(key=None, title=key['title']), thumb=R(TMDB_IMAGE_BASE_URL + key['post_path']))
   return oc
 
 @route(PREFIX + '/addtvshow')
