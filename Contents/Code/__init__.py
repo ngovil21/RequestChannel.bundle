@@ -120,7 +120,9 @@ def AddNewTVShow(title):
 def ViewRequests(title):
     oc = ObjectContainer()
     json = Data.LoadObject(DATA_FILE)
-    print(json)
+    Log.Debug(JSON.StringFromObject(json))
+    if not json:
+        return oc
     for movie_id in sorted(json):
         key = json[movie_id]
         if not key['title']:
