@@ -6,7 +6,7 @@
         <!-- EXCEPT IF THE KEY HAS <array></array> CODE WITHIN IT.  THEN EACH VALUE FOR THAT KEY MUST BE ENTERED AS A SEPARATE STRING WITHIN THAT ARRAY -->    
         <key>CFBundleIdentifier</key>
             <!-- Unique PMS identifier for the plugin and its logs.  Format should always be com.plexapp.plugins.<nameofyourplugin> with no capital letters, spaces, or special characters -->
-            <string>com.plexapp.plugins.yourchannelname</string>
+            <string>com.plexapp.plugins.plexrequestchannel</string>
         <key>PlexFrameworkVersion</key>
             <!-- Version should always be set to 2 -->        
             <string>2</string>

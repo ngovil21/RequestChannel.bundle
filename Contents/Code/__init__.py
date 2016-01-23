@@ -46,21 +46,12 @@ PREFIX   = '/video/plexrequestchannel'
 ART      = 'art-default.jpg'
 ICON     = 'icon-default.png'
 
-# Below you would set any other global variables you may want to use in your programming. I tend to automatically create 
-# a base url for the website I am accessing to add to any urls that are returned with just the folder path and not the 
-# whole url and an http for urls that are returned to the channel without these at the beginning
+DATA_FILE = "Requests"
 
-WebsiteURL = 'http://www.anysite.com'
-http = 'http:'
-# This variable it to make an id below work as a url link
-WebsiteEpURL = 'http://www.anysite.com/watch/'
 
-# These are regex variables that will be used later to search a document for ids
-# it seems to work well to just put "(.?)" between the any text that appears before and after the data you 
-# want to return with your regex, where "(.?)" represents the data you are trying to pull
-RE_LIST_ID = Regex('listId: "(.+?)", pagesConfig: ')
-RE_CONTENT_ID = Regex('CONTENT_ID = "(.+?)";')
-
+TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
+TMDB_API_URL = "http://api.themoviedb.org/3/"
+TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500"
 
 ###################################################################################################
 # This (optional) function is initially called by the PMS framework to initialize the plug-in. This includes setting up
@@ -111,6 +102,12 @@ def Start():
   VideoClipObject.thumb = R(ICON)
   VideoClipObject.art = R(ART)
 
+  # If no Requests file exists, create it
+  # The request file will be where user requests will be stored
+  if not Data.Exists(DATA_FILE):
+    xml = XML.Element(DATA_FILE)
+    Data.Save(DATA_FILE,xml)
+
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is 
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
@@ -125,16 +122,16 @@ def MainMenu():
 # Below is a basic example of a list of three object containers that returns an icon to the screen with a title.
 # In this version we just hardcoded in the sections we would like to break the videos into based on the types of functions
 # that will be described below. I am using a function from below that pulls the thumb from the head of the page
-  oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie", thumb=GetThumb(url='http://www.webpage1.com')))
-  oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show", thumb=GetThumb(url='http://www.webpage2.com')))
-  oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests", thumb=GetThumb(url='http://www.webpage3.com')))
+  oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
+  oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
+  oc.add(DirectoryObject(key=Callback(ViewRequests, title="View Requests"), title="View Requests"))
 
   return oc
 
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title):
-  oc = ObjectContainer
+  oc = ObjectContainer()
 
   oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name or IMDB id of the movie:"))
   return oc
@@ -144,196 +141,11 @@ def SearchMovie(title,query):
   oc = ObjectContainer()
   query = String.Quote(query, usePlus=True)
 
+  #request = JSON.
 
   return oc
 
-#########################################################################################################################
-# the command below is helpful when looking at logs to determine which function is being executed
-# ALSO SAYS IT HELPS THE DESIGNER CREATE A "REST-like API" BUT I DO NOT KNOW WHAT EXACTLY THAT MEANS. I AM THINKING IT
-# ALLOWS ACCESS DIRECTLY TO THE FUNCTION FROM OUTSIDE OF THE CODE
-@route(PREFIX + '/showrss')
 
-# This function shows a basic loop to go through an xml rss feed and pull the data for all the videos or shows listed
-# there
-def VideoRSS(title):
-
-# define an object container and pass the title in from the function above
-  oc = ObjectContainer(title2=title)
-  
-# This is the data parsing API to pull elements from an RSS feed. 
-  xml = RSS.FeedFromURL(url)
-# enter a for loop to return an object for every entry in the feed
-  for item in xml.entries:
-# Pull the data that is available in the form of link, title, date and description
-    url = item.link
-    title = item.title
-    # The date is not always in the correct format so it is always best to return use Datetime.ParseDate to make sure it is correct 
-    date = Datetime.ParseDate(item.date)
-    desc = item.description
-    # Return an object for each item you loop through.  This produces an icon or video name for each entry to the screen.
-    # It is important to ensure you are reading these attributes in to the correct name.  See the Framework Documentation 
-    # for a complete list of objects and the attributes that can be returned with each.
-    oc.add(
-      VideoClipObject(
-	url = url, 
-	title = title, 
-	summary = description, 
-	# Resource.ContentsOfURLWithFallback test the icon to make sure it is valid or returns the fallback if not
-	thumb = Resource.ContentsOfURLWithFallback(thumb, fallback=R(ICON)), 
-	originally_available_at = date
-	)
-      )
-
-# This code below is helpful to show when a source is empty
-  if len(oc) < 1:
-    Log ('still no value for objects')
-    return ObjectContainer(header="Empty", message="Unable to display videos for this show right now.")      
-
-  return oc
-
-#################################################################################################################
-# This function is an example of parsing data from a html page
-@route(PREFIX + '/showhtml')
-def ShowHTML(title):
-
-
-# The parsing API is followed by .xpath(Ô//PARENTELEMENTÕ): where PARENTELEMENT is the parent element within the XML document for  
-# which you want to return data values to the variables for the videos. For example each video in your RSS feed may be contained 
-# within an Item element tag that has element tags for title, thumbnail, description, etc.
-
-# Open the object container
-  oc = ObjectContainer(title2=title)
-
-# The HTML.ElementFromURL create a tree structure of all the elements, attributes and data in your html documents called a DOM Tree. 
-# This tree structure is necessary to pull data with xpath commands
-  html = HTML.ElementFromURL(url)
-
-# We start a for loop for all the items we want to pull off of the page.  You will need to search the source document and play around with
-# and xpath checker to find the right structure to get you to a point of returning the full list of items you want to pull the data from.
-  for video in html.xpath('//div/div/div/ul/li/ul/li'):
-  # need to check if urls need additions and if image needs any additions to address
-    url = video.xpath('./div/a//@href')[0]
-    # here we are adding the sites domain name with a global variable we set at the start of the channel
-    url = WebsiteURL + url
-    thumb = video.xpath('./div/a/img//@style')[0]
-    # A value that is returned may have extra code around it that needs to be removed. Here we use the replace string method to fix the thumb address
-    thumb = thumb.replace("background-image:url('", '').replace("');", '')
-    title = video.xpath('./div/div/p/a//text()')[0]
-
-# SEE THE LINKS AT THE TOP FOR MORE DETAILED INFO ON XPATH 
-# We are using xpath to get of all the values for each element with the parent element returned by the variable video 
-# the syntax is: video.xpath (Ô./CHILDELEMENTÕ)[FIRSTVALUE].FORMAT or video.xpath (Ô./CHILDELEMENT/FORMATÕ)[FIRSTVALUE]
-# where CHILDELEMENT is the xpath commands that gets us to the location of the data in the child element ( ex. title, url, date),
-# FIRSTVALUE is the first occurrence of the child element. Usually you want to get all occurences of the child element for 
-# each parent element so we give this a value of [0] (Python starts the count at zero), and FORMAT defines whether we want 
-# to return the data contained in the element as text or as an attribute.  The syntax is are .text or .get(ÔATTRIBUTEÕ) 
-# or //text() and //@ATTRIBUTE when attached to the child element xpath where ATTRIBUTE is the name of the attribute 
-# you want to return ex. //@href or .get(href) to return the anchor attribute href="www.domainname.com/file.htm"
-
-# this is where the values for each child element we specified are added to the channel as video clip objects the naming scheme for
-# the values passed here are listed in the Framework Documentation for attributes of VideoClipObjects
-
-    oc.add(VideoClipObject(
-      url = url, 
-      title = title, 
-      thumb = Resource.ContentsOfURLWithFallback(thumb, fallback=R(ICON))))
-      
-# This code below is helpful to show when a source is empty
-  if len(oc) < 1:
-    Log ('still no value for objects')
-    return ObjectContainer(header="Empty", message="Unable to display videos for this show right now.")      
-
-# it will loop through and return the values for all items in the page 
-  return oc
-
-
-
-#######################################################################################################################
-@route(PREFIX + '/showjson')
-def ShowJSON(title):
-
-# This function shows you how to pull data from a json data file.  First you need to determine if a json file is available for 
-# the page you are trying to access.  The best way is to open the show with Chrome and use the Developers Tools.  From there you
-# can see all the files that are being opened by the page you are accessing.  (Sometimes you have to hit refresh button for those
-# sources to show up). I usually list them by type so the applications are listed first. It takes a little time and research to
-# figure out what you are looking at and when you find a json file.  You may also have to play with the parameters like ids and
-# number of results to get the list you want.
-
-# Then you have to figure out how to ensure that you are going to use the proper url address for the json file everytime
-
-# Below is a basic example of a json data pull
-
-  oc = ObjectContainer(title2 = title)
-  # Here we call the function we created below to find an id
-  show_id = JSONID(url)
-  # Below is a code I found within the hulu website to pull JSON data for their shows. So I broke the data up to add the correct show id
-  # you could also make global variables for the beginning and end of the JSON address and use those to create the full JSON URl
-  json_url = 'http://www.hulu.com/mozart/v1.h2o/shows/' + show_id +'/episodes?free_only=0&show_id=' + show_id + '&sort=seasons_and_release&video_type=episode&items_per_page=32&access_token=Jk0-QLbtXxtSMOV4TUnwSXqhhDM%3DaoY_yiNlac0ed1d501bee91624b25159a0c57b05d5f34fa3dc981da5c5e9169daf661ffb043b2805717849b7bdeb8e01baccc43f'
-
-  # This is the API used to parse data from JSON
-  videos = JSON.ObjectFromURL(json_url)
-  # Enter a for loop to run through all data sets of the type data
-  for video in videos['data']:
-  # Below this is the format for pulling data from the JSON data from the structure of the Hulu JSON file which requires 
-  # going a little deeper into the structure of the file to pull the data.  Often you will see JSON parses that just go in one level
-  # Ex. url = video['url']. You may have to play with the code to find the right combination for your JSON data
-    url = video['video']['id']
-    # this particular site does not provide a proper url link, so we are using a variable to make the id work
-    url = WebsiteEpURL + str(url)
-    title = video['video']['title']
-    thumb = video['video']['thumbnail_url']
-    duration = video['video']['duration']
-    # the duration must be in milliseconds so at the least you will need to usually multiply it by 1000
-    # duration = int(duration) * 1000
-    # The code below will change it from a MM:SS format to milliseconds 
-    # duration = Datetime.MillisecondsFromString(duration)
-    date = video['video']['available_at']
-    date = Datetime.ParseDate(date)
-    summary = video['video']['description']
-
-    oc.add(EpisodeObject(
-      url = url, 
-      title = title,
-      thumb = Resource.ContentsOfURLWithFallback(thumb, fallback=R(ICON)),
-      summary = summary,
-      # (this code is not accurate for Hulu and just added to show as an example)
-      # duration = duration,
-      originally_available_at = date))
-
-  if len(oc) < 1:
-    Log ('still no value for objects')
-    return ObjectContainer(header="Empty", message="Unable to display videos for this show right now.")      
-
-  return oc
-
-###############################################################################################################
-# This function pulls the ID from each show page for it to be entered into the JSON data url
-# The example below pulls the id from one of two places in the source of the web page 
-# it first looks for a list id and then looks for a content id based on global regex variables set at the top
-# of this program
-@route(PREFIX + '/jsonid')
-def JSONID(url):
-
-  ID = ''
-  content = HTTP.Request(url).content
-  try:
-    ID = RE_LIST_ID.search(content).group(1)
-  except:
-    ID = RE_CONTENT_ID.search(content).group(1)
-  return ID
-
-#############################################################################################################################
-# This is a function to pull the thumb from a the head of a page
-@route(PREFIX + '/getthumb')
-def GetThumb(url):
-  page = HTML.ElementFromURL(url)
-  try:
-    thumb = page.xpath("//head//meta[@property='og:image']//@content")[0]
-    if not thumb.startswith('http://'):
-      thumb = http + thumb
-  except:
-    thumb = R(ICON)
-  return thumb
 
 ###############################################################################################################
 # OTHER THINGS TO LOOK AT WHEN DESIGNING YOUR CHANNEL
