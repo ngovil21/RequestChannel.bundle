@@ -81,6 +81,5 @@
         <key>PlexPluginConsoleLogging</key>
             <!-- This is used to send plugin log statements directly to stout when running PMS from the command line. Rarely used anymore-->
             <string>0</string>
-            
         </dict>
 </plist>
