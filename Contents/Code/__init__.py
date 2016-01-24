@@ -23,8 +23,12 @@ OMDB_API_URL = "http://www.omdbapi.com/"
 ### URL Constants for TheTVDB ##########################
 TVDB_API_KEY = "B93EF22D769A70CB"
 TVDB_API_URL = "http://thetvdb.com/api/"
+TVDB_BANNER_URL = "http://thetvdb.com/banners/"
+#######################################################
 
 
+#######################################################
+#   Start Code
 ########################################################
 
 def Start():
@@ -62,7 +66,7 @@ def MainMenu():
 def AddNewMovie(title):
     oc = ObjectContainer()
 
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name or IMDB id of the movie:"))
+    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name of the movie:"))
     return oc
 
 
@@ -161,10 +165,75 @@ def SearchTV(query):
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
+    if len(series) == 0:
+        oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
+        oc.add(InputDirectoryObject(key=Callback(SearchTV), title="Search Again", prompt="Enter the name of the TV Show:"))
+        oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
+        return oc
     for serie in series:
-        Log.Debug(serie)
+        serieid = serie.get("seriesid")
+        if serieid and serieid.text:
+            id = serieid.text
+        else:
+            Log.Debug("No id found!")
+            id = ""
+        seriename = serie.get("seriesname")
+        if seriename and seriename.text:
+            title = seriename.text
+            title_year = title
+        else:
+            title = ""
+            title_year = ""
+            Log.Debug("No title found!")
+        banner = serie.get("banner")
+        if banner and banner.text:
+            poster = TVDB_BANNER_URL + banner.text
+        else:
+            poster=""
+        overiew = serie.get("Overview")
+        if overiew and overiew.text:
+            summary = overiew.text
+        else:
+            summary = ""
+        firstaired = serie.get("FirstAired")
+        if firstaired and firstaired.text:
+            release_date = firstaired.text
+            year = release_date[0:4]
+            title_year = title + " (" + year + ")"
+        else:
+            release_date = ""
+            year = ""
+        Log.Debug(serie.tostring())
+
+        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year, thumb=poster))
+
     return oc
 
+@route(PREFIX + '/confirmtvrequest')
+def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary=""):
+    if year:
+        title_year = title + " " + "(" + year + ")"
+    else:
+        title_year = title
+    oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?")
+
+    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary), title="Yes"))
+    oc.add(DirectoryObject(key=Callback(MainMenu), title="No"))
+
+    return oc
+
+@route(PREFIX + '/addtvrequest')
+def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
+    if id in Dict:
+        Log.Debug("TV Show is already requested")
+        return ObjectContainer(header=TITLE, message="TV Show has already been requested.")
+    else:
+        Dict[id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict.Save()
+        oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
+        oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
+
+        return oc
 
 @route(PREFIX + '/viewrequests')
 def ViewRequests():
