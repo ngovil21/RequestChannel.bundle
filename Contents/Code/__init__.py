@@ -171,13 +171,13 @@ def SearchTV(query):
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
         return oc
     for serie in series:
-        serieid = serie.get("seriesid")
+        serieid = serie.find("seriesid")
         if serieid and serieid.text:
             id = serieid.text
         else:
             Log.Debug("No id found!")
             id = ""
-        seriename = serie.get("seriesname")
+        seriename = serie.find("seriesname")
         if seriename and seriename.text:
             title = seriename.text
             title_year = title
@@ -185,17 +185,17 @@ def SearchTV(query):
             title = ""
             title_year = ""
             Log.Debug("No title found!")
-        banner = serie.get("banner")
+        banner = serie.find("banner")
         if banner and banner.text:
             poster = TVDB_BANNER_URL + banner.text
         else:
             poster=""
-        overiew = serie.get("Overview")
+        overiew = serie.find("Overview")
         if overiew and overiew.text:
             summary = overiew.text
         else:
             summary = ""
-        firstaired = serie.get("FirstAired")
+        firstaired = serie.find("FirstAired")
         if firstaired and firstaired.text:
             release_date = firstaired.text
             year = release_date[0:4]
@@ -203,7 +203,6 @@ def SearchTV(query):
         else:
             release_date = ""
             year = ""
-        Log.Debug(serie.tostring())
 
         oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year, thumb=poster))
 
