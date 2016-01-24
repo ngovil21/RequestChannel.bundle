@@ -1,5 +1,3 @@
-from distutils.log import Log
-
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
