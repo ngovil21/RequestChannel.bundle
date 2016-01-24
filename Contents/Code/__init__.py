@@ -163,7 +163,7 @@ def AddNewTVShow(title):
 def SearchTV(query):
     oc = ObjectContainer(title1="Search Results")
     query = String.Quote(query, usePlus=True)
-    xml = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/GetSeries.php?seriesname=" + query)
+    xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
     if len(series) == 0:
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
