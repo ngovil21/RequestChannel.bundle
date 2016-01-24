@@ -1,3 +1,5 @@
+from distutils.log import Log
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -24,6 +26,8 @@ OMDB_API_URL = "http://www.omdbapi.com/"
 TVDB_API_KEY = "B93EF22D769A70CB"
 TVDB_API_URL = "http://thetvdb.com/api/"
 TVDB_BANNER_URL = "http://thetvdb.com/banners/"
+
+
 #######################################################
 
 
@@ -174,26 +178,26 @@ def SearchTV(query):
         Log.Debug(str(serie.itertext()))
         id = ""
         title = ""
-        year=""
-        poster=""
-        summary=""
-        title_year=""
+        year = ""
+        poster = ""
+        summary = ""
+        title_year = ""
         for child in serie.getchildren():
-            if child.tag == "seriesid" and child.text:
+            if child.tag.lower() == "seriesid" and child.text:
                 id = child.text
-            elif child.tag == "seriesname" and child.text:
+            elif child.tag.lower() == "seriesname" and child.text:
                 title = child.text
-            elif child.tag == "banner" and child.text:
+            elif child.tag.lower() == "banner" and child.text:
                 poster = TVDB_BANNER_URL + child.text
-            elif child.tag == "Overview" and child.tag:
+            elif child.tag.lower() == "overview" and child.text:
                 summary = child.text
-            elif child.tag == "FirstAired" and child.text:
+            elif child.tag.lower() == "firstaired" and child.text:
                 release_date = child.text
                 year = release_date[0:4]
         if id == "":
             Log.Debug("No id found!")
         if year:
-            title_year = title + " (" + year +")"
+            title_year = title + " (" + year + ")"
         else:
             title_year = title
 
@@ -231,9 +235,11 @@ def SearchTV(query):
         #     release_date = ""
         #     year = ""
 
-        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year, thumb=poster))
+        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year,
+                               thumb=poster))
 
     return oc
+
 
 @route(PREFIX + '/confirmtvrequest')
 def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary=""):
@@ -248,6 +254,7 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary=""):
 
     return oc
 
+
 @route(PREFIX + '/addtvrequest')
 def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
     if id in Dict:
@@ -260,6 +267,7 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
 
         return oc
+
 
 @route(PREFIX + '/viewrequests')
 def ViewRequests():
