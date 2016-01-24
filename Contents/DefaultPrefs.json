@@ -11,7 +11,8 @@
     "label": "View Requests Password  ",
     "type": "text",
     "option": "hidden",
-    "default": ""
+    "default": "",
+    "secure": true
   },
   {
     "id": "couchpotato_url",
@@ -23,7 +24,8 @@
     "id": "couchpotato_api",
     "label": "CouchPotato API Key",
     "type": "text",
-    "default": ""
+    "default": "",
+    "secure": true
   },
   {
     "id": "sonarr_url",

@@ -16,10 +16,16 @@ POSTER_SIZE = "w500/"
 BACKDROP_SIZE = "original/"
 ########################################################
 
-### URL Constants for OpenMovieDataBase ###############
+### URL Constants for OpenMovieDataBase ################
 OMDB_API_URL = "http://www.omdbapi.com/"
-#######################################################
+########################################################
 
+### URL Constants for TheTVDB ##########################
+TVDB_API_KEY = "B93EF22D769A70CB"
+TVDB_API_URL = "http://thetvdb.com/api/"
+
+
+########################################################
 
 def Start():
     ObjectContainer.title1 = TITLE
@@ -47,7 +53,7 @@ def MainMenu():
         oc.add(DirectoryObject(key=Callback(ViewRequests), title="View Requests"))
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests",
-                                    prompt="Please enter the password: "))
+                                    prompt="Please enter the password:"))
 
     return oc
 
@@ -107,7 +113,11 @@ def SearchMovie(title, query):
 
         else:
             Log.Debug("No Results Found")
-            return ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
+            oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
+            oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title="Search Again",
+                                        prompt="Enter the name of the movie:"))
+            oc.add(DirectoryObject(key=Callback(MainMenu), title="Back to Main Menu"))
+            return oc
     return oc
 
 
@@ -140,6 +150,19 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title):
     oc = ObjectContainer()
+
+    oc.add(InputDirectoryObject(key=Callback(SearchTV), title="Request a TV Show", prompt="Enter the name of the TV Show:"))
+    return oc
+
+
+@route(PREFIX + '/searchtv')
+def SearchTV(query):
+    oc = ObjectContainer(title1="Search Results")
+    query = String.Quote(query, usePlus=True)
+    xml = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/GetSeries.php?seriesname=" + query)
+    series = xml.xpath("//Series")
+    for serie in series:
+        Log.Debug(serie)
     return oc
 
 
