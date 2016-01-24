@@ -204,7 +204,7 @@ def SearchTV(query):
             release_date = ""
             year = ""
 
-        oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year, thumb=poster))
+        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year, thumb=poster))
 
     return oc
 
