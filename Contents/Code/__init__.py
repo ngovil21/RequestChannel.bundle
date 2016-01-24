@@ -171,38 +171,65 @@ def SearchTV(query):
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
         return oc
     for serie in series:
-        serieid = serie.find("seriesid")
-        if serieid and serieid.text:
-            id = serieid.text
-        else:
+        Log.Debug(str(serie.itertext()))
+        id = ""
+        title = ""
+        year=""
+        poster=""
+        summary=""
+        title_year=""
+        for child in serie.getchildren():
+            if child.tag == "seriesid" and child.text:
+                id = child.text
+            elif child.tag == "seriesname" and child.text:
+                title = child.text
+            elif child.tag == "banner" and child.text:
+                poster = TVDB_BANNER_URL + child.text
+            elif child.tag == "Overview" and child.tag:
+                summary = child.text
+            elif child.tag == "FirstAired" and child.text:
+                release_date = child.text
+                year = release_date[0:4]
+        if id == "":
             Log.Debug("No id found!")
-            id = ""
-        seriename = serie.find("seriesname")
-        if seriename and seriename.text:
-            title = seriename.text
+        if year:
+            title_year = title + " (" + year +")"
+        else:
             title_year = title
-        else:
-            title = ""
-            title_year = ""
-            Log.Debug("No title found!")
-        banner = serie.find("banner")
-        if banner and banner.text:
-            poster = TVDB_BANNER_URL + banner.text
-        else:
-            poster=""
-        overiew = serie.find("Overview")
-        if overiew and overiew.text:
-            summary = overiew.text
-        else:
-            summary = ""
-        firstaired = serie.find("FirstAired")
-        if firstaired and firstaired.text:
-            release_date = firstaired.text
-            year = release_date[0:4]
-            title_year = title + " (" + year + ")"
-        else:
-            release_date = ""
-            year = ""
+
+        # serieid = serie.find("seriesid")
+        # if serieid
+        # if serieid and serieid.text:
+        #     id = serieid.text
+        # else:
+        #     Log.Debug("No id found!")
+        #     id = ""
+        # seriename = serie.find("seriesname")
+        # if seriename and seriename.text:
+        #     title = seriename.text
+        #     title_year = title
+        # else:
+        #     title = ""
+        #     title_year = ""
+        #     Log.Debug("No title found!")
+        # banner = serie.find("banner")
+        # if banner and banner.text:
+        #     poster = TVDB_BANNER_URL + banner.text
+        # else:
+        #     poster=""
+        # overiew = serie.find("Overview")
+        # if overiew and overiew.text:
+        #     summary = overiew.text
+        # else:
+        #     summary = ""
+        # firstaired = serie.find("FirstAired")
+        # if firstaired and firstaired.text:
+        #     release_date = firstaired.text
+        #     year = release_date[0:4]
+        #     title_year = title + " (" + year + ")"
+        # else:
+        #     release_date = ""
+        #     year = ""
 
         oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year, thumb=poster))
 
