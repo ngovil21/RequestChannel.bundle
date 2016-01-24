@@ -175,13 +175,11 @@ def SearchTV(query):
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
         return oc
     for serie in series:
-        Log.Debug(str(serie.itertext()))
         id = ""
         title = ""
         year = ""
         poster = ""
         summary = ""
-        title_year = ""
         for child in serie.getchildren():
             if child.tag.lower() == "seriesid" and child.text:
                 id = child.text
