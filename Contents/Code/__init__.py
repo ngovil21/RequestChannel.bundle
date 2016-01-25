@@ -63,14 +63,12 @@ def MainMenu():
         except Exception as e:
             Log.Debug(e.message)
 
-
-
     return oc
 
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title):
-    Log.Debug("Client: "+str(Client.Platform))
+    Log.Debug("Client: " + str(Client.Platform))
     oc = ObjectContainer(header=title, message="Please enter the movie name in the searchbox and press enter.")
 
     oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name of the movie:"))
@@ -271,8 +269,13 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
 
 
 @route(PREFIX + '/viewrequests')
-def ViewRequests():
-    oc = ObjectContainer()
+def ViewRequests(query=""):
+    if Prefs['password'] == "" or query == Prefs['password']:
+        oc = ObjectContainer()
+    else:
+        oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
+        oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
+        return oc
     if not Dict:
         Log.Debug("There are no requests")
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
@@ -286,22 +289,10 @@ def ViewRequests():
     return oc
 
 
-
 @route(PREFIX + '/getrequestspassword')
-def GetRequestsPassword():
+def ViewRequestsPassword():
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests", prompt="Please enter the password:"))
-    return oc
-
-@route(PREFIX + '/viewrequestspassword')
-def ViewRequestsPassword(query):
-    if query == Prefs['password']:
-        oc = ObjectContainer(header=TITLE, message="Password is correct!")
-        oc.add(DirectoryObject(key=Callback(ViewRequests), title="Continue to View Requests"))
-    else:
-        oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
-        oc.add(DirectoryObject(key=Callback(MainMenu), title="Back to Main Menu"))
-
+    oc.add(InputDirectoryObject(key=Callback(ViewRequests), title="Enter password:", prompt="Please enter the password:"))
     return oc
 
 
@@ -325,7 +316,7 @@ def ViewRequest(id):
 def ConfirmDeleteRequest(id, title_year=""):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
     oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id), title="Yes"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests), title="No"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="No"))
     return oc
 
 
@@ -334,7 +325,7 @@ def DeleteRequest(id):
     if id in Dict:
         del Dict[id]
     Dict.Save()
-    oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="Return to View Requests"))
     return oc
 
 
@@ -347,7 +338,7 @@ def SendToCouchpotato(id):
             imdb_id = json['imdb_id']
         else:
             oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
-            oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
+            oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="Return to View Requests"))
             return oc
     else:
         imdb_id = id
@@ -368,7 +359,7 @@ def SendToCouchpotato(id):
     key = Dict[id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year), title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="Return to View Requests"))
     return oc
 
 
