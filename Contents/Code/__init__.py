@@ -59,7 +59,7 @@ def MainMenu():
         oc.add(DirectoryObject(key=Callback(ViewRequests), title="View Requests"))
     else:
         try:
-            oc.add(DirectoryObject(key=Callback(GetRequestsPassword), title="View Requests"))
+            oc.add(DirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests"))
         except Exception as e:
             Log.Debug(e.message)
 
