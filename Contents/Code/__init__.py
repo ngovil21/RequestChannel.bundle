@@ -58,7 +58,7 @@ def MainMenu():
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie"), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show"), title="Request a TV Show"))
-    if Prefs['password'] == None or Prefs['password'] == "":
+    if Prefs['password'] == None or Prefs['password'] == "" or password_entered:
         oc.add(DirectoryObject(key=Callback(ViewRequests), title="View Requests"))
     else:
         try:
@@ -203,40 +203,6 @@ def SearchTV(query):
         else:
             title_year = title
 
-        # serieid = serie.find("seriesid")
-        # if serieid
-        # if serieid and serieid.text:
-        #     id = serieid.text
-        # else:
-        #     Log.Debug("No id found!")
-        #     id = ""
-        # seriename = serie.find("seriesname")
-        # if seriename and seriename.text:
-        #     title = seriename.text
-        #     title_year = title
-        # else:
-        #     title = ""
-        #     title_year = ""
-        #     Log.Debug("No title found!")
-        # banner = serie.find("banner")
-        # if banner and banner.text:
-        #     poster = TVDB_BANNER_URL + banner.text
-        # else:
-        #     poster=""
-        # overiew = serie.find("Overview")
-        # if overiew and overiew.text:
-        #     summary = overiew.text
-        # else:
-        #     summary = ""
-        # firstaired = serie.find("FirstAired")
-        # if firstaired and firstaired.text:
-        #     release_date = firstaired.text
-        #     year = release_date[0:4]
-        #     title_year = title + " (" + year + ")"
-        # else:
-        #     release_date = ""
-        #     year = ""
-
         oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary), title=title_year,
                                thumb=poster))
 
@@ -323,7 +289,7 @@ def ViewRequest(id):
 def ConfirmDeleteRequest(id, title_year=""):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
     oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id), title="Yes"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests), title="No"))
+    oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title="No"))
     return oc
 
 
