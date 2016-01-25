@@ -58,15 +58,20 @@ def MainMenu():
     if Prefs['password'] == None or Prefs['password'] == "":
         oc.add(DirectoryObject(key=Callback(ViewRequests), title="View Requests"))
     else:
-        oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests",
-                                    prompt="Please enter the password:"))
+        try:
+            oc.add(DirectoryObject(key=Callback(GetRequestsPassword), title="View Requests", prompt="Please enter the password:"))
+        except Exception as e:
+            Log.Debug(e.message)
+
+
 
     return oc
 
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title):
-    oc = ObjectContainer()
+    Log.Debug("Client: "+str(Client.Platform))
+    oc = ObjectContainer(header=title, message="Please enter the movie name in the searchbox and press enter.")
 
     oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results"), title=title, prompt="Enter the name of the movie:"))
     return oc
@@ -280,6 +285,12 @@ def ViewRequests():
                                    art=key['backdrop']))
     return oc
 
+
+
+@route(PREFIX + '/getrequestspassword')
+def GetRequestsPassword():
+    oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
+    oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests", prompt="Please enter the password:"))
 
 @route(PREFIX + '/viewrequestspassword')
 def ViewRequestsPassword(query):
