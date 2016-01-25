@@ -339,4 +339,16 @@ def SendToCouchpotato(id):
 @route(PREFIX + '/sendtosonarr')
 def SendToSonarr(id):
     oc = ObjectContainer()
+    if not Prefs['sonarr_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sonarr_url']
+    else:
+        sonarr_url = Prefs['sonarr_url']
+    if not sonarr_url.endswith("/"):
+        couchpotato_url = sonarr_url + "/"
+    title = Dict[id]['title']
+    api_header = {
+        'X-Api-Key': Prefs['sonarr_api']
+    }
+    lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=" + title, headers=api_header)
+    Log.Debug(JSON.toString(lookup_json))
     return oc
