@@ -28,12 +28,14 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 
 #######################################################
 
+password_entered = False
 
 #######################################################
 #   Start Code
 ########################################################
 
 def Start():
+    global password_entered
     ObjectContainer.title1 = TITLE
     ObjectContainer.art = R(ART)
 
@@ -44,6 +46,7 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
+    password_entered = False
     # Dict.Reset()
 
 
@@ -270,8 +273,12 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
 
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query=""):
-    if Prefs['password'] == "" or query == Prefs['password']:
+    if Prefs['password'] == "" or password_entered:
         oc = ObjectContainer()
+    elif query == Prefs['password']:
+        global password_entered
+        password_entered = True
+        oc = ObjectContainer(header=TITLE, message="Password is correct")
     else:
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
@@ -316,7 +323,7 @@ def ViewRequest(id):
 def ConfirmDeleteRequest(id, title_year=""):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
     oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id), title="Yes"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="No"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests), title="No"))
     return oc
 
 
@@ -325,7 +332,7 @@ def DeleteRequest(id):
     if id in Dict:
         del Dict[id]
     Dict.Save()
-    oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
 
@@ -338,7 +345,7 @@ def SendToCouchpotato(id):
             imdb_id = json['imdb_id']
         else:
             oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
-            oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="Return to View Requests"))
+            oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
             return oc
     else:
         imdb_id = id
@@ -359,7 +366,7 @@ def SendToCouchpotato(id):
     key = Dict[id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year), title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests,Prefs['password']), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
 
