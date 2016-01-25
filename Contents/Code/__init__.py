@@ -291,6 +291,7 @@ def ViewRequests():
 def GetRequestsPassword():
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
     oc.add(InputDirectoryObject(key=Callback(ViewRequestsPassword), title="View Requests", prompt="Please enter the password:"))
+    return oc
 
 @route(PREFIX + '/viewrequestspassword')
 def ViewRequestsPassword(query):
