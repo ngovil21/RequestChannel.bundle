@@ -356,6 +356,7 @@ def SendToSonarr(id):
             found_show = show
     if not found_show:
         found_show = lookup_json[0]
+    Log.Debug(JSON.StringFromObject(found_show))
 
     title = found_show['title']
     titleslug = found_show['titleSlug']
