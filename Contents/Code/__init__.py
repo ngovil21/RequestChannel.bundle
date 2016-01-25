@@ -350,5 +350,19 @@ def SendToSonarr(id):
         'X-Api-Key': Prefs['sonarr_api']
     }
     lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=" + String.Quote(title), headers=api_header)
-    Log.Debug(JSON.StringFromObject(lookup_json))
+    found_show = None
+    for show in lookup_json:
+        if show['tvdbId'] == id:
+            found_show = show
+    if not found_show:
+        found_show = lookup_json[0]
+
+    title = found_show['title']
+    titleslug = found_show['titleSlug']
+    qualityprofileid = found_show['qualityProfileId']
+    profileid = found_show['profileId']
+
+    values = {'tvdbid': id}
+    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series", values=values, headers=api_header)
+    Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
