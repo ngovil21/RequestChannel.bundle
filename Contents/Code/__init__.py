@@ -350,5 +350,5 @@ def SendToSonarr(id):
         'X-Api-Key': Prefs['sonarr_api']
     }
     lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=" + String.Quote(title), headers=api_header)
-    Log.Debug(JSON.toString(lookup_json))
+    Log.Debug(JSON.StringFromObject(lookup_json))
     return oc
