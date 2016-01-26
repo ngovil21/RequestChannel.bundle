@@ -364,6 +364,6 @@ def SendToSonarr(id):
     profileid = found_show['profileId']
 
     values = {'tvdbid': id}
-    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series", values=values, headers=api_header)
+    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series?tvdbid=" + id, values=values, headers=api_header)
     Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
