@@ -376,22 +376,12 @@ def SendToSonarr(id, locked='unlocked'):
     if not found_show:
         found_show = lookup_json[0]
 
-    title = found_show['title']
-    titleslug = found_show['titleSlug']
-    qualityprofileid = found_show['qualityProfileId']
-    profileid = found_show['profileId']
-    seasons = found_show['seasons']
+    found_show['rootFolderPath'] = prefs['sonarr_path']
 
-    values = {'tvdbid': id,
-              'title': title,
-              'titleSlug': titleslug,
-              'qualityProfileId': qualityprofileid,
-              'profileId': profileid,
-              'seasons': seasons,
-              'path': Prefs['sonarr_path']
-              }
+
+
     #api_header.update(values)
-    addshow = HTTP.Request(sonarr_url + "api/Series/",values=values, headers=api_header)
+    addshow = HTTP.Request(sonarr_url + "api/Series/",values=found_show, headers=api_header)
     #addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
     #Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
