@@ -375,7 +375,6 @@ def SendToSonarr(id, locked='unlocked'):
             found_show = show
     if not found_show:
         found_show = lookup_json[0]
-    Log.Debug(JSON.StringFromObject(found_show))
 
     title = found_show['title']
     titleslug = found_show['titleSlug']
@@ -383,6 +382,7 @@ def SendToSonarr(id, locked='unlocked'):
     profileid = found_show['profileId']
     seasons = found_show['seasons']
 
+    api_header.update(values)
     values = {'tvdbid': id,
               'title': title,
               'titleSlug': titleslug,
@@ -391,6 +391,7 @@ def SendToSonarr(id, locked='unlocked'):
               'seasons': seasons,
               'path': Prefs['sonarr_path']
               }
-    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series", values=values, headers=api_header)
+    api_header.update(values)
+    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values={""} headers=api_header)
     Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
