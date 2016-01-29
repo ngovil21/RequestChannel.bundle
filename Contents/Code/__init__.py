@@ -357,7 +357,7 @@ def SendToCouchpotato(id, locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
     else:
         oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
-    key = Dict[id]
+    key = Dict['movie'][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
