@@ -338,7 +338,7 @@ def SendToCouchpotato(id, locked='unlocked'):
     if Prefs['couchpotato_profile']:
         cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
         if cat['success']:
-            for key in cat['profile']:
+            for key in cat['list']:
                 if key['label'] == Prefs['couchpotato_profile']:
                     values['profile_id'] = key['_id']
         else:
