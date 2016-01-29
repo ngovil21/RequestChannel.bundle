@@ -53,7 +53,7 @@ def Start():
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/mainmenu')
-def MainMenu(locked=True):
+def MainMenu(locked='locked'):
     Log.Debug("Client: " + str(Client.Platform))
     if not locked:
         Log.Debug("MainMenu lock is lifted!")
@@ -61,16 +61,16 @@ def MainMenu(locked=True):
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
-    if not locked or Prefs['password'] is None or Prefs['password'] == "":
-        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=False), title="View Requests"))                #No password needed this session
+    if locked=='unlocked' or Prefs['password'] is None or Prefs['password'] == "":
+        oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))                #No password needed this session
     else:
-        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked=True), title="View Requests"))         #Set View Requests to locked and ask for password
+        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'), title="View Requests"))         #Set View Requests to locked and ask for password
 
     return oc
 
 
 @route(PREFIX + '/addnewmovie')
-def AddNewMovie(title, locked=False):
+def AddNewMovie(title, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
 
     oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:"))
@@ -78,7 +78,7 @@ def AddNewMovie(title, locked=False):
 
 
 @route(PREFIX + '/searchmovie')
-def SearchMovie(title, query, locked=False):
+def SearchMovie(title, query, locked='unlocked'):
     oc = ObjectContainer(title1=title,content=ContainerContent.Movies)
     query = String.Quote(query, usePlus=True)
     if Prefs['movie_db'] == "TheMovieDatabase":
@@ -139,7 +139,7 @@ def SearchMovie(title, query, locked=False):
 
 
 @route(PREFIX + '/confirmmovierequest')
-def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked=False):
+def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " " + "(" + year + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
@@ -151,7 +151,7 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", 
 
 
 @route(PREFIX + '/addmovierequest')
-def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked=False):
+def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     if id in Dict['movie']:
         Log.Debug("Movie is already requested")
         oc = ObjectContainer(header=TITLE, message="Movie has already been requested.")
@@ -166,7 +166,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
 
 
 @route(PREFIX + '/addtvshow')
-def AddNewTVShow(title="", locked=False):
+def AddNewTVShow(title="", locked='unlocked'):
     oc = ObjectContainer()
 
     oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:"))
@@ -174,7 +174,7 @@ def AddNewTVShow(title="", locked=False):
 
 
 @route(PREFIX + '/searchtv')
-def SearchTV(query, locked=False):
+def SearchTV(query, locked='unlocked'):
     oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows)
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
@@ -216,7 +216,7 @@ def SearchTV(query, locked=False):
 
 
 @route(PREFIX + '/confirmtvrequest')
-def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=False):
+def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     if year:
         title_year = title + " " + "(" + year + ")"
     else:
@@ -230,7 +230,7 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
 
 
 @route(PREFIX + '/addtvrequest')
-def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=False):
+def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     if id in Dict['tv']:
         Log.Debug("TV Show is already requested")
         return ObjectContainer(header=TITLE, message="TV Show has already been requested.")
@@ -244,8 +244,8 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
 
 
 @route(PREFIX + '/viewrequests')
-def ViewRequests(query="", locked=False):
-    if not locked:
+def ViewRequests(query="", locked='unlocked'):
+    if locked == 'unlocked':
         Log.Debug("There is no lock on Requests")
         oc = ObjectContainer(content=ContainerContent.Mixed)
     elif query == Prefs['password']:
@@ -259,7 +259,7 @@ def ViewRequests(query="", locked=False):
     if not Dict['movie'] or not Dict['tv']:
         Log.Debug("There are no requests")
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=False), title="Return to Main Menu", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
         for id in Dict['movie']:
@@ -275,19 +275,19 @@ def ViewRequests(query="", locked=False):
                                        art=d['backdrop']))
     if not locked:
         Log.Debug("Requests lock is lifted!")
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=False), title="Return to Main Menu", thumb=R('return.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
 @route(PREFIX + '/getrequestspassword')
-def ViewRequestsPassword(locked=False):
+def ViewRequestsPassword(locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
     oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
 
 
 @route(PREFIX + '/viewrequest')
-def ViewRequest(id, type, locked=False):
+def ViewRequest(id, type, locked='unlocked'):
     key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
@@ -303,14 +303,14 @@ def ViewRequest(id, type, locked=False):
 
 
 @route(PREFIX + '/confirmdeleterequest')
-def ConfirmDeleteRequest(id, type, title_year="", locked=False):
+def ConfirmDeleteRequest(id, type, title_year="", locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
     oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id, type=type, locked=locked), title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
 
 @route(PREFIX + '/deleterequest')
-def DeleteRequest(id, type, locked=False):
+def DeleteRequest(id, type, locked='unlocked'):
     if id in Dict[type]:
         oc = ObjectContainer(header=TITLE, message="Request was deleted!")
         del Dict[type][id]
@@ -322,7 +322,7 @@ def DeleteRequest(id, type, locked=False):
 
 
 @route(PREFIX + '/sendtocouchpotato')
-def SendToCouchpotato(id, locked=False):
+def SendToCouchpotato(id, locked='unlocked'):
     if not id.startswith("tt"):  # Check if id is an imdb id
         # we need to convert tmdb id to imdb
         json = JSON.ObjectFromURL(TMDB_API_URL + "movie/id/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
@@ -356,7 +356,7 @@ def SendToCouchpotato(id, locked=False):
 
 
 @route(PREFIX + '/sendtosonarr')
-def SendToSonarr(id, locked=False):
+def SendToSonarr(id, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="This feature is not supported yet! Please check github for updates!")
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
