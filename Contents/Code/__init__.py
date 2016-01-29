@@ -46,7 +46,6 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
-    Dict.Reset()
     password_entered = False
     if not 'tv' in Dict or not 'movie' in Dict:
         Dict.Reset()
@@ -85,7 +84,7 @@ def AddNewMovie(title):
 
 @route(PREFIX + '/searchmovie')
 def SearchMovie(title, query):
-    oc = ObjectContainer(title1=title)
+    oc = ObjectContainer(title1=title,content=ContainerContent.Movies)
     query = String.Quote(query, usePlus=True)
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
@@ -156,7 +155,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
-        Dict[id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
@@ -174,7 +173,7 @@ def AddNewTVShow(title):
 
 @route(PREFIX + '/searchtv')
 def SearchTV(query):
-    oc = ObjectContainer(title1="Search Results")
+    oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows)
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
@@ -249,7 +248,7 @@ def ViewRequests(query=""):
     elif query == Prefs['password']:
         global password_entered
         password_entered = True
-        oc = ObjectContainer(header=TITLE, message="Password is correct")
+        oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
     else:
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
@@ -285,7 +284,7 @@ def ViewRequest(id, type):
     key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year), title="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year), title="Delete Request"))
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id), title="Send to CouchPotato"))
@@ -297,18 +296,21 @@ def ViewRequest(id, type):
 
 
 @route(PREFIX + '/confirmdeleterequest')
-def ConfirmDeleteRequest(id, title_year=""):
+def ConfirmDeleteRequest(id, type, title_year=""):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
-    oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id), title="Yes"))
-    oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title="No"))
+    oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id, type=type), title="Yes"))
+    oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type), title="No"))
     return oc
 
 
-def DeleteRequest(id):
-    oc = ObjectContainer(header=TITLE, message="Request was deleted!")
-    if id in Dict:
-        del Dict[id]
-    Dict.Save()
+def DeleteRequest(id, type):
+    if id in Dict[type]:
+        oc = ObjectContainer(header=TITLE, message="Request was deleted!")
+        del Dict[type][id]
+
+        Dict.Save()
+    else:
+        oc = ObjectContainer(header=TITLE, message="Request could not be deleted!")
     oc.add(DirectoryObject(key=Callback(ViewRequests), title="Return to View Requests"))
     return oc
 
