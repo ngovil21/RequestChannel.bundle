@@ -51,6 +51,7 @@ def Start():
         Dict().Reset()
         Dict['tv'] = {}
         Dict['movie'] = {}
+        Dict.Save()
 
 
 ###################################################################################################
@@ -258,15 +259,15 @@ def ViewRequests(query=""):
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
     else:
         for id in Dict['movie']:
-            key = Dict[[id]
-            title_year = key['title'] + " (" + key['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title=title_year, thumb=key['poster'], summary=key['summary'],
-                                   art=key['backdrop']))
+            d = Dict['movie'][id]
+            title_year = d['title'] + " (" + d['year'] + ")"
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type']), title=title_year, thumb=d['poster'], summary=d['summary'],
+                                   art=d['backdrop']))
         for id in Dict['tv']:
-            key = Dict['tv'][id]
-            title_year = key['title'] + " (" + key['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title=title_year, thumb=key['poster'], summary=key['summary'],
-                                   art=key['backdrop']))
+            d = Dict['tv'][id]
+            title_year = d['title'] + " (" + d['year'] + ")"
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type']), title=title_year, thumb=d['poster'], summary=d['summary'],
+                                   art=d['backdrop']))
     return oc
 
 
@@ -278,8 +279,8 @@ def ViewRequestsPassword():
 
 
 @route(PREFIX + '/viewrequest')
-def ViewRequest(id):
-    key = Dict[id]
+def ViewRequest(id, type):
+    key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year), title="Delete Request"))
