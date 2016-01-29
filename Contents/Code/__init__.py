@@ -390,7 +390,8 @@ def SendToSonarr(id, locked='unlocked'):
               'seasons': seasons,
               'path': Prefs['sonarr_path']
               }
-    api_header.update(values)
-    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
+    #api_header.update(values)
+    addshow = HTTP.Request(sonarr, sonarr_url + "api/Series",data=values, headers=api_header)
+    #addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
     Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
