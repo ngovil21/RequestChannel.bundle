@@ -120,6 +120,8 @@ def SearchMovie(title, query, locked=False):
             for key in results:
                 if not key['Title']:
                     continue
+                if not key['type'] == "movie":  # only show movie results
+                    continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
                 oc.add(
                     DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'], locked=locked),
@@ -288,14 +290,14 @@ def ViewRequest(id, type, locked=False):
     key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request", thumb=R('x-mark.png')))
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
-            oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato"))
+            oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato", thumb=R('couchpotato.png')))
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
 
@@ -314,7 +316,7 @@ def DeleteRequest(id, type, locked=False):
         Dict.Save()
     else:
         oc = ObjectContainer(header=TITLE, message="Request could not be deleted!")
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
 
@@ -327,7 +329,7 @@ def SendToCouchpotato(id, locked=False):
             imdb_id = json['imdb_id']
         else:
             oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
-            oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", locked=locked))
+            oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
             return oc
     else:
         imdb_id = id
@@ -348,7 +350,7 @@ def SendToCouchpotato(id, locked=False):
     key = Dict[id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year, locked=locked), title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", locked=locked))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     return oc
 
 
