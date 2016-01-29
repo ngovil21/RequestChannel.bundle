@@ -364,7 +364,7 @@ def SendToSonarr(id, locked='unlocked'):
         sonarr_url = Prefs['sonarr_url']
     if not sonarr_url.endswith("/"):
         couchpotato_url = sonarr_url + "/"
-    title = Dict[id]['title']
+    title = Dict['tv'][id]['title']
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
     }
