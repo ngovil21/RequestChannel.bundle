@@ -391,7 +391,7 @@ def SendToSonarr(id, locked='unlocked'):
               'path': Prefs['sonarr_path']
               }
     #api_header.update(values)
-    addshow = HTTP.Request(sonarr_url + "api/Series",values=values, headers=api_header)
+    addshow = HTTP.Request(sonarr_url + "api/Series/",values=values, headers=api_header)
     #addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
-    Log.Debug(JSON.StringFromObject(addshow_json))
+    #Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
