@@ -382,7 +382,6 @@ def SendToSonarr(id, locked='unlocked'):
     profileid = found_show['profileId']
     seasons = found_show['seasons']
 
-    api_header.update(values)
     values = {'tvdbid': id,
               'title': title,
               'titleSlug': titleslug,
