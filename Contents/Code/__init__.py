@@ -46,9 +46,10 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
+    Dict.Reset()
     password_entered = False
     if not 'tv' in Dict or not 'movie' in Dict:
-        Dict().Reset()
+        Dict.Reset()
         Dict['tv'] = {}
         Dict['movie'] = {}
         Dict.Save()
@@ -151,7 +152,7 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
 
 @route(PREFIX + '/addmovierequest')
 def AddMovieRequest(id, title, year="", poster="", backdrop="", summary=""):
-    if id in Dict:
+    if id in Dict['movie']:
         Log.Debug("Movie is already requested")
         return ObjectContainer(header=TITLE, message="Movie has already been requested.")
     else:
@@ -229,7 +230,7 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary=""):
 
 @route(PREFIX + '/addtvrequest')
 def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
-    if id in Dict:
+    if id in Dict['tv']:
         Log.Debug("TV Show is already requested")
         return ObjectContainer(header=TITLE, message="TV Show has already been requested.")
     else:
@@ -263,11 +264,12 @@ def ViewRequests(query=""):
             title_year = d['title'] + " (" + d['year'] + ")"
             oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type']), title=title_year, thumb=d['poster'], summary=d['summary'],
                                    art=d['backdrop']))
-        for id in Dict['tv']:
-            d = Dict['tv'][id]
-            title_year = d['title'] + " (" + d['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type']), title=title_year, thumb=d['poster'], summary=d['summary'],
-                                   art=d['backdrop']))
+        if Dict['tv']:
+            for id in Dict['tv']:
+                d = Dict['tv'][id]
+                title_year = d['title'] + " (" + d['year'] + ")"
+                oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type']), title=title_year, thumb=d['poster'], summary=d['summary'],
+                                       art=d['backdrop']))
     return oc
 
 
