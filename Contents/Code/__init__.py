@@ -54,6 +54,8 @@ def Start():
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 def MainMenu(locked=True):
     Log.Debug("Client: " + str(Client.Platform))
+    if not locked:
+        Log.Debug("MainMenu lock is lifted!")
     oc = ObjectContainer(replace_parent=True)
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
@@ -241,9 +243,11 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked=False):
     if not locked:
+        Log.Debug("There is no lock on Requests")
         oc = ObjectContainer(content=ContainerContent.Mixed)
     elif query == Prefs['password']:
         locked = False
+        Log.Debug("Requests are unlocked")
         oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
     else:
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
@@ -253,6 +257,7 @@ def ViewRequests(query="", locked=False):
         Log.Debug("There are no requests")
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+        return oc
     else:
         for id in Dict['movie']:
             d = Dict['movie'][id]
@@ -265,6 +270,8 @@ def ViewRequests(query="", locked=False):
                 title_year = d['title'] + " (" + d['year'] + ")"
                 oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
                                        art=d['backdrop']))
+    if not locked:
+        Log.Debug("Requests lock is lifted!")
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
