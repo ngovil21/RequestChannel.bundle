@@ -117,13 +117,12 @@ def SearchMovie(title, query, locked='unlocked'):
             for key in results:
                 if not key['Title']:
                     continue
-                if not key['type'] == "movie":  # only show movie results
-                    continue
+                # if not (key['type'] == "movie"):  # only show movie results
+                #     continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
                 oc.add(
                     DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'], locked=locked),
                                     title=title_year, thumb=key['Poster']))
-
         else:
             Log.Debug("No Results Found")
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
