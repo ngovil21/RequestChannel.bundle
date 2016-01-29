@@ -1,3 +1,6 @@
+from cgitb import handler
+from distutils.log import Log
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -58,10 +61,10 @@ def MainMenu(locked=True):
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
-    if not locked or Prefs['password'] == None or Prefs['password'] == "":
-        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="View Requests", locked=False))                #No password needed this session
+    if not locked or Prefs['password'] is None or Prefs['password'] == "":
+        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="View Requests"))                #No password needed this session
     else:
-        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked=locked), title="View Requests", locked=True))         #Set View Requests to locked and ask for password
+        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked=locked), title="View Requests"))         #Set View Requests to locked and ask for password
 
     return oc
 
