@@ -2,7 +2,7 @@ TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
 ART = 'art-default.jpg'
-ICON = 'icon-default.png'
+ICON = 'plexrequestchannel.png'
 
 DATA_FILE = "Requests"
 
@@ -41,6 +41,7 @@ def Start():
     EpisodeObject.art = R(ART)
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
+
     if not 'tv' in Dict or not 'movie' in Dict:
         Dict.Reset()
         Dict['tv'] = {}
@@ -58,9 +59,9 @@ def MainMenu(locked=True):
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
     if not locked or Prefs['password'] == None or Prefs['password'] == "":
-        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), tittle="View Requests", locked=False))                #No password needed this session
+        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="View Requests", locked=False))                #No password needed this session
     else:
-        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked=locked), tittle="View Requests", locked=True))         #Set View Requests to locked and ask for password
+        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked=locked), title="View Requests", locked=True))         #Set View Requests to locked and ask for password
 
     return oc
 
@@ -69,7 +70,7 @@ def MainMenu(locked=True):
 def AddNewMovie(title, locked=False):
     oc = ObjectContainer(header=title, message="Please enter the movie name in the searchbox and press enter.")
 
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), tittle=title, prompt="Enter the name of the movie:"))
+    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:"))
     return oc
 
 
@@ -102,13 +103,13 @@ def SearchMovie(title, query, locked=False):
                     art = None
                 title_year = key['title'] + " (" + year + ")"
                 oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art,
-                                                    summary=key['overview'], locked=locked), tittle=title_year, thumb=thumb, summary=key['overview'], art=art))
+                                                    summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
             else:
                 Log.Debug("No Results Found")
-                oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), tittle="Search Again",
+                oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
                                             prompt="Enter the name of the movie:"))
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-                oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Back to Main Menu"))
+                oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
                 return oc
     else:  # Use OMDB By Default
         request = JSON.ObjectFromURL(url=OMDB_API_URL + "?s=" + query + "&r=json")
@@ -125,9 +126,9 @@ def SearchMovie(title, query, locked=False):
         else:
             Log.Debug("No Results Found")
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-            oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), tittle="Search Again",
+            oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
                                         prompt="Enter the name of the movie:"))
-            oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Back to Main Menu"))
+            oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
     return oc
 
@@ -138,8 +139,8 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", 
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
     oc.add(
-        DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), tittle="Yes"))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="No"))
+        DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), title="Yes", thumb=R('check.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
 
@@ -149,13 +150,13 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
     if id in Dict['movie']:
         Log.Debug("Movie is already requested")
         oc = ObjectContainer(header=TITLE, message="Movie has already been requested.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"), thumb=R('return.png'))
         return oc
     else:
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
 
 
@@ -163,7 +164,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
 def AddNewTVShow(title="", locked=False):
     oc = ObjectContainer()
 
-    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), tittle="Request a TV Show", prompt="Enter the name of the TV Show:"))
+    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:"))
     return oc
 
 
@@ -175,8 +176,8 @@ def SearchTV(query, locked=False):
     series = xml.xpath("//Series")
     if len(series) == 0:
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
-        oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), tittle="Search Again", prompt="Enter the name of the TV Show:"))
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+        oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     for serie in series:
         id = ""
@@ -203,7 +204,7 @@ def SearchTV(query, locked=False):
         else:
             title_year = title
 
-        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked), tittle=title_year,
+        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked), title=title_year,
                                thumb=poster))
 
     return oc
@@ -217,8 +218,8 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
         title_year = title
     oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?")
 
-    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), tittle="Yes"))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="No"))
+    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), title="Yes", , thumb=R('check.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", , thumb=R('x-mark.png')))
 
     return oc
 
@@ -232,7 +233,7 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
 
         return oc
 
@@ -246,32 +247,32 @@ def ViewRequests(query="", locked=False):
         oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
     else:
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
         return oc
     if not Dict:
         Log.Debug("There are no requests")
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     else:
         for id in Dict['movie']:
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), tittle=title_year, thumb=d['poster'], summary=d['summary'],
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
                                    art=d['backdrop']))
         if Dict['tv']:
             for id in Dict['tv']:
                 d = Dict['tv'][id]
                 title_year = d['title'] + " (" + d['year'] + ")"
-                oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), tittle=title_year, thumb=d['poster'], summary=d['summary'],
+                oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
                                        art=d['backdrop']))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), tittle="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
 @route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked=False):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), tittle="Enter password:", prompt="Please enter the password:"))
+    oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
 
 
@@ -280,13 +281,13 @@ def ViewRequest(id, type, locked=False):
     key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), tittle="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request"))
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
-            oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), tittle="Send to CouchPotato"))
+            oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato"))
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), tittle="Send to Sonarr"))
+            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr"))
 
     return oc
 
@@ -294,8 +295,8 @@ def ViewRequest(id, type, locked=False):
 @route(PREFIX + '/confirmdeleterequest')
 def ConfirmDeleteRequest(id, type, title_year="", locked=False):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
-    oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id, type=type, locked=locked), tittle="Yes"))
-    oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), tittle="No"))
+    oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id, type=type, locked=locked), title="Yes", thumb=R('check.png')))
+    oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
 
 
@@ -306,7 +307,7 @@ def DeleteRequest(id, type, locked=False):
         Dict.Save()
     else:
         oc = ObjectContainer(header=TITLE, message="Request could not be deleted!")
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), tittle="Return to View Requests", locked=locked))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", locked=locked))
     return oc
 
 
