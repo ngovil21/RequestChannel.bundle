@@ -348,10 +348,9 @@ def SendToCouchpotato(id, locked='unlocked'):
         if cat['success']:
             for key in cat['categories']:
                 if key['label'] == Prefs['couchpotato_category']:
-                    values['profile_id'] = key['_id']
+                    values['category_id'] = key['_id']
         else:
             Log.Debug("Unable to open up Couchpotato Category List")
-        values['category_id'] = Prefs['couchpotato_category']
     json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
     if 'success' in json and json['success']:
         oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
