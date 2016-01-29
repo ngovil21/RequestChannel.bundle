@@ -52,6 +52,7 @@ def Start():
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
+@route(PREFIX + '/mainmenu')
 def MainMenu(locked=True):
     Log.Debug("Client: " + str(Client.Platform))
     if not locked:
@@ -255,10 +256,10 @@ def ViewRequests(query="", locked=False):
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
         return oc
-    if not Dict:
+    if not Dict['movie'] or not Dict['tv']:
         Log.Debug("There are no requests")
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=False), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
         for id in Dict['movie']:
@@ -274,7 +275,7 @@ def ViewRequests(query="", locked=False):
                                        art=d['backdrop']))
     if not locked:
         Log.Debug("Requests lock is lifted!")
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=False), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
