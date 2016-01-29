@@ -308,7 +308,7 @@ def ConfirmDeleteRequest(id, type, title_year="", locked=False):
     oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
 
-
+@route(PREFIX + '/deleterequest')
 def DeleteRequest(id, type, locked=False):
     if id in Dict[type]:
         oc = ObjectContainer(header=TITLE, message="Request was deleted!")
