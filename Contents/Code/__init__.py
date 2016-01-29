@@ -376,7 +376,7 @@ def SendToSonarr(id, locked='unlocked'):
     if not found_show:
         found_show = lookup_json[0]
 
-    found_show['rootFolderPath'] = prefs['sonarr_path']
+    found_show['rootFolderPath'] = Prefs['sonarr_path']
 
 
 
