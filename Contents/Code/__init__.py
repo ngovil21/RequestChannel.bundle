@@ -288,7 +288,7 @@ def ViewRequest(id, type, locked=False):
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
             oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr"))
-
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", thumb=R('return.png')))
     return oc
 
 
