@@ -55,8 +55,6 @@ def Start():
 @route(PREFIX + '/mainmenu')
 def MainMenu(locked='locked'):
     Log.Debug("Client: " + str(Client.Platform))
-    if not locked:
-        Log.Debug("MainMenu lock is lifted!")
     oc = ObjectContainer(replace_parent=True)
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
@@ -72,7 +70,6 @@ def MainMenu(locked='locked'):
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-
     oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:"))
     return oc
 
@@ -86,7 +83,6 @@ def SearchMovie(title, query, locked='unlocked'):
             'Accept': 'application/json'
         }
         request = JSON.ObjectFromURL(url=TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&query=" + query, headers=headers)
-        # Log.Debug(JSON.StringFromObject(request))
         if 'results' in request:
             results = request['results']
             for key in results:
@@ -246,11 +242,9 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked='unlocked'):
     if locked == 'unlocked':
-        Log.Debug("There is no lock on Requests")
         oc = ObjectContainer(content=ContainerContent.Mixed)
     elif query == Prefs['password']:
         locked = 'unlocked'
-        Log.Debug("Requests are unlocked")
         oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
     else:
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
@@ -273,8 +267,6 @@ def ViewRequests(query="", locked='unlocked'):
                 title_year = d['title'] + " (" + d['year'] + ")"
                 oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
                                        art=d['backdrop']))
-    if locked=='unlocked':
-        Log.Debug("Requests lock is lifted!")
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
@@ -295,9 +287,9 @@ def ViewRequest(id, type, locked='unlocked'):
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato", thumb=R('couchpotato.png')))
-    if key['type'] == 'tv':
-        if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
+    # if key['type'] == 'tv':
+    #     if Prefs['sonarr_url'] and Prefs['sonarr_api']:
+    #         oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -341,9 +333,27 @@ def SendToCouchpotato(id, locked='unlocked'):
         couchpotato_url = Prefs['couchpotato_url']
     if not couchpotato_url.endswith("/"):
         couchpotato_url = couchpotato_url + "/"
-    request_url = couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/?identifier=" + imdb_id
-    Log.Debug(request_url)
-    json = JSON.ObjectFromURL(request_url)
+    values={}
+    values['identifier'] = imdb_id
+    if Prefs['couchpotato_profile']:
+        cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
+        if cat['success']:
+            for key in cat['profile']:
+                if key['label'] == Prefs['couchpotato_profile']:
+                    values['profile_id'] = key['_id']
+        else:
+            Log.Debug("Unable to open up Couchpotato Profile List")
+    if Prefs['couchpotato_category']:
+        cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
+        if cat['success']:
+            for key in cat['categories']:
+                if key['label'] == Prefs['couchpotato_category']:
+                    values['profile_id'] = key['_id']
+        else:
+            Log.Debug("Unable to open up Couchpotato Category List")
+        values['category_id'] = Prefs['couchpotato_category']
+    request_url = couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/:
+    json = JSON.ObjectFromURL(request_url, values=values)
     if 'success' in json and json['success']:
         oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
     else:
@@ -378,10 +388,6 @@ def SendToSonarr(id, locked='unlocked'):
 
     found_show['rootFolderPath'] = Prefs['sonarr_path']
 
-
-
-    #api_header.update(values)
-    addshow = HTTP.Request(sonarr_url + "api/Series/",values=found_show, headers=api_header)
+    addshow = HTTP.Request(sonarr_url + "api/Series",values=found_show, headers=api_header)
     #addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
-    #Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
