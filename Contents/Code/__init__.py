@@ -219,7 +219,7 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
     oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?")
 
     oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), title="Yes", , thumb=R('check.png')))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", , thumb=R('x-mark.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
 
