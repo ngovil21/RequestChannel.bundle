@@ -249,7 +249,7 @@ def ViewRequests(query="", locked='unlocked'):
         Log.Debug("There is no lock on Requests")
         oc = ObjectContainer(content=ContainerContent.Mixed)
     elif query == Prefs['password']:
-        locked = False
+        locked = 'unlocked'
         Log.Debug("Requests are unlocked")
         oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
     else:
@@ -273,14 +273,14 @@ def ViewRequests(query="", locked='unlocked'):
                 title_year = d['title'] + " (" + d['year'] + ")"
                 oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
                                        art=d['backdrop']))
-    if not locked:
+    if locked=='unlocked':
         Log.Debug("Requests lock is lifted!")
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
 @route(PREFIX + '/getrequestspassword')
-def ViewRequestsPassword(locked='unlocked'):
+def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
     oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
@@ -381,8 +381,16 @@ def SendToSonarr(id, locked='unlocked'):
     titleslug = found_show['titleSlug']
     qualityprofileid = found_show['qualityProfileId']
     profileid = found_show['profileId']
+    seasons = found_show['seasons']
 
-    values = {'tvdbid': id}
-    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series?tvdbid=" + id, values=values, headers=api_header)
+    values = {'tvdbid': id,
+              'title': title,
+              'titleSlug': titleslug,
+              'qualityProfileId': qualityprofileid,
+              'profileId': profileid,
+              'seasons': seasons,
+              'path': Prefs['sonarr_path']
+              }
+    addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series", values=values, headers=api_header)
     Log.Debug(JSON.StringFromObject(addshow_json))
     return oc
