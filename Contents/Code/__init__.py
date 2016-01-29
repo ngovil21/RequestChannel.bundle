@@ -68,7 +68,7 @@ def MainMenu(locked=True):
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked=False):
-    oc = ObjectContainer(header=title, message="Please enter the movie name in the searchbox and press enter.")
+    oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
 
     oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:"))
     return oc
@@ -241,7 +241,7 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked=False):
     if not locked:
-        oc = ObjectContainer()
+        oc = ObjectContainer(content=ContainerContent.Mixed)
     elif query == Prefs['password']:
         locked = False
         oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
@@ -307,7 +307,7 @@ def DeleteRequest(id, type, locked=False):
         Dict.Save()
     else:
         oc = ObjectContainer(header=TITLE, message="Request could not be deleted!")
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", locked=locked))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     return oc
 
 
