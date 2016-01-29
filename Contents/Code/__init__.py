@@ -47,7 +47,10 @@ def Start():
     VideoClipObject.art = R(ART)
 
     password_entered = False
-    # Dict.Reset()
+    if not 'tv' in Dict or not 'movie' in Dict:
+        Dict().Reset()
+        Dict['tv'] = {}
+        Dict['movie'] = {}
 
 
 ###################################################################################################
@@ -229,7 +232,7 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary=""):
         Log.Debug("TV Show is already requested")
         return ObjectContainer(header=TITLE, message="TV Show has already been requested.")
     else:
-        Dict[id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict['tv'][id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
@@ -254,8 +257,13 @@ def ViewRequests(query=""):
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu"))
     else:
-        for id in Dict:
-            key = Dict[id]
+        for id in Dict['movie']:
+            key = Dict[[id]
+            title_year = key['title'] + " (" + key['year'] + ")"
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title=title_year, thumb=key['poster'], summary=key['summary'],
+                                   art=key['backdrop']))
+        for id in Dict['tv']:
+            key = Dict['tv'][id]
             title_year = key['title'] + " (" + key['year'] + ")"
             oc.add(DirectoryObject(key=Callback(ViewRequest, id=id), title=title_year, thumb=key['poster'], summary=key['summary'],
                                    art=key['backdrop']))
