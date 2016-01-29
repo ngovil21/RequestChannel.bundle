@@ -8,11 +8,10 @@
   },
   {
     "id": "password",
-    "label": "View Requests Password  ",
+    "label": "View Requests Password",
     "type": "text",
     "option": "hidden",
-    "default": "",
-    "secure": true
+    "default": ""
   },
   {
     "id": "couchpotato_url",
@@ -28,6 +27,18 @@
     "secure": true
   },
   {
+    "id": "couchpotato_profile",
+    "label": "CouchPotato Profile Id",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "couchpotato_category",
+    "label": "CouchPotato Category Id",
+    "type": "text",
+    "default": ""
+  },
+  {
     "id": "sonarr_url",
     "label": "Sonarr URL",
     "type": "text",
@@ -38,5 +49,18 @@
     "label": "Sonarr API Key",
     "type": "text",
     "default": ""
-  }
+  },
+  {
+    "id": "sonarr_quality",
+    "label": "Sonarr Quality Id",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "sonarr_path",
+    "label": "Sonarr Path",
+    "type": "text",
+    "default": ""
+  },
+
 ]
