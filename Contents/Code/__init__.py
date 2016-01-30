@@ -57,9 +57,9 @@ def Start():
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/mainmenu')
-def MainMenu(locked='locked'):
+def MainMenu(locked='locked', message=None):
     Log.Debug("Client: " + str(Client.Platform))
-    oc = ObjectContainer(replace_parent=True)
+    oc = ObjectContainer(replace_parent=True, message=message)
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
@@ -148,14 +148,14 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", 
 
     return oc
 
-
+@indirect
 @route(PREFIX + '/addmovierequest')
 def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     if id in Dict['movie']:
         Log.Debug("Movie is already requested")
         oc = ObjectContainer(header=TITLE, message="Movie has already been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
-        return oc
+        return MainMenu(locked=locked, message="Movie has already been requested")
     else:
         title_year = title + " (" + year + ")"
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'title_year':title_year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
@@ -165,7 +165,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
         Notify(id=id, type='movie')
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
-        return oc
+        return MainMenu(locked=locked, message="Movie has been requested")
 
 
 @route(PREFIX + '/addtvshow')
@@ -230,12 +230,12 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
 
     return oc
 
-
+@indirect
 @route(PREFIX + '/addtvrequest')
 def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     if id in Dict['tv']:
         Log.Debug("TV Show is already requested")
-        return ObjectContainer(header=TITLE, message="TV Show has already been requested.")
+        return MainMenu(locked=locked, message="TV Show has already been requested")
     else:
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
@@ -245,13 +245,13 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
 
-        return oc
+        return MainMenu(locked=locked, message="TV Show has been requested")
 
 
 @route(PREFIX + '/viewrequests')
-def ViewRequests(query="", locked='unlocked'):
+def ViewRequests(query="", locked='unlocked', message=None):
     if locked == 'unlocked':
-        oc = ObjectContainer(content=ContainerContent.Mixed)
+        oc = ObjectContainer(content=ContainerContent.Mixed, message=message)
     elif query == Prefs['password']:
         locked = 'unlocked'
         oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
@@ -310,16 +310,19 @@ def ConfirmDeleteRequest(id, type, title_year="", locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
 
+@indirect
 @route(PREFIX + '/deleterequest')
 def DeleteRequest(id, type, locked='unlocked'):
     if id in Dict[type]:
-        oc = ObjectContainer(header=TITLE, message="Request was deleted!")
+        # oc = ObjectContainer(header=TITLE, message="Request was deleted!")
+        message = "Request was deleted"
         del Dict[type][id]
         Dict.Save()
     else:
-        oc = ObjectContainer(header=TITLE, message="Request could not be deleted!")
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
-    return oc
+        # oc = ObjectContainer(header=TITLE, message="Request could not be deleted!")
+        message = "Request could not be deleted"
+    # oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
+    return ViewRequests(locked=locked, message=message)
 
 
 @route(PREFIX + '/sendtocouchpotato')
