@@ -86,14 +86,14 @@
     "label": "Pushbullet API",
     "type": "text",
     "values": "",
-    "default": "none"
+    "default": ""
   },
   {
     "id": "pushover_api",
     "label": "Pushover API",
     "type": "text",
     "values": "",
-    "default": "none"
+    "default": ""
   },
 
 ]
