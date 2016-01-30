@@ -28,13 +28,13 @@
   },
   {
     "id": "couchpotato_profile",
-    "label": "CouchPotato Profile Id",
+    "label": "CouchPotato Profile Name",
     "type": "text",
     "default": ""
   },
   {
     "id": "couchpotato_category",
-    "label": "CouchPotato Category Id",
+    "label": "CouchPotato Category Name",
     "type": "text",
     "default": ""
   },

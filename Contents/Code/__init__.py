@@ -286,9 +286,9 @@ def ViewRequest(id, type, locked='unlocked'):
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato", thumb=R('couchpotato.png')))
-    # if key['type'] == 'tv':
-    #     if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-    #         oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
+    if key['type'] == 'tv':
+        if Prefs['sonarr_url'] and Prefs['sonarr_api']:
+            oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -375,7 +375,7 @@ def SendToSonarr(id, locked='unlocked'):
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
     }
-    lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=" + String.Quote(title), headers=api_header)
+    lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=tvdbid:" + id, headers=api_header)
     found_show = None
     for show in lookup_json:
         if show['tvdbId'] == id:
@@ -384,7 +384,7 @@ def SendToSonarr(id, locked='unlocked'):
         found_show = lookup_json[0]
 
     found_show['rootFolderPath'] = Prefs['sonarr_path']
-
-    addshow = HTTP.Request(sonarr_url + "api/Series",values=found_show, headers=api_header)
+    values = JSON.StringFromObject(found_show)
+    addshow = HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
     #addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
     return oc
