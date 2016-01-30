@@ -153,10 +153,12 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
-        Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        title_year = title + " (" + year + ")"
+        Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'title_year':title_year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
+        Notify(id=id, type='movie')
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
@@ -235,6 +237,7 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
         Dict.Save()
         if Prefs['sonarr_autorequest']:
             SendToSonarr(id)
+        Notify(id=id, type='tv')
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
 
@@ -393,13 +396,21 @@ def SendToSonarr(id, locked='unlocked'):
             profile_id = profile['id']
             break
 
+    rootFolderPath = ""
+    if Prefs['sonarr_path']:
+        rootFolderPath = Prefs['sonarr_path']
+    else:
+        root = JSON.ObjectFromURL(sonarr_url + "api/Rootfolder", headers=api_header)
+        if root:
+            rootFolderPath = root[0]['path']
+
     Log.Debug("Profile id: " + str(profile_id))
     options = {}
     options['title'] = found_show['title']
     options['tvdbId'] = found_show['tvdbId']
     options['qualityProfileId'] = int(profile_id)
     options['titleSlug'] = found_show['titleSlug']
-    options['rootFolderPath'] = Prefs['sonarr_path']
+    options['rootFolderPath'] = rootFolderPath
     options['seasons'] = found_show['seasons']
     options['monitored'] = True
 
@@ -424,7 +435,7 @@ def SendToSonarr(id, locked='unlocked'):
         add_options['ignoreEpisodesWithoutFiles'] = True
     elif Prefs['sonarr_monitor'] += 'none':
         options['monitored'] = False
-
+    options['addOptions'] = add_options
     values = JSON.StringFromObject(options)
     try:
         HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
@@ -435,3 +446,25 @@ def SendToSonarr(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
+
+#Notify user of requests
+def Notify(id, type):
+    if Prefs['pushbullet_api']:
+        api_header = {'Access-Token': Prefs['pushbullet_api'],
+                      'Content-Type': 'application/json'
+                      }
+        if type = 'movie'
+            movie = Dict['movie'][id]
+            title_year = movie['title'] + " (" + movie['year'] + ")"
+            data = {'type':'note'}
+            data['title'] = "Plex Request Channel - New Movie Request"
+            data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id:" + id + "\nPoster: " + movie['poster']
+            values = JSON.StringFromObject(data)
+            response = HTTP.Request("https://api.pushbullet.com/v2/create-push",data=values, headers=api_header)
+        elif type = 'tv':
+            tv = Dict['tv'][id]
+            data = {'type': 'note'}
+            data['title'] = "Plex Request Channel - New TV Show Request"
+            data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id:" + id + "\nPoster: " + tv['poster']
+            values = JSON.StringFromObject(data)
+            response = HTTP.Request("https://api.pushbullet.com/v2/create-push", data=values, headers=api_header)
