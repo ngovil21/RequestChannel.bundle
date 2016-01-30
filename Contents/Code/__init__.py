@@ -150,7 +150,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
     if id in Dict['movie']:
         Log.Debug("Movie is already requested")
         oc = ObjectContainer(header=TITLE, message="Movie has already been requested.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"), thumb=R('return.png'))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
@@ -253,7 +253,7 @@ def ViewRequests(query="", locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Password is incorrect!")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
         return oc
-    if not Dict['movie'] or not Dict['tv']:
+    if not Dict['movie'] and not Dict['tv']:
         Log.Debug("There are no requests")
         oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
