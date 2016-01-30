@@ -450,9 +450,9 @@ def SendToSonarr(id, locked='unlocked'):
 #Notify user of requests
 def Notify(id, type):
     if Prefs['pushbullet_api']:
-        import base64
-        encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
-        api_header = {'Authorization': b'Basic ' + encode,
+        # import base64
+        # encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
+        api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
                       'Content-Type': 'application/json'
                       }
         try:
@@ -472,4 +472,4 @@ def Notify(id, type):
                 values = JSON.StringFromObject(data)
                 response = HTTP.Request("https://api.pushbullet.com/v2/pushes", data=values, headers=api_header)
         except Exception as e:
-            Log.Debug(e.message)
+            Log.Debug("Pushbullet failed: " + e.message)
