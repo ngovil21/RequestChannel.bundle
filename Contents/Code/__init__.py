@@ -427,13 +427,13 @@ def SendToSonarr(id, locked='unlocked'):
         add_options['ignoreEpisodesWithoutFiles'] = True
     elif Prefs['sonarr_monitor'] == 'latest':
         options['seasons'][len(options['seasons'])-1]['monitored'] = True
-    elif Prefs['sonarr_monitor'] += 'first':
+    elif Prefs['sonarr_monitor'] == 'first':
         options['season'][1]['monitored'] = True
-    elif Prefs['sonarr_monitor'] += 'missing':
+    elif Prefs['sonarr_monitor'] == 'missing':
         add_options['ignoreEpisodesWithFiles'] = True
-    elif Prefs['sonarr_monitor'] += 'existing':
+    elif Prefs['sonarr_monitor'] == 'existing':
         add_options['ignoreEpisodesWithoutFiles'] = True
-    elif Prefs['sonarr_monitor'] += 'none':
+    elif Prefs['sonarr_monitor'] == 'none':
         options['monitored'] = False
     options['addOptions'] = add_options
     values = JSON.StringFromObject(options)
