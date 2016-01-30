@@ -74,5 +74,12 @@
     "type": "text",
     "default": ""
   },
+  {
+    "id": "sonarr_monitor",
+    "label": "Monitor",
+    "type": "enum",
+    "values": ["all", "future", "latest", "first", "missing", "existing", "none"],
+    "default": "none"
+  },
 
 ]

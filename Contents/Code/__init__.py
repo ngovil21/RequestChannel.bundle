@@ -164,8 +164,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
 
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
-    oc = ObjectContainer()
-
+    oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:"))
     return oc
 
@@ -402,12 +401,36 @@ def SendToSonarr(id, locked='unlocked'):
     options['titleSlug'] = found_show['titleSlug']
     options['rootFolderPath'] = Prefs['sonarr_path']
     options['seasons'] = found_show['seasons']
+    options['monitored'] = True
+
+    add_options = {'ignoreEpisodesWithFiles': False,
+                   'ignoreEpisodesWithoutFiles': False,
+                   'searchForMissingEpisodes': True
+                   }
+
+    if Prefs['sonarr_monitor'] == 'all':
+        for season in options['seasons']:
+            season['monitored'] = True
+    elif Prefs['sonarr_monitor'] == 'future':
+        add_options['ignoreEpisodesWithFiles'] = True
+        add_options['ignoreEpisodesWithoutFiles'] = True
+    elif Prefs['sonarr_monitor'] == 'latest':
+        options['seasons'][len(options['seasons'])-1]['monitored'] = True
+    elif Prefs['sonarr_monitor'] += 'first':
+        options['season'][1]['monitored'] = True
+    elif Prefs['sonarr_monitor'] += 'missing':
+        add_options['ignoreEpisodesWithFiles'] = True
+    elif Prefs['sonarr_monitor'] += 'existing':
+        add_options['ignoreEpisodesWithoutFiles'] = True
+    elif Prefs['sonarr_monitor'] += 'none':
+        options['monitored'] = False
 
     values = JSON.StringFromObject(options)
     try:
         HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
     except:
-        oc = ObjectContainer(header=TITLE, message="Could not send movie to Sonarr!")
+        oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
+
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
