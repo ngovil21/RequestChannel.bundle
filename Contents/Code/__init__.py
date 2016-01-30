@@ -460,11 +460,11 @@ def Notify(id, type):
             data['title'] = "Plex Request Channel - New Movie Request"
             data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id:" + id + "\nPoster: " + movie['poster']
             values = JSON.StringFromObject(data)
-            response = HTTP.Request("https://api.pushbullet.com/v2/create-push",data=values, headers=api_header)
+            response = HTTP.Request("https://api.pushbullet.com/v2/pushes",data=values, headers=api_header)
         elif type = 'tv':
             tv = Dict['tv'][id]
             data = {'type': 'note'}
             data['title'] = "Plex Request Channel - New TV Show Request"
             data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id:" + id + "\nPoster: " + tv['poster']
             values = JSON.StringFromObject(data)
-            response = HTTP.Request("https://api.pushbullet.com/v2/create-push", data=values, headers=api_header)
+            response = HTTP.Request("https://api.pushbullet.com/v2/pushes", data=values, headers=api_header)
