@@ -27,6 +27,12 @@
     "secure": true
   },
   {
+    "id": "couchpotato_autorequest",
+    "label": "Automatically add request to CouchPotato?",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "couchpotato_profile",
     "label": "CouchPotato Profile Name",
     "type": "text",
@@ -49,6 +55,12 @@
     "label": "Sonarr API Key",
     "type": "text",
     "default": ""
+  },
+  {
+    "id": "sonarr_autorequest",
+    "label": "Automatically add request to Sonarr?",
+    "type": "bool",
+    "default": false
   },
   {
     "id": "sonarr_profile",

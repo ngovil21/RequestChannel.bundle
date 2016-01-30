@@ -155,6 +155,8 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
     else:
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
+        if Prefs['couchpotato_autorequest']:
+            SendToCouchpotato(id)
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
@@ -232,6 +234,8 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
     else:
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
+        if Prefs['sonarr_autorequest']:
+            SendToSonarr(id)
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
 
@@ -364,7 +368,7 @@ def SendToCouchpotato(id, locked='unlocked'):
 
 @route(PREFIX + '/sendtosonarr')
 def SendToSonarr(id, locked='unlocked'):
-    oc = ObjectContainer(header=TITLE, message="This feature is not supported yet! Please check github for updates!")
+    oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -400,7 +404,11 @@ def SendToSonarr(id, locked='unlocked'):
     options['seasons'] = found_show['seasons']
 
     values = JSON.StringFromObject(options)
-    addshow = HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
+    try:
+        HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
+    except:
+        oc = ObjectContainer(header=TITLE, message="Could not send movie to Sonarr!")
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
