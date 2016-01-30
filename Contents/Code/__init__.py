@@ -26,6 +26,10 @@ TVDB_API_URL = "http://thetvdb.com/api/"
 TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 #######################################################
 
+### Notification Constants ############################
+PUSHBULLET_API_URL = "https://api.pushbullet.com/v2"
+PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
+PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 #######################################################
 #   Start Code
@@ -461,15 +465,44 @@ def Notify(id, type):
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 data = {'type':'note'}
                 data['title'] = "Plex Request Channel - New Movie Request"
-                data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id:" + id + "\nPoster: " + movie['poster']
+                data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
                 values = JSON.StringFromObject(data)
-                response = HTTP.Request("https://api.pushbullet.com/v2/pushes",data=values, headers=api_header)
+                response = HTTP.Request(PUSHBULLET_API_URL + "pushes",data=values, headers=api_header)
+                if response:
+                    Log.Debug("Pushbullet notification sent for :" + id)
             elif type == 'tv':
                 tv = Dict['tv'][id]
                 data = {'type': 'note'}
                 data['title'] = "Plex Request Channel - New TV Show Request"
-                data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id:" + id + "\nPoster: " + tv['poster']
+                data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
                 values = JSON.StringFromObject(data)
-                response = HTTP.Request("https://api.pushbullet.com/v2/pushes", data=values, headers=api_header)
+                response = HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+                if response:
+                    Log.Debug("Pushbullet notification sent for :" + id)
+        except Exception as e:
+            Log.Debug("Pushbullet failed: " + e.message)
+    if Prefs['pushover_api']:
+        try:
+            if type == 'movie':
+                movie = Dict['movie'][id]
+                title_year = movie['title'] + " (" + movie['year'] + ")"
+                data = {'token': PUSHOVER_API_KEY}
+                data['user'] = Prefs['pushover_api']
+                data['title'] = "Plex Request Channel - New Movie Request"
+                data['message'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+                values = JSON.StringFromObject(data)
+                response = HTTP.Request("https://api.pushbullet.com/v2/pushes", data=values)
+                if response:
+                    Log.Debug("Pushover notification sent for :" + id)
+            elif type == 'tv':
+                tv = Dict['tv'][id]
+                data = {'token': PUSHOVER_API_KEY}
+                data['user'] = Prefs['pushover_api']
+                data['title'] = "Plex Request Channel - New TV Show Request"
+                data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                values = JSON.StringFromObject(data)
+                response = HTTP.Request("https://api.pushbullet.com/v2/pushes", data=values)
+                if response:
+                    Log.Debug("Pushover notification sent for :" + id)
         except Exception as e:
             Log.Debug("Pushbullet failed: " + e.message)
