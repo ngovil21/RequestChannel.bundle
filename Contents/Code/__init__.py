@@ -46,6 +46,8 @@ def Start():
     VideoClipObject.thumb = R(ICON)
     VideoClipObject.art = R(ART)
 
+    Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
+
     if not 'tv' in Dict or not 'movie' in Dict:
         Dict.Reset()
         Dict['tv'] = {}
@@ -80,7 +82,7 @@ def AddNewMovie(title, locked='unlocked'):
 
 @route(PREFIX + '/searchmovie')
 def SearchMovie(title, query, locked='unlocked'):
-    oc = ObjectContainer(title1=title,content=ContainerContent.Movies, view_group=ViewType.Grid)
+    oc = ObjectContainer(title1=title,content=ContainerContent.Movies, view_group="Details")
     query = String.Quote(query, usePlus=True)
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
@@ -177,7 +179,7 @@ def AddNewTVShow(title="", locked='unlocked'):
 
 @route(PREFIX + '/searchtv')
 def SearchTV(query, locked='unlocked'):
-    oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows, view_group=ViewType.Grid)
+    oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
