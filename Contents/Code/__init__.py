@@ -47,6 +47,7 @@ def Start():
     VideoClipObject.art = R(ART)
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
+    Plugin.AddViewGroup("Grid", viewMode="Grid", mediaType="items")
 
     if not 'tv' in Dict or not 'movie' in Dict:
         Dict.Reset()
@@ -123,8 +124,8 @@ def SearchMovie(title, query, locked='unlocked'):
             for key in results:
                 if not key['Title']:
                     continue
-                # if not (key['type'] == "movie"):  # only show movie results
-                #     continue
+                if 'type' in key and not (key['type'] == "movie"):  # only show movie results
+                    continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
                 oc.add(
                     DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'], locked=locked),
@@ -199,8 +200,8 @@ def SearchTV(query, locked='unlocked'):
                 id = child.text
             elif child.tag.lower() == "seriesname" and child.text:
                 title = child.text
-            # elif child.tag.lower() == "banner" and child.text and not poster:
-            #     poster = TVDB_BANNER_URL + child.text
+            elif child.tag.lower() == "banner" and child.text and not poster:
+                poster = TVDB_BANNER_URL + child.text
             elif child.tag.lower() == "overview" and child.text:
                 summary = child.text
             elif child.tag.lower() == "firstaired" and child.text:
