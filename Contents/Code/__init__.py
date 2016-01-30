@@ -387,7 +387,7 @@ def SendToSonarr(id, locked='unlocked'):
     profile_id = 1
     for profile in profile_json:
         if profile['name'] == Prefs['sonarr_profile']:
-            profile_id = profile['id']
+            profile_id = int(profile['id'])
             break
 
     Log.Debug("Profile id: " + str(profile_id))
