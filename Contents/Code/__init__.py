@@ -197,13 +197,15 @@ def SearchTV(query, locked='unlocked'):
                 id = child.text
             elif child.tag.lower() == "seriesname" and child.text:
                 title = child.text
-            elif child.tag.lower() == "banner" and child.text:
-                poster = TVDB_BANNER_URL + child.text
+            # elif child.tag.lower() == "banner" and child.text and not poster:
+            #     poster = TVDB_BANNER_URL + child.text
             elif child.tag.lower() == "overview" and child.text:
                 summary = child.text
             elif child.tag.lower() == "firstaired" and child.text:
                 release_date = child.text
                 year = release_date[0:4]
+            elif child.tag.lower() == "poster" and child.text:
+                poster = TVDB_BANNER_URL + child.text
         if id == "":
             Log.Debug("No id found!")
         if year:
