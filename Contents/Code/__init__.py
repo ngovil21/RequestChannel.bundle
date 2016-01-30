@@ -490,8 +490,8 @@ def Notify(id, type):
                 data['user'] = Prefs['pushover_user']
                 data['title'] = "Plex Request Channel - New Movie Request"
                 data['message'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
-                values = JSON.StringFromObject(data)
-                response = HTTP.Request(PUSHOVER_API_URL, data=values)
+                #values = JSON.StringFromObject(data)
+                response = HTTP.Request(PUSHOVER_API_URL, values=data)
                 if response:
                     Log.Debug("Pushover notification sent for :" + id)
             elif type == 'tv':
@@ -499,9 +499,9 @@ def Notify(id, type):
                 data = {'token': PUSHOVER_API_KEY}
                 data['user'] = Prefs['pushover_user']
                 data['title'] = "Plex Request Channel - New TV Show Request"
-                data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
-                values = JSON.StringFromObject(data)
-                response = HTTP.Request(PUSHOVER_API_URL, data=values)
+                data['messsage'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                #values = JSON.StringFromObject(data)
+                response = HTTP.Request(PUSHOVER_API_URL, values=data)
                 if response:
                     Log.Debug("Pushover notification sent for :" + id)
         except Exception as e:
