@@ -390,6 +390,7 @@ def SendToSonarr(id, locked='unlocked'):
             profile_id = profile['id']
             break
 
+    Log.Debug("Profile id: " + str(profile_id))
     found_show['qualityProfileId'] = profile_id
 
     found_show['rootFolderPath'] = Prefs['sonarr_path']
