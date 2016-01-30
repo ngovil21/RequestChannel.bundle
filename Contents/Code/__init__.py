@@ -357,7 +357,7 @@ def SendToCouchpotato(id, locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
     key = Dict['movie'][id]
     title_year = key['title'] + " (" + key['year'] + ")"
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, title_year=title_year, locked=locked), title="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='movie', title_year=title_year, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     return oc
 
@@ -387,14 +387,20 @@ def SendToSonarr(id, locked='unlocked'):
     profile_id = 1
     for profile in profile_json:
         if profile['name'] == Prefs['sonarr_profile']:
-            profile_id = int(profile['id'])
+            profile_id = profile['id']
             break
 
     Log.Debug("Profile id: " + str(profile_id))
-    found_show['qualityProfileId'] = profile_id
+    options = {}
+    options['title'] = found_show['title']
+    options['tvdbId'] = found_show['tvdbId']
+    options['qualityProfileId'] = int(profile_id)
+    options['titleSlug'] = found_show['titleSlug']
+    options['rootFolderPath'] = Prefs['sonarr_path']
+    options['seasons'] = found_show['seasons']
 
-    found_show['rootFolderPath'] = Prefs['sonarr_path']
-    values = JSON.StringFromObject(found_show)
+    values = JSON.StringFromObject(options)
     addshow = HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
-    #addshow_json = JSON.ObjectFromURL(sonarr_url + "api/Series",values=values, headers=api_header)
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     return oc
