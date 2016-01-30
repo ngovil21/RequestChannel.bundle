@@ -51,8 +51,8 @@
     "default": ""
   },
   {
-    "id": "sonarr_quality",
-    "label": "Sonarr Quality Id",
+    "id": "sonarr_profile",
+    "label": "Sonarr Profile",
     "type": "text",
     "default": ""
   },

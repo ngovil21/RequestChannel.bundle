@@ -383,6 +383,15 @@ def SendToSonarr(id, locked='unlocked'):
     if not found_show:
         found_show = lookup_json[0]
 
+    profile_json = JSON.ObjectFromURL(sonarr_url + "api/Profile", headers=api_header)
+    profile_id = 1
+    for profile in profile_json:
+        if profile['name'] == Prefs['sonarr_profile']:
+            profile_id = profile['id']
+            break
+
+    found_show['qualityProfileId'] = profile_id
+
     found_show['rootFolderPath'] = Prefs['sonarr_path']
     values = JSON.StringFromObject(found_show)
     addshow = HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
