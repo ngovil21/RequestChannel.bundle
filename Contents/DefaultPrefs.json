@@ -89,8 +89,8 @@
     "default": "none"
   },
   {
-    "id": "pushbullet_api",
-    "label": "Pushbullet API",
+    "id": "pushover_api",
+    "label": "Pushover API",
     "type": "text",
     "values": "",
     "default": "none"
