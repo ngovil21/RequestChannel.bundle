@@ -277,6 +277,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
                 oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
                                        art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+    if len(oc) > 1:
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
     return oc
 
 
@@ -286,6 +288,20 @@ def ViewRequestsPassword(locked='locked'):
     oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
 
+@route(PREFIX + '/confirmclearrequests')
+def ConfirmDeleteRequests(locked='unlocked'):
+    oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
+    oc.add(DirectoryObject(key=Callback(ClearRequests, locked=locked), title="Yes", thumb=R('check.png')))
+    oc.add(DirectoryObject(key=Callback(ViewRequests,  locked=locked), title="No", thumb=R('x-mark.png')))
+    return oc
+
+@indirect
+@route(PREFIX + '/clearrequests')
+def ClearRequests(locked='unlocked'):
+    Dict['tv'] = {}
+    Dict['movie'] = {}
+    Dict.Save()
+    return ViewRequests(locked=locked, message="All requests have been cleared")
 
 @route(PREFIX + '/viewrequest')
 def ViewRequest(id, type, locked='unlocked'):
