@@ -89,8 +89,8 @@
     "default": ""
   },
   {
-    "id": "pushover_api",
-    "label": "Pushover API",
+    "id": "pushover_user",
+    "label": "Pushover User Key",
     "type": "text",
     "values": "",
     "default": ""
