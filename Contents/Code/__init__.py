@@ -183,12 +183,13 @@ def SearchTV(query, locked='unlocked'):
     oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
-    series = xml.xpath("//Series")
+    series = xml.xpath("//Series/seriesid")
     if len(series) == 0:
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:"))
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
+    count = 0
     for serie in series:
         id = ""
         title = ""
@@ -209,6 +210,20 @@ def SearchTV(query, locked='unlocked'):
                 year = release_date[0:4]
             elif child.tag.lower() == "poster" and child.text:
                 poster = TVDB_BANNER_URL + child.text
+        if not serie.text:
+            continue
+        id = serie.text
+        if count < 6:                   #Let's look for the actual poster for the first 5 tv shows to reduce api hits
+            try:
+                serie_page = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/series/" + id)
+                poster_text = serie_page.xpath("//Series/poster/text")[0]
+                if poster_text:
+                    Log.Debug(poster_text)
+                    poster = TVDB_BANNER_URL + poster_text
+            except:
+                pass
+            count+=1
+            if serie_page:
         if id == "":
             Log.Debug("No id found!")
         if year:
