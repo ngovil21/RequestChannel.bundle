@@ -237,7 +237,7 @@ def SearchTV(query, locked='unlocked'):
             title_year = title
 
         oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked),
-                               title=title_year, summary=summary, thumb=poster))
+                               rating_key=id, title=title_year, summary=summary, thumb=poster))
     oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:", thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
