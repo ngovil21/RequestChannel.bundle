@@ -150,8 +150,9 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", 
     title_year = title + " " + "(" + year + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
-    oc.add(
-        DirectoryObject(
+    if Client.Platform = ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+        oc.add(DirectoryObject(key=None, title=""))
+    oc.add(DirectoryObject(
             key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
             title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
@@ -224,9 +225,9 @@ def SearchTV(query, locked='unlocked'):
         if count < 11:  # Let's look for the actual poster for only the first 10 tv shows to reduce api hits
             try:
                 serie_page = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/series/" + id)
-                poster_text = serie_page.xpath("//Series/poster/text()")[0]
+                poster_text = serie_page.xpath("//Series/poster/text()")
                 if poster_text:
-                    poster = TVDB_BANNER_URL + poster_text
+                    poster = TVDB_BANNER_URL + poster_text[0]
             except Exception as e:
                 Log.Debug(e)
             count += 1
@@ -253,8 +254,9 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
         title_year = title
     oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?")
 
-    oc.add(
-        DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+    if Client.Platform = ClientPlatform.Android:            #If an android, add an empty first item because it gets truncated for some reason
+        oc.add(DirectoryObject(key=None, title=""))
+    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
                         title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
@@ -324,6 +326,8 @@ def ViewRequestsPassword(locked='locked'):
 @route(PREFIX + '/confirmclearrequests')
 def ConfirmDeleteRequests(locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
+    if Client.Platform = ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+        oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(key=Callback(ClearRequests, locked=locked), title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
@@ -343,6 +347,8 @@ def ViewRequest(id, type, locked='unlocked'):
     key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
+    if Client.Platform = ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+        oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request",
                            thumb=R('x-mark.png')))
     if key['type'] == 'movie':
@@ -358,6 +364,8 @@ def ViewRequest(id, type, locked='unlocked'):
 @route(PREFIX + '/confirmdeleterequest')
 def ConfirmDeleteRequest(id, type, title_year="", locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
+    if Client.Platform = ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+        oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id, type=type, locked=locked), title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
