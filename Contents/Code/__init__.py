@@ -83,7 +83,7 @@ def AddNewMovie(title, locked='unlocked'):
 
 @route(PREFIX + '/searchmovie')
 def SearchMovie(title, query, locked='unlocked'):
-    oc = ObjectContainer(title1=title,content=ContainerContent.Movies, view_group="Details")
+    oc = ObjectContainer(title1=title,content=ContainerContent.Movies, view_group="Grid")
     query = String.Quote(query, usePlus=True)
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
@@ -180,7 +180,7 @@ def AddNewTVShow(title="", locked='unlocked'):
 
 @route(PREFIX + '/searchtv')
 def SearchTV(query, locked='unlocked'):
-    oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows, view_group="Details")
+    oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows, view_group="Grid")
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series/seriesid")
