@@ -213,7 +213,8 @@ def SearchTV(query, locked='unlocked'):
             try:
                 serie_page = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/series/" + id)
                 Log.Debug(XML.StringFromObject(serie_page))
-                poster_tag = serie_page.xpath("//Series/poster")[0]
+                poster_tag = serie_page.xpath("//Series/poster/text()")
+                Log.Debug(str(poster_tag))
                 if poster_tag:
                     Log.Debug(poster_tag.text)
                     poster = TVDB_BANNER_URL + poster_tag.text
