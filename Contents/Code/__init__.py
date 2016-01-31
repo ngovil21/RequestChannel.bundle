@@ -31,6 +31,7 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
+
 #######################################################
 #   Start Code
 ########################################################
@@ -65,10 +66,11 @@ def MainMenu(locked='locked', message=None):
 
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
-    if locked=='unlocked' or Prefs['password'] is None or Prefs['password'] == "":
-        oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))                #No password needed this session
+    if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
+        oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
     else:
-        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'), title="View Requests"))         #Set View Requests to locked and ask for password
+        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
+                               title="View Requests"))  # Set View Requests to locked and ask for password
 
     return oc
 
@@ -76,13 +78,13 @@ def MainMenu(locked='locked', message=None):
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:"))
+    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
     return oc
 
 
 @route(PREFIX + '/searchmovie')
 def SearchMovie(title, query, locked='unlocked'):
-    oc = ObjectContainer(title1=title,content=ContainerContent.Movies, view_group="Details")
+    oc = ObjectContainer(title1=title, content=ContainerContent.Movies, view_group="Details")
     query = String.Quote(query, usePlus=True)
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
@@ -108,7 +110,8 @@ def SearchMovie(title, query, locked='unlocked'):
                     art = None
                 title_year = key['title'] + " (" + year + ")"
                 oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art,
-                                                    summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+                                                    summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'],
+                                       art=art))
             else:
                 Log.Debug("No Results Found")
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
@@ -127,7 +130,8 @@ def SearchMovie(title, query, locked='unlocked'):
                     continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
                 oc.add(
-                    DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'], locked=locked),
+                    DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'],
+                                                 locked=locked),
                                     title=title_year, thumb=key['Poster']))
         else:
             Log.Debug("No Results Found")
@@ -136,6 +140,9 @@ def SearchMovie(title, query, locked='unlocked'):
                                         prompt="Enter the name of the movie:"))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
+    oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again", prompt="Enter the name of the Movie:",
+                                thumb=R('search.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
@@ -145,10 +152,13 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", 
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
     oc.add(
-        DirectoryObject(key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), title="Yes", thumb=R('check.png')))
+        DirectoryObject(
+            key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+            title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
+
 
 @indirect
 @route(PREFIX + '/addmovierequest')
@@ -160,7 +170,8 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
         return MainMenu(locked=locked, message="Movie has already been requested")
     else:
         title_year = title + " (" + year + ")"
-        Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'title_year':title_year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
+                             'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
@@ -173,7 +184,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:"))
+    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:", thumb=R('search.png')))
     return oc
 
 
@@ -209,18 +220,15 @@ def SearchTV(query, locked='unlocked'):
                 year = release_date[0:4]
             elif child.tag.lower() == "poster" and child.text:
                 poster = TVDB_BANNER_URL + child.text
-        if count < 5:                   #Let's look for the actual poster for the first 5 tv shows to reduce api hits
+        if count < 5:  # Let's look for the actual poster for only the first 5 tv shows to reduce api hits
             try:
                 serie_page = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/series/" + id)
-                poster_tag = serie_page.xpath("//Series/poster/text()")[0]
-                Log.Debug(str(poster_tag))
-                if poster_tag:
-                    Log.Debug(poster_tag)
-                    poster = TVDB_BANNER_URL + poster_tag
-                Log.Debug(poster)
+                poster_text = serie_page.xpath("//Series/poster/text()")[0]
+                if poster_text:
+                    poster = TVDB_BANNER_URL + poster_text
             except Exception as e:
                 Log.Debug(e)
-            count+=1
+            count += 1
         if id == "":
             Log.Debug("No id found!")
         if year:
@@ -228,9 +236,11 @@ def SearchTV(query, locked='unlocked'):
         else:
             title_year = title
 
-        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked), title=title_year,
+        oc.add(DirectoryObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked),
+                               title=title_year,
                                thumb=poster))
-
+    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:", thumb=R('search.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
@@ -242,10 +252,13 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
         title_year = title
     oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?")
 
-    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), title="Yes", thumb=R('check.png')))
+    oc.add(
+        DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+                        title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
+
 
 @indirect
 @route(PREFIX + '/addtvrequest')
@@ -285,13 +298,15 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['movie']:
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
+            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'],
+                                   summary=d['summary'],
                                    art=d['backdrop']))
         if Dict['tv']:
             for id in Dict['tv']:
                 d = Dict['tv'][id]
                 title_year = d['title'] + " (" + d['year'] + ")"
-                oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'], summary=d['summary'],
+                oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'],
+                                       summary=d['summary'],
                                        art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1:
@@ -305,12 +320,14 @@ def ViewRequestsPassword(locked='locked'):
     oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
 
+
 @route(PREFIX + '/confirmclearrequests')
 def ConfirmDeleteRequests(locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
     oc.add(DirectoryObject(key=Callback(ClearRequests, locked=locked), title="Yes", thumb=R('check.png')))
-    oc.add(DirectoryObject(key=Callback(ViewRequests,  locked=locked), title="No", thumb=R('x-mark.png')))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
+
 
 @indirect
 @route(PREFIX + '/clearrequests')
@@ -320,12 +337,14 @@ def ClearRequests(locked='unlocked'):
     Dict.Save()
     return ViewRequests(locked=locked, message="All requests have been cleared")
 
+
 @route(PREFIX + '/viewrequest')
 def ViewRequest(id, type, locked='unlocked'):
     key = Dict[type][id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request", thumb=R('x-mark.png')))
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request",
+                           thumb=R('x-mark.png')))
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato", thumb=R('couchpotato.png')))
@@ -342,6 +361,7 @@ def ConfirmDeleteRequest(id, type, title_year="", locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(DeleteRequest, id=id, type=type, locked=locked), title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=type, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
+
 
 @indirect
 @route(PREFIX + '/deleterequest')
@@ -378,7 +398,7 @@ def SendToCouchpotato(id, locked='unlocked'):
         couchpotato_url = Prefs['couchpotato_url']
     if not couchpotato_url.endswith("/"):
         couchpotato_url = couchpotato_url + "/"
-    values={}
+    values = {}
     values['identifier'] = imdb_id
     if Prefs['couchpotato_profile']:
         cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
@@ -466,7 +486,7 @@ def SendToSonarr(id, locked='unlocked'):
         add_options['ignoreEpisodesWithFiles'] = True
         add_options['ignoreEpisodesWithoutFiles'] = True
     elif Prefs['sonarr_monitor'] == 'latest':
-        options['seasons'][len(options['seasons'])-1]['monitored'] = True
+        options['seasons'][len(options['seasons']) - 1]['monitored'] = True
     elif Prefs['sonarr_monitor'] == 'first':
         options['season'][1]['monitored'] = True
     elif Prefs['sonarr_monitor'] == 'missing':
@@ -478,7 +498,7 @@ def SendToSonarr(id, locked='unlocked'):
     options['addOptions'] = add_options
     values = JSON.StringFromObject(options)
     try:
-        HTTP.Request(sonarr_url + "api/Series",data=values, headers=api_header)
+        HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
     except:
         oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
 
@@ -487,7 +507,8 @@ def SendToSonarr(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
-#Notify user of requests
+
+# Notify user of requests
 def Notify(id, type):
     if Prefs['pushbullet_api']:
         # import base64
@@ -499,11 +520,11 @@ def Notify(id, type):
             if type == 'movie':
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
-                data = {'type':'note'}
+                data = {'type': 'note'}
                 data['title'] = "Plex Request Channel - New Movie Request"
                 data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
                 values = JSON.StringFromObject(data)
-                response = HTTP.Request(PUSHBULLET_API_URL + "pushes",data=values, headers=api_header)
+                response = HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
                 if response:
                     Log.Debug("Pushbullet notification sent for :" + id)
             elif type == 'tv':
@@ -526,7 +547,7 @@ def Notify(id, type):
                 data['user'] = Prefs['pushover_user']
                 data['title'] = "Plex Request Channel - New Movie Request"
                 data['message'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
-                #values = JSON.StringFromObject(data)
+                # values = JSON.StringFromObject(data)
                 response = HTTP.Request(PUSHOVER_API_URL, values=data)
                 if response:
                     Log.Debug("Pushover notification sent for :" + id)
@@ -536,7 +557,7 @@ def Notify(id, type):
                 data['user'] = Prefs['pushover_user']
                 data['title'] = "Plex Request Channel - New TV Show Request"
                 data['messsage'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
-                #values = JSON.StringFromObject(data)
+                # values = JSON.StringFromObject(data)
                 response = HTTP.Request(PUSHOVER_API_URL, values=data)
                 if response:
                     Log.Debug("Pushover notification sent for :" + id)
