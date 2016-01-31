@@ -216,8 +216,8 @@ def SearchTV(query, locked='unlocked'):
                 if poster_tag:
                     Log.Debug(poster_tag.text)
                     poster = TVDB_BANNER_URL + poster_tag.text
-            except:
-                pass
+            except Exception as e:
+                Log.Debug(e)
             count+=1
         if id == "":
             Log.Debug("No id found!")
