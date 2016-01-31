@@ -47,7 +47,7 @@ def Start():
     VideoClipObject.art = R(ART)
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
-    Plugin.AddViewGroup("Grid", viewMode="Grid", mediaType="items")
+    Plugin.AddViewGroup("Grid", viewMode="Posters", mediaType="items")
 
     if not 'tv' in Dict or not 'movie' in Dict:
         Dict.Reset()
