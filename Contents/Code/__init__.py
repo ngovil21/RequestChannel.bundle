@@ -215,7 +215,7 @@ def SearchTV(query, locked='unlocked'):
                 poster_tag = serie_page.xpath("//Series/poster/text()")[0]
                 Log.Debug(str(poster_tag))
                 if poster_tag:
-                    Log.Debug(poster_tag.text)
+                    Log.Debug(poster_tag)
                     poster = TVDB_BANNER_URL + poster_tag
                 Log.Debug(poster)
             except Exception as e:
