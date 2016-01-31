@@ -212,12 +212,11 @@ def SearchTV(query, locked='unlocked'):
         if count < 5:                   #Let's look for the actual poster for the first 5 tv shows to reduce api hits
             try:
                 serie_page = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/series/" + id)
-                Log.Debug(XML.StringFromObject(serie_page))
-                poster_tag = serie_page.xpath("//Series/poster/text()")
+                poster_tag = serie_page.xpath("//Series/poster/text()")[0]
                 Log.Debug(str(poster_tag))
                 if poster_tag:
                     Log.Debug(poster_tag.text)
-                    poster = TVDB_BANNER_URL + poster_tag.text
+                    poster = TVDB_BANNER_URL + poster_tag
                 Log.Debug(poster)
             except Exception as e:
                 Log.Debug(e)
