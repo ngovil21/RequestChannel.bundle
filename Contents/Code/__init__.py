@@ -139,8 +139,8 @@ def SearchMovie(title, query, locked='unlocked'):
                                         prompt="Enter the name of the movie:"))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again", prompt="Enter the name of the Movie:",
-                                thumb=R('search.png')))
+    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
+                                prompt="Enter the name of the movie:", thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
