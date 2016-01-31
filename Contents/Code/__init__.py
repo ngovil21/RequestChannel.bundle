@@ -223,7 +223,6 @@ def SearchTV(query, locked='unlocked'):
             except:
                 pass
             count+=1
-            if serie_page:
         if id == "":
             Log.Debug("No id found!")
         if year:
