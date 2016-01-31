@@ -221,7 +221,7 @@ def SearchTV(query, locked='unlocked'):
                 year = release_date[0:4]
             elif child.tag.lower() == "poster" and child.text:
                 poster = TVDB_BANNER_URL + child.text
-        if count < 5:  # Let's look for the actual poster for only the first 5 tv shows to reduce api hits
+        if count < 11:  # Let's look for the actual poster for only the first 10 tv shows to reduce api hits
             try:
                 serie_page = XML.ElementFromURL(TVDB_API_URL + TVDB_API_KEY + "/series/" + id)
                 poster_text = serie_page.xpath("//Series/poster/text()")[0]
