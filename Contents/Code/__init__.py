@@ -78,7 +78,8 @@ def MainMenu(locked='locked', message=None):
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
+    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:",
+                                thumb=R('search.png')))
     return oc
 
 
@@ -129,8 +130,8 @@ def SearchMovie(title, query, locked='unlocked'):
                 if 'type' in key and not (key['type'] == "movie"):  # only show movie results
                     continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
-                oc.add(MovieObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'],
-                                   locked=locked), rating_key=id, title=title_year, thumb=key['Poster']))
+                oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'],
+                                                 locked=locked), rating_key=key['imdbID'], title=title_year, thumb=key['Poster']))
         else:
             Log.Debug("No Results Found")
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
@@ -182,7 +183,8 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:", thumb=R('search.png')))
+    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
+                                thumb=R('search.png')))
     return oc
 
 
@@ -194,7 +196,8 @@ def SearchTV(query, locked='unlocked'):
     series = xml.xpath("//Series")
     if len(series) == 0:
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
-        oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:", thumb=R('search.png')))
+        oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
+                                    thumb=R('search.png')))
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     count = 0
@@ -235,8 +238,9 @@ def SearchTV(query, locked='unlocked'):
             title_year = title
 
         oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked),
-                               rating_key=id, title=title_year, summary=summary, thumb=poster))
-    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:", thumb=R('search.png')))
+                            rating_key=id, title=title_year, summary=summary, thumb=poster))
+    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
+                                thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
@@ -295,16 +299,15 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['movie']:
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
-            oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'],
-                                   summary=d['summary'],
-                                   art=d['backdrop']))
+            oc.add(TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=d['poster'],
+                                summary=d['summary'], art=d['backdrop']))
         if Dict['tv']:
             for id in Dict['tv']:
                 d = Dict['tv'][id]
                 title_year = d['title'] + " (" + d['year'] + ")"
-                oc.add(DirectoryObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), title=title_year, thumb=d['poster'],
-                                       summary=d['summary'],
-                                       art=d['backdrop']))
+                oc.add(
+                    TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=d['poster'],
+                                 summary=d['summary'], art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1:
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
