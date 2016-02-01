@@ -15,8 +15,7 @@ Plex Request Channel will allow you to manage requests from your users directly 
 
 To install this channel, you can either clone the bundle using git, or download the file directly from Github and then place the .bundle folder in your Plex Plugins folder. Refer to the following Plex Support pages for more information.
 
-https://support.plex.tv/hc/en-us/articles/201187656-How-do-I-manually-install-a-channel-
-
+https://support.plex.tv/hc/en-us/articles/201187656-How-do-I-manually-install-a-channel- <br>
 https://support.plex.tv/hc/en-us/articles/201106098
 
 You will also need to make sure that Channels are shared with your Plex users. Information on how to do so can be found in the following link.
