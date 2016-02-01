@@ -19,6 +19,6 @@ https://support.plex.tv/hc/en-us/articles/201187656-How-do-I-manually-install-a-
 https://support.plex.tv/hc/en-us/articles/201106098
 
 <br>
-You will also need to make sure that Channels are shared with your Plex users. Information on how to do so can be found in the following link.
+You will also need to make sure that Channels are shared with your Plex users. Information can be found in the following link.
 
 https://support.plex.tv/hc/en-us/articles/204232573-Restricting-the-Shares
