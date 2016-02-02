@@ -577,19 +577,19 @@ def Notify(id, type):
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 subject = "Plex Request Channel - New Movie Request"
-                body = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+                body = "A user has requested a new movie.<br>" + title_year + "<br>IMDB id: " + id + "<br><img src='" + movie['poster'] + "'>"
             elif type== 'tv':
                 tv = Dict['tv'][id]
                 subject = "Plex Request Channel - New TV Show Request"
-                body = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                body = "A user has requested a new tv show.<br>" + tv['title'] + "<br>TVDB id: " + id + "<br><img src='" + tv['poster'] + "'>"
             else:
                 return
-            sendEmail(subject, body)
+            sendEmail(subject, body,'html')
         except Exception as e:
             Log.Debug("Email failed: " + e.message)
 
 
-def sendEmail(subject, body):
+def sendEmail(subject, body, type='html'):
     from email.MIMEText import MIMEText
     from email.MIMEMultipart import MIMEMultipart
     import smtplib
@@ -598,7 +598,7 @@ def sendEmail(subject, body):
     msg['From'] = Prefs['email_from']
     msg['To'] = Prefs['email_to']
     msg['Subject'] = subject
-    msg.attach(MIMEText(body,'plain'))
+    msg.attach(MIMEText(body,type))
     server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
     server.ehlo()
     server.starttls()
