@@ -592,8 +592,8 @@ def Notify(id, type):
                 if tv['summary']:
                     summary = tv['summary'] + "<br>\n"
                 body = "A user has requested a new tv show!<br>\n" + \
-                       summary + \
                        "<h2>" + tv['title'] + "</h2>" + \
+                       summary + \
                        "TVDB id: " + id + "<br>\n" + \
                        "<Poster:><img src='" + tv['poster'] + "'>"
             else:
