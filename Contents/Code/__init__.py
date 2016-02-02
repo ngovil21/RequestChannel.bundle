@@ -569,22 +569,24 @@ def Notify(id, type):
                 response = HTTP.Request(PUSHOVER_API_URL, values=data)
                 if response:
                     Log.Debug("Pushover notification sent for :" + id)
-        if Prefs['email_to']:
-            try:
-                if type == 'movie':
-                    movie = Dict['movie'][id]
-                    title_year = movie['title'] + " (" + movie['year'] + ")"
-                    subject = "Plex Request Channel - New Movie Request"
-                    body = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
-                elif type== 'tv':
-                    tv = Dict['tv'][id]
-                    subject = "Plex Request Channel - New TV Show Request"
-                    body = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
-                else:
-                    return
-                sendEmail(subject, body)
-            except Exception as e:
-                Log.Debug("Email failed: " + e.message)
+        except Exception as e:
+            Log.Debug("Pushover failed: " + e.message)
+    if Prefs['email_to']:
+        try:
+            if type == 'movie':
+                movie = Dict['movie'][id]
+                title_year = movie['title'] + " (" + movie['year'] + ")"
+                subject = "Plex Request Channel - New Movie Request"
+                body = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+            elif type== 'tv':
+                tv = Dict['tv'][id]
+                subject = "Plex Request Channel - New TV Show Request"
+                body = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+            else:
+                return
+            sendEmail(subject, body)
+        except Exception as e:
+            Log.Debug("Email failed: " + e.message)
 
 
 def sendEmail(subject, body):
