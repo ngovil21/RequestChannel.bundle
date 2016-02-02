@@ -577,14 +577,22 @@ def Notify(id, type):
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 subject = "Plex Request Channel - New Movie Request"
+                summary = ""
+                if tv['summary']:
+                    summary = tv['summary'] + "<br>\n"
                 body = "A user has requested a new movie!<br>\n" + \
                        "<h2>" + title_year + "</h2>" + \
+                       summary + \
                        "IMDB id: " + id + "<br>\n" + \
                        "<Poster:><img src='" + movie['poster'] + "'>"
             elif type== 'tv':
                 tv = Dict['tv'][id]
                 subject = "Plex Request Channel - New TV Show Request"
+                summary = ""
+                if tv['summary']:
+                    summary = tv['summary'] + "<br>\n"
                 body = "A user has requested a new tv show!<br>\n" + \
+                       summary + \
                        "<h2>" + tv['title'] + "</h2>" + \
                        "TVDB id: " + id + "<br>\n" + \
                        "<Poster:><img src='" + tv['poster'] + "'>"
