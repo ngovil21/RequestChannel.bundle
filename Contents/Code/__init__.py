@@ -32,6 +32,7 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 
+
 #######################################################
 #   Start Code
 ########################################################
@@ -111,8 +112,7 @@ def SearchMovie(title, query, locked='unlocked'):
                     art = None
                 title_year = key['title'] + " (" + year + ")"
                 oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art,
-                                                    summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'],
-                                       art=art))
+                                       summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
             else:
                 Log.Debug("No Results Found")
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
