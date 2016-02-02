@@ -606,3 +606,4 @@ def sendEmail(subject, body):
     server.login(Prefs['email_username'], Prefs['email_password'])
     text = msg.as_string()
     server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
+    server.quit()
