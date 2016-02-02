@@ -175,7 +175,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
-        Notify(id=id, type='movie')
+        notifyRequest(id=id, type='movie')
         oc = ObjectContainer(header=TITLE, message="Movie has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return MainMenu(locked=locked, message="Movie has been requested")
@@ -274,7 +274,7 @@ def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked=
         Dict.Save()
         if Prefs['sonarr_autorequest']:
             SendToSonarr(id)
-        Notify(id=id, type='tv')
+        notifyRequest(id=id, type='tv')
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
 
@@ -517,7 +517,7 @@ def SendToSonarr(id, locked='unlocked'):
 
 
 # Notify user of requests
-def Notify(id, type):
+def notifyRequest(id, type):
     if Prefs['pushbullet_api']:
         # import base64
         # encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
@@ -583,10 +583,29 @@ def Notify(id, type):
                        "<Poster:><img src='" + tv['poster'] + "'>"
             else:
                 return
-            sendEmail(subject, body,'html')
+            sendEmail(subject, body, 'html')
         except Exception as e:
             Log.Debug("Email failed: " + e.message)
 
+def Notify(title, body):
+    if Prefs['email_to']:
+        try:
+            if not sendEmail(title, body, 'html'):
+                Log.Debug("Email notification sent")
+        except Exception as e:
+            Log.Debug("Email failed: " + e.message)
+    if Prefs['pushbullet_api']:
+        try:
+            if sendPushBullet(title,body):
+                Log.Debug("Pushbullet notification sent")
+        except Exception as e:
+            Log.Debug("PushBullet failed: " + e.message)
+    if Prefs['pushover_user']:
+        try:
+            if sendPushover(title,body):
+                Log.Debug("Pushover notification sent")
+        except Exception as e:
+            Log.Debug("Pushover failed: " + e.message)
 
 def sendPushBullet(title, body):
     api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
