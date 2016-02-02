@@ -1,3 +1,5 @@
+from DumbTools import DumbKeyboard
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -32,8 +34,7 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 
-
-#######################################################
+########################################################
 #   Start Code
 ########################################################
 
@@ -72,7 +73,7 @@ def MainMenu(locked='locked', message=None):
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                title="View Requests"))  # Set View Requests to locked and ask for password
-
+    Log.Debug(str(Request.Headers))
     return oc
 
 
