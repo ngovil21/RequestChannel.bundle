@@ -577,11 +577,11 @@ def Notify(id, type):
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 subject = "Plex Request Channel - New Movie Request"
-                body = "A user has requested a new movie.<br>" + title_year + "<br>IMDB id: " + id + "<br><img src='" + movie['poster'] + "'>"
+                body = "A user has requested a new movie.<br>\n" + title_year + "<br>\nIMDB id: " + id + "<br>\n<img src='" + movie['poster'] + "'>"
             elif type== 'tv':
                 tv = Dict['tv'][id]
                 subject = "Plex Request Channel - New TV Show Request"
-                body = "A user has requested a new tv show.<br>" + tv['title'] + "<br>TVDB id: " + id + "<br><img src='" + tv['poster'] + "'>"
+                body = "A user has requested a new tv show.<br>\n" + tv['title'] + "<br>\nTVDB id: " + id + "<br>\n<img src='" + tv['poster'] + "'>"
             else:
                 return
             sendEmail(subject, body,'html')
