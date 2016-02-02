@@ -560,29 +560,29 @@ def notifyRequest(id, type):
         try:
             if type == 'movie':
                 movie = Dict['movie'][id]
-                title_year = movie['title'] + " (" + movie['year'] + ")"
+                title = movie['title'] + " (" + movie['year'] + ")"
+                poster = movie['poster']
+                id_type = "IMDB"
                 subject = "Plex Request Channel - New Movie Request"
                 summary = ""
                 if movie['summary']:
                     summary = movie['summary'] + "<br>\n"
-                body = "A user has requested a new movie!<br>\n" + \
-                       "<h2>" + title_year + "</h2>" + \
-                       summary + \
-                       "IMDB id: " + id + "<br>\n" + \
-                       "<Poster:><img src='" + movie['poster'] + "'>"
             elif type == 'tv':
                 tv = Dict['tv'][id]
+                title = tv['title']
+                id_type = "TVDB"
+                poster = tv['poster']
                 subject = "Plex Request Channel - New TV Show Request"
                 summary = ""
                 if tv['summary']:
                     summary = tv['summary'] + "<br>\n"
-                body = "A user has requested a new tv show!<br>\n" + \
-                       "<h2>" + tv['title'] + "</h2>" + \
-                       summary + \
-                       "TVDB id: " + id + "<br>\n" + \
-                       "<Poster:><img src='" + tv['poster'] + "'>"
             else:
                 return
+            body = "A user has made a new request! <br>\n" + \
+                   "<p style='font-size:20px'> " + title + " </p><br>" + \
+                   id_type + " id: " + id + " <br>\n" + \
+                   summary + \
+                   "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, body, 'html')
         except Exception as e:
             Log.Debug("Email failed: " + e.message)
