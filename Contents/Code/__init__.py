@@ -578,10 +578,10 @@ def notifyRequest(id, type):
                     summary = tv['summary'] + "<br>\n"
             else:
                 return
-            body = "A user has made a new request! <br>\n" + \
-                   "<font style='font-size:20px'> " + title + " </font><br>\n" + \
-                   id_type + " id: " + id + " <br><br>\n" + \
-                   summary + \
+            body = "A user has made a new request! <br><br>\n" + \
+                   "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
+                   "(" +id_type + " id: " + id + ") <br><br>\n" + \
+                   summary + " <br>\n"\
                    "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, body, 'html')
         except Exception as e:
