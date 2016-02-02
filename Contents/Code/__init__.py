@@ -521,35 +521,19 @@ def Notify(id, type):
     if Prefs['pushbullet_api']:
         # import base64
         # encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
-        api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
-                      'Content-Type': 'application/json'
-                      }
         try:
             if type == 'movie':
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
-                if movie['poster']:
-                    data = {'type': 'file'}
-                    data['title'] = "Plex Request Channel - New TV Show Request"
-                    data['body'] = "A user has requested a new tv show.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
-                    data['file_url'] = movie['poster']
-                else:
-                    data = {'type': 'note'}
-                    data['title'] = "Plex Request Channel - New Movie Request"
-                    data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+                title = "Plex Request Channel - New Movie Request"
+                body = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
             elif type == 'tv':
                 tv = Dict['tv'][id]
-                if tv['poster']:
-                    data = {'type':'file'}
-                    data['title'] = "Plex Request Channel - New TV Show Request"
-                    data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
-                    data['file_url'] = tv['poster']
-                else:
-                    data = {'type': 'note'}
-                    data['title'] = "Plex Request Channel - New TV Show Request"
-                    data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
-            values = JSON.StringFromObject(data)
-            response = HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+                title = "Plex Request Channel - New TV Show Request"
+                body = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+            else:
+                return
+            response = sendPushBullet(title,body)
             if response:
                 Log.Debug("Pushbullet notification sent for :" + id)
         except Exception as e:
@@ -559,24 +543,17 @@ def Notify(id, type):
             if type == 'movie':
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
-                data = {'token': PUSHOVER_API_KEY}
-                data['user'] = Prefs['pushover_user']
-                data['title'] = "Plex Request Channel - New Movie Request"
-                data['message'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
-                # values = JSON.StringFromObject(data)
-                response = HTTP.Request(PUSHOVER_API_URL, values=data)
-                if response:
-                    Log.Debug("Pushover notification sent for :" + id)
+                title = "Plex Request Channel - New Movie Request"
+                message = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
             elif type == 'tv':
                 tv = Dict['tv'][id]
-                data = {'token': PUSHOVER_API_KEY}
-                data['user'] = Prefs['pushover_user']
-                data['title'] = "Plex Request Channel - New TV Show Request"
-                data['messsage'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
-                # values = JSON.StringFromObject(data)
-                response = HTTP.Request(PUSHOVER_API_URL, values=data)
-                if response:
-                    Log.Debug("Pushover notification sent for :" + id)
+                title = "Plex Request Channel - New TV Show Request"
+                message = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+            else:
+                return
+            response = sendPushover(title, message)
+            if response:
+                Log.Debug("Pushover notification sent for :" + id)
         except Exception as e:
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['email_to']:
@@ -586,14 +563,14 @@ def Notify(id, type):
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 subject = "Plex Request Channel - New Movie Request"
                 summary = ""
-                if tv['summary']:
-                    summary = tv['summary'] + "<br>\n"
+                if movie['summary']:
+                    summary = movie['summary'] + "<br>\n"
                 body = "A user has requested a new movie!<br>\n" + \
                        "<h2>" + title_year + "</h2>" + \
                        summary + \
                        "IMDB id: " + id + "<br>\n" + \
                        "<Poster:><img src='" + movie['poster'] + "'>"
-            elif type== 'tv':
+            elif type == 'tv':
                 tv = Dict['tv'][id]
                 subject = "Plex Request Channel - New TV Show Request"
                 summary = ""
@@ -611,6 +588,23 @@ def Notify(id, type):
             Log.Debug("Email failed: " + e.message)
 
 
+def sendPushBullet(title, body):
+    api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
+                  'Content-Type': 'application/json'
+                  }
+    data = {'type': 'note'}
+    data['title'] = title
+    data['body'] = body
+    values = JSON.StringFromObject(data)
+    return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+
+def sendPushover(title, message):
+    data = {'token': PUSHOVER_API_KEY}
+    data['user'] = Prefs['pushover_user']
+    data['title'] = title
+    data['message'] = message
+    return HTTP.Request(PUSHOVER_API_URL, values=data)
+
 def sendEmail(subject, body, type='html'):
     from email.MIMEText import MIMEText
     from email.MIMEMultipart import MIMEMultipart
@@ -627,5 +621,6 @@ def sendEmail(subject, body, type='html'):
     server.ehlo()
     server.login(Prefs['email_username'], Prefs['email_password'])
     text = msg.as_string()
-    server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
+    senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
     server.quit()
+    return senders
