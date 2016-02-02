@@ -590,8 +590,8 @@ def Notify(id, type):
 
 
 def sendEmail(subject, body):
-    from email import MIMEText
-    from email import MIMEMultipart
+    from email.MIMEText import MIMEText
+    from email.MIMEMultipart import MIMEMultipart
     import smtplib
 
     msg = MIMEMultipart()
