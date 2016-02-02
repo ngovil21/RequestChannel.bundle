@@ -132,7 +132,7 @@
   },
   {
     "id": "email_password",
-    "label": "SMTP Server Port",
+    "label": "SMTP Server Password",
     "type": "text",
     "values": "",
     "default": "",
