@@ -531,6 +531,7 @@ def Notify(id, type):
                 data = {'type': 'note'}
                 data['title'] = "Plex Request Channel - New Movie Request"
                 data['body'] = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+                data['image_url'] = movie['poster']
                 values = JSON.StringFromObject(data)
                 response = HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
                 if response:
@@ -540,6 +541,7 @@ def Notify(id, type):
                 data = {'type': 'note'}
                 data['title'] = "Plex Request Channel - New TV Show Request"
                 data['body'] = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                data['image_url'] = tv['poster']
                 values = JSON.StringFromObject(data)
                 response = HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
                 if response:
