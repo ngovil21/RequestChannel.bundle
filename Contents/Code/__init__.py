@@ -579,8 +579,8 @@ def notifyRequest(id, type):
             else:
                 return
             body = "A user has made a new request! <br>\n" + \
-                   "<p style='font-size:20px'> " + title + " </p><br>" + \
-                   id_type + " id: " + id + " <br>\n" + \
+                   "<font style='font-size:20px'> " + title + " </font><br>\n" + \
+                   id_type + " id: " + id + " <br><br>\n" + \
                    summary + \
                    "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, body, 'html')
