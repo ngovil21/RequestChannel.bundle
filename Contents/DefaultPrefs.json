@@ -11,7 +11,8 @@
     "label": "View Requests Password",
     "type": "text",
     "option": "hidden",
-    "default": ""
+    "default": "",
+    "secure": true
   },
   {
     "id": "couchpotato_url",
@@ -136,7 +137,8 @@
     "type": "text",
     "values": "",
     "default": "",
-    "option": "hidden"
+    "option": "hidden",
+    "secure": true
   },
 
 ]
