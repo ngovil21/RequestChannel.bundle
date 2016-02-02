@@ -95,5 +95,48 @@
     "values": "",
     "default": ""
   },
+  {
+    "id": "email_from",
+    "label": "Email to send from",
+    "type": "text",
+    "values": "",
+    "default": ""
+  },
+  {
+    "id": "email_to",
+    "label": "Email to send to",
+    "type": "text",
+    "values": "",
+    "default": ""
+  },
+  {
+    "id": "email_server",
+    "label": "SMTP Server",
+    "type": "text",
+    "values": "",
+    "default": ""
+  },
+  {
+    "id": "email_port",
+    "label": "SMTP Server Port",
+    "type": "text",
+    "values": "",
+    "default": ""
+  },
+  {
+    "id": "email_username",
+    "label": "SMTP Username",
+    "type": "text",
+    "values": "",
+    "default": ""
+  },
+  {
+    "id": "email_password",
+    "label": "SMTP Server Port",
+    "type": "text",
+    "values": "",
+    "default": "",
+    "option": "hidden"
+  },
 
 ]

@@ -569,5 +569,38 @@ def Notify(id, type):
                 response = HTTP.Request(PUSHOVER_API_URL, values=data)
                 if response:
                     Log.Debug("Pushover notification sent for :" + id)
+    if Prefs['email_to']:
+        try:
+            if type == 'movie':
+                movie = Dict['movie'][id]
+                title_year = movie['title'] + " (" + movie['year'] + ")"
+                subject = "Plex Request Channel - New Movie Request"
+                body = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+            elif type== 'tv':
+                tv = Dict['tv'][id]
+                subject = "Plex Request Channel - New TV Show Request"
+                body = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+            else:
+                return
+            sendEmail(subject, body)
         except Exception as e:
-            Log.Debug("Pushover failed: " + e.message)
+            Log.Debug("Email failed: " + e.message)
+
+
+def sendEmail(subject, body):
+    from email import MIMEText
+    from email import MIMEMultipart
+    import smtplib
+
+    msg = MIMEMultipart()
+    msg['From'] = Prefs['email_from']
+    msg['To'] = Prefs['email_to']
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body,'plain'))
+    server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+    server.login(Prefs['email_username'], Prefs['email_password'])
+    text = msg.as_string()
+    server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
