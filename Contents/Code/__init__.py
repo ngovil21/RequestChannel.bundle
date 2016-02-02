@@ -183,7 +183,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
 
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
-    oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
+    oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
                                 thumb=R('search.png')))
     return oc
