@@ -34,6 +34,8 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 
+PLEX_USER_URL = "https://plex.tv/users/account"
+
 ########################################################
 #   Start Code
 ########################################################
@@ -73,7 +75,9 @@ def MainMenu(locked='locked', message=None):
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                title="View Requests"))  # Set View Requests to locked and ask for password
-    Log.Debug(str(Request.Headers))
+
+    Log.Debug("Username is:" + getUsername())
+
     return oc
 
 
@@ -644,3 +648,13 @@ def sendEmail(subject, body, type='html'):
     senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
     server.quit()
     return senders
+
+#Playing with fire here. Don't like using token, but only way to get username of client. Currently a hack getting Request Headers.
+def getUsername():
+    if 'X-Plex-Token' in Request.Headers:
+        #user_token = headers['X-Plex-Token']
+        account_info = XML.ObjectFromURL(PLEX_USER_URL)
+        title = account_info.xpath("/user/@username")
+        if title:
+            return title[0]
+    return ""
