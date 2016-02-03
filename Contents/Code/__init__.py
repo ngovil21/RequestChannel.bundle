@@ -651,9 +651,14 @@ def sendEmail(subject, body, type='html'):
 
 #Playing with fire here. Don't like using token, but only way to get username of client. Currently a hack getting Request Headers.
 def getUsername():
+    import urllib2
     if 'X-Plex-Token' in Request.Headers:
-        #user_token = headers['X-Plex-Token']
-        account_info = XML.ObjectFromURL(PLEX_USER_URL)
+        headers = Request.Headers
+        response = urllib2.urlopen(urllib2.Request(PLEX_USER_URL, headers=headers))
+        if response:
+            account_info = XML.ObjectFromString(response.read())
+        else:
+            return ""
         title = account_info.xpath("/user/@username")
         if title:
             return title[0]
