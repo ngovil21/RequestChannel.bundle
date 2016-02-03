@@ -662,7 +662,7 @@ def getUsername():
             string = String.StripDiacritics(string)
             if resp:
                 account_info = XML.ElementFromString(string)
-                title = account_info.xpath("/user/@titlee")
+                title = account_info.xpath("/user/@title")
                 if title:
                     return title[0]
         except:
