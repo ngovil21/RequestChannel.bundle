@@ -119,13 +119,13 @@ def SearchMovie(title, query, locked='unlocked'):
                 title_year = key['title'] + " (" + year + ")"
                 oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art,
                                        summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
-            else:
-                Log.Debug("No Results Found")
-                oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
-                                            prompt="Enter the name of the movie:"))
-                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-                oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
-                return oc
+        else:
+            Log.Debug("No Results Found")
+            oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
+                                        prompt="Enter the name of the movie:"))
+            oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
+            oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
+            return oc
     else:  # Use OMDB By Default
         request = JSON.ObjectFromURL(url=OMDB_API_URL + "?s=" + query + "&r=json")
         if 'Search' in request:
