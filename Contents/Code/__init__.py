@@ -260,7 +260,7 @@ def SearchTV(query, locked='unlocked'):
 
 
 @route(PREFIX + '/confirmtvrequest')
-def ConfirmTVRequest(id, source='', title, year="", poster="", backdrop="", summary="", locked='unlocked'):
+def ConfirmTVRequest(id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if year:
         title_year = title + " " + "(" + year + ")"
     else:
@@ -465,7 +465,7 @@ def SendToSonarr(id, locked='unlocked'):
     else:
         sonarr_url = Prefs['sonarr_url']
     if not sonarr_url.endswith("/"):
-        couchpotato_url = sonarr_url + "/"
+        sonarr_url = sonarr_url + "/"
     title = Dict['tv'][id]['title']
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
@@ -484,7 +484,6 @@ def SendToSonarr(id, locked='unlocked'):
         if profile['name'] == Prefs['sonarr_profile']:
             profile_id = profile['id']
             break
-
     rootFolderPath = ""
     if Prefs['sonarr_path']:
         rootFolderPath = Prefs['sonarr_path']
