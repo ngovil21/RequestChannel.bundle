@@ -83,6 +83,49 @@
     "default": "none"
   },
   {
+    "id": "sickrage_url",
+    "label": "Sickrage URL",
+    "type": "text",
+    "default": "http://127.0.0.1:8081/"
+  },
+  {
+    "id": "sickrage_api",
+    "label": "Sickrage Api Key",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "sickrage_autorequest",
+    "label": "Automatically add request to SickRage?",
+    "type": "bool",
+    "default": false
+  },
+  {
+    "id": "sickrage_location",
+    "label": "Sickrage Download Location (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "sickrage_status",
+    "label": "Sickrage Initial Status of episodes",
+    "type": "enum",
+    "values": ["wanted","skipped","archived","ignored"],
+    "default": "wanted"
+  },
+  {
+    "id": "sickrage_initial",
+    "label": "Sickrage Initial Qualities (|)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "sickrage_archive",
+    "label": "Sickrage Archive Qualities (|)",
+    "type": "text",
+    "default": ""
+  },
+  {
     "id": "pushbullet_api",
     "label": "Pushbullet API",
     "type": "text",

@@ -306,8 +306,10 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
     else:
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source':source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
-        if Prefs['sonarr_autorequest']:
+        if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(id)
+        if Prefs['sickrage_autorequest'] and Prefs['sickrage_url'] and Prefs['sickrage_api']:
+            SendToSickrage(id)
         notifyRequest(id=id, type='tv')
         oc = ObjectContainer(header=TITLE, message="TV Show has been requested.")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
@@ -402,6 +404,8 @@ def ViewRequest(id, type, locked='unlocked'):
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
             oc.add(DirectoryObject(key=Callback(SendToSonarr, id=id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
+        if Prefs['sickrage_url'] and Prefs['sickrage_api']:
+            oc.add(DirectoryObject(key=Callback(SendToSickrage, id=id, locked=locked), title="Send to Sickrage", thumb=R('sickrage.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -469,10 +473,13 @@ def SendToCouchpotato(id, locked='unlocked'):
                     values['category_id'] = key['_id']
         else:
             Log.Debug("Unable to open up Couchpotato Category List")
-    json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
-    if 'success' in json and json['success']:
-        oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
-    else:
+    try:
+        json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
+        if 'success' in json and json['success']:
+            oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
+        else:
+            oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
+    except:
         oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
     key = Dict['movie'][id]
     title_year = key['title'] + " (" + key['year'] + ")"
@@ -483,7 +490,6 @@ def SendToCouchpotato(id, locked='unlocked'):
 
 @route(PREFIX + '/sendtosonarr')
 def SendToSonarr(id, locked='unlocked'):
-    oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -551,6 +557,7 @@ def SendToSonarr(id, locked='unlocked'):
     values = JSON.StringFromObject(options)
     try:
         HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
+        oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
     except:
         oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
 
@@ -559,6 +566,38 @@ def SendToSonarr(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
+@route(PREFIX + "/sendtosickrage")
+def SendToSickrage(id, locked='unlocked'):
+    if not Prefs['sickrage_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sickrage_url']
+    else:
+        sonarr_url = Prefs['sickrage_url']
+    if not sonarr_url.endswith("/"):
+        sickrage_url = sickrage_url + "/"
+    title = Dict['tv'][id]['title']
+    data = {'tvdbid': id}
+    if Prefs['sickrage_location']:
+        data['location'] = Prefs['sickrage_location']
+    if Prefs['sickrage_status']:
+        data['status'] = Prefs['sickrage_status']
+    if Prefs['sickrage_initial']:
+        data['initial'] = Prefs['sickrage_initial']
+    if Prefs['sickrage_archive']:
+        data['archive'] = Prefs['sickrage_archive']
+
+    try:
+        resp = JSON.ObjectFromURL(Prefs['sickrage_url'] + "api/" + Prefs['sickrage_api'] + "/", values=data)
+        if 'success' in resp and resp['success']:
+            oc = ObjectContainer(header=TITLE, message="Show added to SickRage")
+        else:
+            oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
+    except:
+        oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
+
+    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    return oc
 
 # Notify user of requests
 def notifyRequest(id, type):
