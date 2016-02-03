@@ -671,6 +671,6 @@ def getUsername():
                 title = account_info.xpath("/user/@title")
                 if title:
                     return title[0]
-        except:
-            pass
+        except Exception as e:
+            Log.Debug(e.message)
     return ""
