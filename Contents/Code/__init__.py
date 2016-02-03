@@ -117,7 +117,7 @@ def SearchMovie(title, query, locked='unlocked'):
                 else:
                     art = None
                 title_year = key['title'] + " (" + year + ")"
-                oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], title=key['title'], year=year, poster=thumb, backdrop=art,
+                oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
                                        summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
         else:
             Log.Debug("No Results Found")
@@ -136,7 +136,7 @@ def SearchMovie(title, query, locked='unlocked'):
                 if 'type' in key and not (key['type'] == "movie"):  # only show movie results
                     continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
-                oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], title=key['Title'], year=key['Year'], poster=key['Poster'],
+                oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'], poster=key['Poster'],
                                                  locked=locked), rating_key=key['imdbID'], title=title_year, thumb=key['Poster']))
         else:
             Log.Debug("No Results Found")
@@ -152,14 +152,14 @@ def SearchMovie(title, query, locked='unlocked'):
 
 
 @route(PREFIX + '/confirmmovierequest')
-def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
+def ConfirmMovieRequest(id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " " + "(" + year + ")"
     oc = ObjectContainer(title1="Confirm Movie Request", title2="Are you sure you would like to request the movie " + title_year + "?")
 
     if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
-            key=Callback(AddMovieRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+            key=Callback(AddMovieRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
             title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
@@ -168,7 +168,7 @@ def ConfirmMovieRequest(id, title, year="", poster="", backdrop="", summary="", 
 
 @indirect
 @route(PREFIX + '/addmovierequest')
-def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
+def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if id in Dict['movie']:
         Log.Debug("Movie is already requested")
         oc = ObjectContainer(header=TITLE, message="Movie has already been requested.")
@@ -176,7 +176,7 @@ def AddMovieRequest(id, title, year="", poster="", backdrop="", summary="", lock
         return MainMenu(locked=locked, message="Movie has already been requested")
     else:
         title_year = title + " (" + year + ")"
-        Dict['movie'][id] = {'type': 'movie', 'id': id, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
+        Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
                              'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
@@ -244,7 +244,7 @@ def SearchTV(query, locked='unlocked'):
         else:
             title_year = title
 
-        oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, title=title, year=year, poster=poster, summary=summary, locked=locked),
+        oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
                             rating_key=id, title=title_year, summary=summary, thumb=poster))
     oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                 thumb=R('search.png')))
@@ -253,7 +253,7 @@ def SearchTV(query, locked='unlocked'):
 
 
 @route(PREFIX + '/confirmtvrequest')
-def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
+def ConfirmTVRequest(id, source='', title, year="", poster="", backdrop="", summary="", locked='unlocked'):
     if year:
         title_year = title + " " + "(" + year + ")"
     else:
@@ -262,7 +262,7 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
 
     if Client.Platform == ClientPlatform.Android:            #If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
-    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
                         title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
@@ -271,12 +271,12 @@ def ConfirmTVRequest(id, title, year="", poster="", backdrop="", summary="", loc
 
 @indirect
 @route(PREFIX + '/addtvrequest')
-def AddTVRequest(id, title, year="", poster="", backdrop="", summary="", locked='unlocked'):
+def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if id in Dict['tv']:
         Log.Debug("TV Show is already requested")
         return MainMenu(locked=locked, message="TV Show has already been requested")
     else:
-        Dict['tv'][id] = {'type': 'tv', 'id': id, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        Dict['tv'][id] = {'type': 'tv', 'id': id, 'source':source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         if Prefs['sonarr_autorequest']:
             SendToSonarr(id)
