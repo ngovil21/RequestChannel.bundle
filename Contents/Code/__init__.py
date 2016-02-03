@@ -661,6 +661,11 @@ def getUsername():
             resp = urllib2.urlopen(req)
             string = resp.read()
             string = String.StripDiacritics(string)
+            req = urllib2.Request(url="https://plex.tv/api/home/users", headers=headers)
+            resp = urllib2.urlopen(req)
+            string2 = resp.read()
+            string2 = String.StripDiacritics(string2)
+            Log.Debug(string2)
             if resp:
                 account_info = XML.ElementFromString(string)
                 title = account_info.xpath("/user/@title")
