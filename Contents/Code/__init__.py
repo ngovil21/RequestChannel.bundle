@@ -79,11 +79,6 @@ def MainMenu(locked='locked', message=None):
         oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                title="View Requests"))  # Set View Requests to locked and ask for password
 
-    #Log.Debug("Username is: " + getUsername())
-    #Log.Debug(str(Request.Headers))
-    Log.Debug(ClientPlatform.Roku)
-    Log.Debug(ClientPlatform.iOS)
-
     return oc
 
 
