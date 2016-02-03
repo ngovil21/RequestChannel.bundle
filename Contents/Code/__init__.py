@@ -76,7 +76,7 @@ def MainMenu(locked='locked', message=None):
         oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                title="View Requests"))  # Set View Requests to locked and ask for password
 
-    Log.Debug("Username is:" + getUsername())
+    Log.Debug("Username is: " + getUsername())
 
     return oc
 
@@ -659,11 +659,8 @@ def getUsername():
         string = response.read()
         string = String.StripDiacritics(string)
         if response:
-            Log.Debug(string)
             account_info = XML.ElementFromString(string)
-        else:
-            return ""
-        title = account_info.xpath("/user/@username")
-        if title:
-            return title[0]
+            title = account_info.xpath("/user/@username")
+            if title:
+                return title[0]
     return ""
