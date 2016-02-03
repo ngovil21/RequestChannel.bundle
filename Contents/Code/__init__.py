@@ -653,11 +653,14 @@ def sendEmail(subject, body, type='html'):
 def getUsername():
     import urllib2
     if 'X-Plex-Token' in Request.Headers:
-        headers = Request.Headers
+        headers = {}
+        headers['X-Plex-Token'] = Request.Headers['X-Plex-Token']s
         response = urllib2.urlopen(urllib2.Request(PLEX_USER_URL, headers=headers))
+        string = response.read()
+        string = String.StripDiacritics(string)
         if response:
-            #Log.Debug(response.read())
-            account_info = XML.ElementFromString(response.read())
+            Log.Debug(string)
+            account_info = XML.ElementFromString(string)
         else:
             return ""
         title = account_info.xpath("/user/@username")
