@@ -655,12 +655,16 @@ def getUsername():
     if 'X-Plex-Token' in Request.Headers:
         headers = {}
         headers['X-Plex-Token'] = Request.Headers['X-Plex-Token']
-        response = urllib2.urlopen(urllib2.Request(PLEX_USER_URL, headers=headers))
-        string = response.read()
-        string = String.StripDiacritics(string)
-        if response:
-            account_info = XML.ElementFromString(string)
-            title = account_info.xpath("/user/@username")
-            if title:
-                return title[0]
+        try:
+            req = urllib2.Request(url=PLEX_USER_URL, headers=headers)
+            resp = urllib2.urlopen(req)
+            string = resp.read()
+            string = String.StripDiacritics(string)
+            if resp:
+                account_info = XML.ElementFromString(string)
+                title = account_info.xpath("/user/@titlee")
+                if title:
+                    return title[0]
+        except:
+            pass
     return ""
