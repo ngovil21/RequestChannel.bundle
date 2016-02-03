@@ -654,7 +654,7 @@ def getUsername():
     import urllib2
     if 'X-Plex-Token' in Request.Headers:
         headers = {}
-        headers['X-Plex-Token'] = Request.Headers['X-Plex-Token']s
+        headers['X-Plex-Token'] = Request.Headers['X-Plex-Token']
         response = urllib2.urlopen(urllib2.Request(PLEX_USER_URL, headers=headers))
         string = response.read()
         string = String.StripDiacritics(string)
