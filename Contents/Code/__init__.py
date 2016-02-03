@@ -656,8 +656,8 @@ def getUsername():
         headers = Request.Headers
         response = urllib2.urlopen(urllib2.Request(PLEX_USER_URL, headers=headers))
         if response:
-            Log.Debug(response.read())
-            account_info = XML.ObjectFromString(response.read())
+            #Log.Debug(response.read())
+            account_info = XML.ElementFromString(response.read())
         else:
             return ""
         title = account_info.xpath("/user/@username")
