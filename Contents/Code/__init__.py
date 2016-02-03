@@ -260,7 +260,7 @@ def SearchTV(query, locked='unlocked'):
 
 
 @route(PREFIX + '/confirmtvrequest')
-def ConfirmTVRequest(id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
+def ConfirmTVRequest(id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
     if year:
         title_year = title + " " + "(" + year + ")"
     else:
