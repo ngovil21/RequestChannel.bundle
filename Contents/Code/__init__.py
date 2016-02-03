@@ -136,8 +136,12 @@ def SearchMovie(title, query, locked='unlocked'):
                 if 'type' in key and not (key['type'] == "movie"):  # only show movie results
                     continue
                 title_year = key['Title'] + " (" + key['Year'] + ")"
+                if key['Poster']:
+                    thumb = key['Poster']
+                else:
+                    thumb = R('no-poster.jpg')
                 oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'], poster=key['Poster'],
-                                                 locked=locked), rating_key=key['imdbID'], title=title_year, thumb=key['Poster']))
+                                                 locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
@@ -243,9 +247,12 @@ def SearchTV(query, locked='unlocked'):
             title_year = title + " (" + year + ")"
         else:
             title_year = title
-
+        if poster:
+            thumb = poster
+        else:
+            thumb = R('no-poster.jpg')
         oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
-                            rating_key=id, title=title_year, summary=summary, thumb=poster))
+                            rating_key=id, title=title_year, summary=summary, thumb=thumb))
     oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                 thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
@@ -307,14 +314,22 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['movie']:
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
-            oc.add(TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=d['poster'],
+            if d['poster']:
+                thumb = d['poster']
+            else:
+                thumb = R('no-poster.jpg')
+            oc.add(TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
                                 summary=d['summary'], art=d['backdrop']))
         if Dict['tv']:
             for id in Dict['tv']:
                 d = Dict['tv'][id]
                 title_year = d['title'] + " (" + d['year'] + ")"
+                if d['poster']:
+                    thumb = d['poster']
+                else:
+                    thumb = R('no-poster.jpg')
                 oc.add(
-                    TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=d['poster'],
+                    TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
                                  summary=d['summary'], art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1:
