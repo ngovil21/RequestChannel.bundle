@@ -34,6 +34,9 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 
+DUMB_KEYBOARD_CLIENTS = ["Plex for iOS", "Plex Media Player", ]
+
+
 PLEX_USER_URL = "https://plex.tv/users/account"
 
 ########################################################
@@ -78,6 +81,8 @@ def MainMenu(locked='locked', message=None):
 
     #Log.Debug("Username is: " + getUsername())
     #Log.Debug(str(Request.Headers))
+    Log.Debug(ClientPlatform.Roku)
+    Log.Debug(ClientPlatform.iOS)
 
     return oc
 
