@@ -34,7 +34,7 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 
-DUMB_KEYBOARD_CLIENTS = ["Plex for iOS", "Plex Media Player", ]
+DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku']
 
 
 PLEX_USER_URL = "https://plex.tv/users/account"
@@ -90,13 +90,16 @@ def MainMenu(locked='locked', message=None):
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:",
+    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        DumbKeyboard(PREFIX, oc,SearchMovie,title,R('search.png'),locked=locked)
+    else:
+        oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title=title, prompt="Enter the name of the movie:",
                                 thumb=R('search.png')))
     return oc
 
 
 @route(PREFIX + '/searchmovie')
-def SearchMovie(title, query, locked='unlocked'):
+def SearchMovie(title="Search Results", query="", locked='unlocked'):
     oc = ObjectContainer(title1=title, content=ContainerContent.Movies, view_group="Details")
     query = String.Quote(query, usePlus=True)
     if Prefs['movie_db'] == "TheMovieDatabase":
@@ -154,7 +157,10 @@ def SearchMovie(title, query, locked='unlocked'):
                                         prompt="Enter the name of the movie:"))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
-    oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
+    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, title="Search Again", thumb=R('search.png'), locked=locked)
+    else:
+        oc.add(InputDirectoryObject(key=Callback(SearchMovie, title="Search Results", locked=locked), title="Search Again",
                                 prompt="Enter the name of the movie:", thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
@@ -199,7 +205,10 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
-    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
+    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, title="Request a TV Show", thumb=R('search.png'), locked=locked)
+    else:
+        oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
                                 thumb=R('search.png')))
     return oc
 
@@ -258,7 +267,10 @@ def SearchTV(query, locked='unlocked'):
             thumb = R('no-poster.jpg')
         oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
                             rating_key=id, title=title_year, summary=summary, thumb=thumb))
-    oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
+    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, title="Search Again", thumb=R('search.png'), locked=locked)
+    else:
+        oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                 thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
@@ -345,7 +357,10 @@ def ViewRequests(query="", locked='unlocked', message=None):
 @route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
+    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, title="Enter password:", locked=locked)
+    else:
+        oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
 
 
