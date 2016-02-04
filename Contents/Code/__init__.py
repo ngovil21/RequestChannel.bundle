@@ -660,8 +660,6 @@ def SendToSickrage(id, locked='unlocked'):
 # Notify user of requests
 def notifyRequest(id, type, title="", message=""):
     if Prefs['pushbullet_api']:
-        # import base64
-        # encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
@@ -808,9 +806,9 @@ def checkAdmin():
     import urllib2
     try:
         token = Request.Headers.get('X-Plex-Token', "")
-        req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={"X-Plex-Token": token})
+        req = HTTP.Request("http://127.0.0.1:32400/myplex/account")
         resp = urllib2.urlopen(req)
-        if resp.read():
+        if req.content:
             return True
     except Exception as e:
         Log.Debug(e.message)
