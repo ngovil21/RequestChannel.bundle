@@ -14,6 +14,18 @@
     "default": "",
     "secure": true
   },
+   {
+    "id": "register",
+    "label": "Register User Clients?",
+    "type": "bool",
+    "default": false
+  },
+  {
+    "id": "weekly_limit",
+    "label": "Weekly Request Limit (unlimited by default)",
+    "type": "text",
+    "default": ""
+  },
   {
     "id": "couchpotato_url",
     "label": "CouchPotato URL",

@@ -33,11 +33,10 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
-
-DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku']
-
+DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo']
 
 PLEX_USER_URL = "https://plex.tv/users/account"
+
 
 ########################################################
 #   Start Code
@@ -56,11 +55,13 @@ def Start():
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
 
-    if not 'tv' in Dict or not 'movie' in Dict:
-        Dict.Reset()
+    if not 'tv' in Dict:
         Dict['tv'] = {}
+    if not 'movie' in Dict:
         Dict['movie'] = {}
-        Dict.Save()
+    if not 'register' in Dict:
+        Dict['register'] = {}
+    Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
 
 
 ###################################################################################################
@@ -70,7 +71,16 @@ def Start():
 def MainMenu(locked='locked', message=None):
     Log.Debug("Client: " + str(Client.Platform))
     oc = ObjectContainer(replace_parent=True, message=message)
+    is_admin = checkAdmin()
+    token = Request.Headers['X-Plex-Token']
+    if not is_admin and Prefs['register'] and (token not in Prefs['register'] or not Prefs['register'][token]['nickname']):
+        return Register(locked=locked)
+    if not token in Dict['register']:
+        Dict['register'][token] = {'nickname': "", 'requests': 0}
 
+    register_date = Datetime.FromTimestamp(Dict['register_reset'])
+    if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
+        resetRegister()
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
     if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
@@ -78,18 +88,47 @@ def MainMenu(locked='locked', message=None):
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                title="View Requests"))  # Set View Requests to locked and ask for password
-
     return oc
+
+
+def resetRegister():
+    for key in Dict['register']:
+        Dict['register'][key]['requests'] = 0
+    Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+
+
+@route(PREFIX + '/register')
+def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
+    oc = ObjectContainer(header=TITLE, message=message)
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
+    else:
+        oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
+                                    prompt="Enter your name or nickname"))
+    return oc
+
+
+@route(PREFIX + '/registername')
+def RegisterName(query="", locked='locked'):
+    if not query:
+        return Register(message="You must enter a name. Try again.", locked=locked)
+    token = Request.Headers['X-Plex-Token']
+    Dict['register'][token] = {'nickname': query, 'requests': 0}
+    return MainMenu(message="Your device has been registered. Thank you.", locked=locked)
 
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked='unlocked'):
+    if Prefs['weekly_limit'] and Prefs['weekly_limit'] > 0 and not checkAdmin():
+        token = Request.Headers['X-Plex-Token']
+        if Dict['register'][token]['requests'] >= Prefs['weekly_limit']:
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + str(Prefs['weekly_limit']) + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
-        DumbKeyboard(prefix=PREFIX, oc=oc,callback=SearchMovie,dktitle=title,dkthumb=R('search.png'),locked=locked)
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
     else:
-        oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:",
-                                thumb=R('search.png')))
+        oc.add(
+            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
     return oc
 
 
@@ -120,15 +159,16 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 else:
                     art = None
                 title_year = key['title'] + " (" + year + ")"
-                oc.add(DirectoryObject(key=Callback(ConfirmMovieRequest, id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
-                                       summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+                oc.add(DirectoryObject(
+                    key=Callback(ConfirmMovieRequest, id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
+                                 summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
         else:
             Log.Debug("No Results Found")
-            if Client.Product in DUMB_KEYBOARD_CLIENTS:
+            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
-                                        prompt="Enter the name of the movie:"))
+                                            prompt="Enter the name of the movie:"))
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
@@ -146,23 +186,24 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     thumb = key['Poster']
                 else:
                     thumb = R('no-poster.jpg')
-                oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'], poster=key['Poster'],
-                                                 locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
+                oc.add(TVShowObject(
+                    key=Callback(ConfirmMovieRequest, id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'], poster=key['Poster'],
+                                 locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-            if Client.Product in DUMB_KEYBOARD_CLIENTS:
+            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
-                                        prompt="Enter the name of the movie:"))
+                                            prompt="Enter the name of the movie:"))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
-    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
-                                prompt="Enter the name of the movie:", thumb=R('search.png')))
+                                    prompt="Enter the name of the movie:", thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
@@ -175,8 +216,8 @@ def ConfirmMovieRequest(id, title, source='', year="", poster="", backdrop="", s
     if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
-            key=Callback(AddMovieRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
-            title="Yes", thumb=R('check.png')))
+        key=Callback(AddMovieRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+        title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
@@ -195,6 +236,8 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
                              'backdrop': backdrop, 'summary': summary}
         Dict.Save()
+        token = Request.Headers['X-Plex-Token']
+        Prefs['register'][token]['requests'] = Prefs['register'][token]['requests'] + 1
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
         notifyRequest(id=id, type='movie')
@@ -205,12 +248,16 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
 
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
+    if Prefs['weekly_limit'] and Prefs['weekly_limit'] > 0:
+        token = Request.Headers['X-Plex-Token']
+        if Dict['register'][token]['requests'] >= Prefs['weekly_limit'] and not checkAdmin():
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + str(Prefs['weekly_limit']) + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
-                                thumb=R('search.png')))
+                                    thumb=R('search.png')))
     return oc
 
 
@@ -222,11 +269,11 @@ def SearchTV(query, locked='unlocked'):
     series = xml.xpath("//Series")
     if len(series) == 0:
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
-        if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
-                                    thumb=R('search.png')))
+                                        thumb=R('search.png')))
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     count = 0
@@ -269,13 +316,14 @@ def SearchTV(query, locked='unlocked'):
             thumb = poster
         else:
             thumb = R('no-poster.jpg')
-        oc.add(TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
-                            rating_key=id, title=title_year, summary=summary, thumb=thumb))
-    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        oc.add(
+            TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
+                         rating_key=id, title=title_year, summary=summary, thumb=thumb))
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
-                                thumb=R('search.png')))
+                                    thumb=R('search.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
@@ -288,10 +336,11 @@ def ConfirmTVRequest(id, title, source="", year="", poster="", backdrop="", summ
         title_year = title
     oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?")
 
-    if Client.Platform == ClientPlatform.Android:            #If an android, add an empty first item because it gets truncated for some reason
+    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
-    oc.add(DirectoryObject(key=Callback(AddTVRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
-                        title="Yes", thumb=R('check.png')))
+    oc.add(DirectoryObject(
+        key=Callback(AddTVRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
+        title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
@@ -304,8 +353,11 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
         Log.Debug("TV Show is already requested")
         return MainMenu(locked=locked, message="TV Show has already been requested")
     else:
-        Dict['tv'][id] = {'type': 'tv', 'id': id, 'source':source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop, 'summary': summary}
+        token = Request.Headers['X-Plex-Token']
+        Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
+                          'summary': summary, 'user': Dict['register'][token]['nickname']}
         Dict.Save()
+        Dict['register'][token]['requests'] += 1
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(id)
         if Prefs['sickrage_autorequest'] and Prefs['sickrage_url'] and Prefs['sickrage_api']:
@@ -363,7 +415,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
 @route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
@@ -566,14 +618,15 @@ def SendToSonarr(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
+
 @route(PREFIX + "/sendtosickrage")
 def SendToSickrage(id, locked='unlocked'):
     if not Prefs['sickrage_url'].startswith("http"):
-        sonarr_url = "http://" + Prefs['sickrage_url']
+        sickrage_url = "http://" + Prefs['sickrage_url']
     else:
-        sonarr_url = Prefs['sickrage_url']
-    if not sonarr_url.endswith("/"):
-        sickrage_url = sickrage_url + "/"
+        sickrage_url = Prefs['sickrage_url']
+    if not sickrage_url.endswith("/"):
+        sickrage_url += "/"
     title = Dict['tv'][id]['title']
     data = {'tvdbid': id}
     if Prefs['sickrage_location']:
@@ -586,7 +639,7 @@ def SendToSickrage(id, locked='unlocked'):
         data['archive'] = Prefs['sickrage_archive']
 
     try:
-        resp = JSON.ObjectFromURL(Prefs['sickrage_url'] + "api/" + Prefs['sickrage_api'] + "/", values=data)
+        resp = JSON.ObjectFromURL(sickrage_url + "api/" + Prefs['sickrage_api'] + "/", values=data)
         if 'success' in resp and resp['success']:
             oc = ObjectContainer(header=TITLE, message="Show added to SickRage")
         else:
@@ -599,39 +652,49 @@ def SendToSickrage(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
+
 # Notify user of requests
 def notifyRequest(id, type):
     if Prefs['pushbullet_api']:
         # import base64
         # encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
         try:
+            user = "A user"
+            token = Request.Headers['X-Plex-Token']
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-                body = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+
+                body = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
             elif type == 'tv':
                 tv = Dict['tv'][id]
                 title = "Plex Request Channel - New TV Show Request"
-                body = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                body = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
             else:
                 return
-            response = sendPushBullet(title,body)
+            response = sendPushBullet(title, body)
             if response:
                 Log.Debug("Pushbullet notification sent for :" + id)
         except Exception as e:
             Log.Debug("Pushbullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
+            user = "A user"
+            token = Request.Headers['X-Plex-Token']
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-                message = "A user has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
             elif type == 'tv':
                 tv = Dict['tv'][id]
                 title = "Plex Request Channel - New TV Show Request"
-                message = "A user has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushover(title, message)
@@ -641,6 +704,10 @@ def notifyRequest(id, type):
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['email_to']:
         try:
+            user = "A user"
+            token = Request.Headers['X-Plex-Token']
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
                 title = movie['title'] + " (" + movie['year'] + ")"
@@ -661,14 +728,16 @@ def notifyRequest(id, type):
                     summary = tv['summary'] + "<br>\n"
             else:
                 return
-            body = "A user has made a new request! <br><br>\n" + \
+            body = user + " has made a new request! <br><br>\n" + \
                    "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
-                   "(" +id_type + " id: " + id + ") <br>\n" + \
-                   summary + " <br>\n"\
-                   "<Poster:><img src= '" + poster + "' width='300'>"
+                   "(" + id_type + " id: " + id + ") <br>\n" + \
+                   summary + " <br>\n" \
+                             "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, body, 'html')
+            Log.Debug("Email notification sent for: " + id)
         except Exception as e:
             Log.Debug("Email failed: " + e.message)
+
 
 def Notify(title, body):
     if Prefs['email_to']:
@@ -679,16 +748,17 @@ def Notify(title, body):
             Log.Debug("Email failed: " + e.message)
     if Prefs['pushbullet_api']:
         try:
-            if sendPushBullet(title,body):
+            if sendPushBullet(title, body):
                 Log.Debug("Pushbullet notification sent")
         except Exception as e:
             Log.Debug("PushBullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
-            if sendPushover(title,body):
+            if sendPushover(title, body):
                 Log.Debug("Pushover notification sent")
         except Exception as e:
             Log.Debug("Pushover failed: " + e.message)
+
 
 def sendPushBullet(title, body):
     api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
@@ -700,6 +770,7 @@ def sendPushBullet(title, body):
     values = JSON.StringFromObject(data)
     return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
 
+
 def sendPushover(title, message):
     data = {'token': PUSHOVER_API_KEY}
     data['user'] = Prefs['pushover_user']
@@ -707,6 +778,8 @@ def sendPushover(title, message):
     data['message'] = message
     return HTTP.Request(PUSHOVER_API_URL, values=data)
 
+
+# noinspection PyUnresolvedReferences
 def sendEmail(subject, body, type='html'):
     from email.MIMEText import MIMEText
     from email.MIMEMultipart import MIMEMultipart
@@ -716,7 +789,7 @@ def sendEmail(subject, body, type='html'):
     msg['From'] = Prefs['email_from']
     msg['To'] = Prefs['email_to']
     msg['Subject'] = subject
-    msg.attach(MIMEText(body,type))
+    msg.attach(MIMEText(body, type))
     server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
     server.ehlo()
     server.starttls()
@@ -727,27 +800,12 @@ def sendEmail(subject, body, type='html'):
     server.quit()
     return senders
 
-#Playing with fire here. Don't like using token, but only way to get username of client. Currently a hack getting Request Headers.
-def getUsername():
-    import urllib2
-    if 'X-Plex-Token' in Request.Headers:
-        headers = {}
-        headers['X-Plex-Token'] = Request.Headers['X-Plex-Token']
-        try:
-            req = urllib2.Request(url=PLEX_USER_URL, headers=headers)
-            resp = urllib2.urlopen(req)
-            string = resp.read()
-            string = String.StripDiacritics(string)
-            req = urllib2.Request(url="https://plex.tv/api/home/users", headers=headers)
-            resp = urllib2.urlopen(req)
-            string2 = resp.read()
-            string2 = String.StripDiacritics(string2)
-            Log.Debug(string2)
-            if resp:
-                account_info = XML.ElementFromString(string)
-                title = account_info.xpath("/user/@title")
-                if title:
-                    return title[0]
-        except Exception as e:
-            Log.Debug(e.message)
-    return ""
+
+def checkAdmin():
+    try:
+        req = HTTP.Request("http://127.0.0.1/myplex/account", headers=Request.Headers)
+        if req:
+            return True
+    except:
+        pass
+    return False
