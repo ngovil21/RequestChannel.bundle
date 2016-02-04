@@ -72,7 +72,7 @@ def MainMenu(locked='locked', message=None):
     oc = ObjectContainer(replace_parent=True, message=message)
     is_admin = checkAdmin()
     if is_admin:
-        print("This user is an admin")
+        Log.Debug("This user is an admin")
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
