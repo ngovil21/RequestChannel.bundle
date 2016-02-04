@@ -72,6 +72,8 @@ def MainMenu(locked='locked', message=None):
     Log.Debug("Product: " + str(Client.Product))
     oc = ObjectContainer(replace_parent=True, message=message)
     is_admin = checkAdmin()
+    if is_admin:
+        Log.Debug("User is Admin")
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
@@ -804,12 +806,10 @@ def sendEmail(subject, body, type='html'):
 
 
 def checkAdmin():
-    import urllib2
     try:
-        token = Request.Headers.get('X-Plex-Token', "")
         req = HTTP.Request("http://127.0.0.1:32400/myplex/account")
-        #resp = urllib2.urlopen(req)
         if req.content:
+            Log.Debug(req.content)
             return True
     except Exception as e:
         Log.Debug(e.message)
