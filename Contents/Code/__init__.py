@@ -68,7 +68,8 @@ def Start():
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/mainmenu')
 def MainMenu(locked='locked', message=None):
-    Log.Debug("Client: " + str(Client.Platform))
+    Log.Debug("Platform: " + str(Client.Platform))
+    Log.Debug("Product: " + str(Client.Product))
     oc = ObjectContainer(replace_parent=True, message=message)
     is_admin = checkAdmin()
     token = Request.Headers['X-Plex-Token']
