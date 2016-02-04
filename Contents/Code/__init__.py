@@ -803,9 +803,12 @@ def sendEmail(subject, body, type='html'):
 
 
 def checkAdmin():
+    import urllib2
     try:
-        req = HTTP.Request("http://127.0.0.1:32400/myplex/account", headers=Request.Headers)
-        if req:
+        token = Request.Headers.get('X-Plex-Token', "")
+        req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={"X-Plex-Token": token})
+        resp = urllib2.urlopen(req)
+        if resp.read():
             return True
     except Exception as e:
         Log.Debug(e.message)
