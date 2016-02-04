@@ -102,7 +102,7 @@ def resetRegister():
 @route(PREFIX + '/register')
 def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
     oc = ObjectContainer(header=TITLE, message=message)
-    if Client.Product == "Plex Web"
+    if Client.Product == "Plex Web":
         oc.message += " Enter your name in the searchbox and press enter."
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
