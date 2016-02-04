@@ -71,8 +71,6 @@ def MainMenu(locked='locked', message=None):
     Log.Debug("Client: " + str(Client.Platform))
     oc = ObjectContainer(replace_parent=True, message=message)
     is_admin = checkAdmin()
-    if is_admin:
-        Log.Debug("This user is an admin")
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
@@ -83,11 +81,12 @@ def MainMenu(locked='locked', message=None):
         resetRegister()
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
-    if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
-        oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
-    else:
-        oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
-                               title="View Requests"))  # Set View Requests to locked and ask for password
+    if not Prefs['viewrequests_admin'] or is_admin:
+        if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
+            oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
+        else:
+            oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
+                                   title="View Requests"))  # Set View Requests to locked and ask for password
     return oc
 
 
@@ -100,7 +99,7 @@ def resetRegister():
 @route(PREFIX + '/register')
 def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
     if Client.Product == "Plex Web":
-        message += " Enter your name in the searchbox and press enter."
+        message += "\nEnter your name in the searchbox and press enter."
     oc = ObjectContainer(header=TITLE, message=message)
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)

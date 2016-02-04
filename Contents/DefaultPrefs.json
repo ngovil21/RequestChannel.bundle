@@ -7,6 +7,12 @@
     "default": "OpenMovieDatabase"
   },
   {
+    "id": "viewrequests_admin",
+    "label": "Show Requests Page to Admin only?",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "password",
     "label": "View Requests Password",
     "type": "text",
@@ -14,7 +20,7 @@
     "default": "",
     "secure": true
   },
-   {
+  {
     "id": "register",
     "label": "Register User Clients?",
     "type": "bool",
