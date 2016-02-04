@@ -81,7 +81,7 @@ def MainMenu(locked='locked', message=None):
         resetRegister()
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
-    if not Prefs['viewrequests_admin'] or is_admin:
+    if Prefs['usersviewrequests'] or is_admin:
         if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
         else:

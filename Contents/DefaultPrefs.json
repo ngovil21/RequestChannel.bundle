@@ -7,8 +7,8 @@
     "default": "OpenMovieDatabase"
   },
   {
-    "id": "viewrequests_admin",
-    "label": "Show Requests Page to Admin only?",
+    "id": "usersviewrequests",
+    "label": "Allow users to see requests page?",
     "type": "bool",
     "default": false
   },
