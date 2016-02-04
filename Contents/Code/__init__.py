@@ -803,7 +803,7 @@ def sendEmail(subject, body, type='html'):
 
 def checkAdmin():
     try:
-        req = HTTP.Request("http://127.0.0.1/myplex/account", headers=Request.Headers)
+        req = HTTP.Request("http://127.0.0.1:32400/myplex/account", headers=Request.Headers)
         if req:
             return True
     except:
