@@ -807,7 +807,8 @@ def sendEmail(subject, body, type='html'):
 
 def checkAdmin():
     try:
-        req = HTTP.Request("http://127.0.0.1:32400/myplex/account")
+        token = Request.Headers['X-Plex-Token']
+        req = HTTP.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': token})
         if req.content:
             Log.Debug(req.content)
             return True
