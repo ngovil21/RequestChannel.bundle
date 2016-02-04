@@ -36,7 +36,6 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo']
 
 
-
 ########################################################
 #   Start Code
 ########################################################
@@ -76,9 +75,8 @@ def MainMenu(locked='locked', message=None):
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
-    if not token in Dict['register']:
+    if token not in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
-
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
@@ -109,6 +107,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
                                     prompt="Enter your name or nickname"))
     return oc
+
 
 @indirect
 @route(PREFIX + '/registername')
@@ -360,7 +359,7 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
                           'summary': summary, 'user': Dict['register'][token]['nickname']}
         Dict.Save()
-        Dict['register'][token]['requests']  =  Dict['register'][token]['requests'] + 1
+        Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(id)
         if Prefs['sickrage_autorequest'] and Prefs['sickrage_url'] and Prefs['sickrage_api']:
