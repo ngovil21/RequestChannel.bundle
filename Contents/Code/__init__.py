@@ -110,7 +110,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
                                     prompt="Enter your name or nickname"))
     return oc
 
-@indirect()
+@indirect
 @route(PREFIX + '/registername')
 def RegisterName(query="", locked='locked'):
     if not query:
