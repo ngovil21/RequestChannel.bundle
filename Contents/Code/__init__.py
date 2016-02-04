@@ -35,7 +35,6 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo']
 
-PLEX_USER_URL = "https://plex.tv/users/account"
 
 
 ########################################################
@@ -72,6 +71,8 @@ def MainMenu(locked='locked', message=None):
     Log.Debug("Client: " + str(Client.Platform))
     oc = ObjectContainer(replace_parent=True, message=message)
     is_admin = checkAdmin()
+    if is_admin:
+        print("This user is an admin")
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
