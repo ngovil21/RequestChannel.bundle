@@ -75,7 +75,6 @@ def MainMenu(locked='locked', message=None):
         Log.Debug("This user is an admin")
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
-        oc
         return Register(locked=locked)
     if not token in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
