@@ -802,6 +802,6 @@ def checkAdmin():
         resp = urllib2.urlopen(req)
         if resp.read():
             return True
-    except Exception as e:
-        Log.Debug(e.message)
+    except:
+        pass
     return False
