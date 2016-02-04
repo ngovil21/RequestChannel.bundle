@@ -78,7 +78,7 @@ def MainMenu(locked='locked', message=None):
     if token not in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
-    if (register_date + Datetime.Delta(minutes=1)) < Datetime.Now():
+    if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
     oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
     oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
