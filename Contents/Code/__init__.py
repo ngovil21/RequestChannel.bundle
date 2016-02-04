@@ -807,6 +807,6 @@ def checkAdmin():
         req = HTTP.Request("http://127.0.0.1:32400/myplex/account", headers=Request.Headers)
         if req:
             return True
-    except:
-        pass
+    except Exception as e:
+        Log.Debug(e.message)
     return False
