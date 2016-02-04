@@ -806,12 +806,13 @@ def sendEmail(subject, body, type='html'):
 
 
 def checkAdmin():
+    import urllib2
     try:
         token = Request.Headers['X-Plex-Token']
-        req = XML.ElementFromURL("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': token})
-        if req:
-            Log.Debug(XML.StringFromElement(req))
+        req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': token})
+        resp = urllib2.urlopen(req)
+        if resp.read():
             return True
     except Exception as e:
-        Log.Debug(e.message)
+        pass
     return False
