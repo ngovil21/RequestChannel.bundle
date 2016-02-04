@@ -74,7 +74,7 @@ def MainMenu(locked='locked', message=None):
     if is_admin:
         Log.Debug("This user is an admin")
     token = Request.Headers['X-Plex-Token']
-    if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
+    if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):s
         return Register(locked=locked)
     if not token in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
@@ -100,8 +100,9 @@ def resetRegister():
 
 @route(PREFIX + '/register')
 def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
+    if Client.Product == "Plex Web":
+        message += " Enter your name in the searchbox and press enter."
     oc = ObjectContainer(header=TITLE, message=message)
-    oc.message = oc.message + " Enter your name in the searchbox and press enter."
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
     else:
