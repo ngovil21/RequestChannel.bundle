@@ -60,6 +60,7 @@ def Start():
     if not 'register' in Dict:
         Dict['register'] = {}
     Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+    Dict.Save()
 
 
 ###################################################################################################
@@ -121,10 +122,10 @@ def RegisterName(query="", locked='locked'):
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title, locked='unlocked'):
-    if Prefs['weekly_limit'] and Prefs['weekly_limit'] > 0 and not checkAdmin():
+    if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
-        if Dict['register'][token]['requests'] >= Prefs['weekly_limit']:
-            return MainMenu(message="Sorry you have reached your weekly request limit of " + str(Prefs['weekly_limit']) + ".", locked=locked)
+        if Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
+            return MainMenu(message="Sorry you have reached your weekly request limit of " +Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
@@ -250,10 +251,10 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
 
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
-    if Prefs['weekly_limit'] and Prefs['weekly_limit'] > 0:
+    if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0):
         token = Request.Headers['X-Plex-Token']
-        if Dict['register'][token]['requests'] >= Prefs['weekly_limit'] and not checkAdmin():
-            return MainMenu(message="Sorry you have reached your weekly request limit of " + str(Prefs['weekly_limit']) + ".", locked=locked)
+        if Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']) and not checkAdmin():
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
