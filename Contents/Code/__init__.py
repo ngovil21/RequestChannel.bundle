@@ -808,7 +808,7 @@ def checkAdmin():
     try:
         token = Request.Headers.get('X-Plex-Token', "")
         req = HTTP.Request("http://127.0.0.1:32400/myplex/account")
-        resp = urllib2.urlopen(req)
+        #resp = urllib2.urlopen(req)
         if req.content:
             return True
     except Exception as e:
