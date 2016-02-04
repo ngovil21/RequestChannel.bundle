@@ -409,7 +409,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
                     TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
                                  summary=d['summary'], art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
-    if len(oc) > 1:
+    if len(oc) > 1 and checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
     return oc
 
@@ -450,7 +450,8 @@ def ViewRequest(id, type, locked='unlocked'):
     oc = ObjectContainer(title2=title_year)
     if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request",
+    if checkAdmin():
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request",
                            thumb=R('x-mark.png')))
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
@@ -537,7 +538,8 @@ def SendToCouchpotato(id, locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
     key = Dict['movie'][id]
     title_year = key['title'] + " (" + key['year'] + ")"
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='movie', title_year=title_year, locked=locked), title="Delete Request"))
+    if checkAdmin():
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='movie', title_year=title_year, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     return oc
 
@@ -614,8 +616,8 @@ def SendToSonarr(id, locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
     except:
         oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
-
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
+    if checkAdmin():
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
@@ -648,15 +650,15 @@ def SendToSickrage(id, locked='unlocked'):
             oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
     except:
         oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
-
-    oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
+    if checkAdmin():
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
 # Notify user of requests
-def notifyRequest(id, type):
+def notifyRequest(id, type, title="", message=""):
     if Prefs['pushbullet_api']:
         # import base64
         # encode = base64.encodestring('%s:%s' % (Prefs['pushbullet_api'], "")).replace('\n', '')
@@ -669,15 +671,14 @@ def notifyRequest(id, type):
                 movie = Dict['movie'][id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-
-                body = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + id + "\nPoster: " + movie['poster']
             elif type == 'tv':
                 tv = Dict['tv'][id]
                 title = "Plex Request Channel - New TV Show Request"
-                body = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + id + "\nPoster: " + tv['poster']
             else:
                 return
-            response = sendPushBullet(title, body)
+            response = sendPushBullet(title, message)
             if response:
                 Log.Debug("Pushbullet notification sent for :" + id)
         except Exception as e:
@@ -730,12 +731,12 @@ def notifyRequest(id, type):
                     summary = tv['summary'] + "<br>\n"
             else:
                 return
-            body = user + " has made a new request! <br><br>\n" + \
+            message = user + " has made a new request! <br><br>\n" + \
                    "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
                    "(" + id_type + " id: " + id + ") <br>\n" + \
                    summary + " <br>\n" \
                              "<Poster:><img src= '" + poster + "' width='300'>"
-            sendEmail(subject, body, 'html')
+            sendEmail(subject, message, 'html')
             Log.Debug("Email notification sent for: " + id)
         except Exception as e:
             Log.Debug("Email failed: " + e.message)
