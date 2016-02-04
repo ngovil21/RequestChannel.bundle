@@ -73,7 +73,7 @@ def MainMenu(locked='locked', message=None):
     oc = ObjectContainer(replace_parent=True, message=message)
     is_admin = checkAdmin()
     token = Request.Headers['X-Plex-Token']
-    if not is_admin and Prefs['register'] and (token not in Prefs['register'] or not Prefs['register'][token]['nickname']):
+    if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
     if not token in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
@@ -237,7 +237,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
                              'backdrop': backdrop, 'summary': summary}
         Dict.Save()
         token = Request.Headers['X-Plex-Token']
-        Prefs['register'][token]['requests'] = Prefs['register'][token]['requests'] + 1
+        Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
         notifyRequest(id=id, type='movie')
@@ -357,7 +357,7 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
                           'summary': summary, 'user': Dict['register'][token]['nickname']}
         Dict.Save()
-        Dict['register'][token]['requests'] += 1
+        Dict['register'][token]['requests']  =  Dict['register'][token]['requests'] + 1
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(id)
         if Prefs['sickrage_autorequest'] and Prefs['sickrage_url'] and Prefs['sickrage_api']:
