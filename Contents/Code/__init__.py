@@ -127,7 +127,7 @@ def AddNewMovie(title, locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
         if Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
-            return MainMenu(message="Sorry you have reached your weekly request limit of " +Prefs['weekly_limit'] + ".", locked=locked)
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
@@ -455,7 +455,7 @@ def ViewRequest(id, type, locked='unlocked'):
         oc.add(DirectoryObject(key=None, title=""))
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type=type, title_year=title_year, locked=locked), title="Delete Request",
-                           thumb=R('x-mark.png')))
+                               thumb=R('x-mark.png')))
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(SendToCouchpotato, id=id, locked=locked), title="Send to CouchPotato", thumb=R('couchpotato.png')))
@@ -582,14 +582,8 @@ def SendToSonarr(id, locked='unlocked'):
             rootFolderPath = root[0]['path']
 
     Log.Debug("Profile id: " + str(profile_id))
-    options = {}
-    options['title'] = found_show['title']
-    options['tvdbId'] = found_show['tvdbId']
-    options['qualityProfileId'] = int(profile_id)
-    options['titleSlug'] = found_show['titleSlug']
-    options['rootFolderPath'] = rootFolderPath
-    options['seasons'] = found_show['seasons']
-    options['monitored'] = True
+    options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'qualityProfileId': int(profile_id),
+               'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath, 'seasons': found_show['seasons'], 'monitored': True}
 
     add_options = {'ignoreEpisodesWithFiles': False,
                    'ignoreEpisodesWithoutFiles': False,
@@ -733,10 +727,10 @@ def notifyRequest(id, type, title="", message=""):
             else:
                 return
             message = user + " has made a new request! <br><br>\n" + \
-                   "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
-                   "(" + id_type + " id: " + id + ") <br>\n" + \
-                   summary + " <br>\n" \
-                             "<Poster:><img src= '" + poster + "' width='300'>"
+                      "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
+                      "(" + id_type + " id: " + id + ") <br>\n" + \
+                      summary + " <br>\n" \
+                                "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, message, 'html')
             Log.Debug("Email notification sent for: " + id)
         except Exception as e:
@@ -768,18 +762,13 @@ def sendPushBullet(title, body):
     api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
                   }
-    data = {'type': 'note'}
-    data['title'] = title
-    data['body'] = body
+    data = {'type': 'note', 'title': title, 'body': body}
     values = JSON.StringFromObject(data)
     return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
 
 
 def sendPushover(title, message):
-    data = {'token': PUSHOVER_API_KEY}
-    data['user'] = Prefs['pushover_user']
-    data['title'] = title
-    data['message'] = message
+    data = {'token': PUSHOVER_API_KEY, 'user': Prefs['pushover_user'], 'title': title, 'message': message}
     return HTTP.Request(PUSHOVER_API_URL, values=data)
 
 
@@ -814,5 +803,5 @@ def checkAdmin():
         if resp.read():
             return True
     except Exception as e:
-        pass
+        Log.Debug(e.message)
     return False
