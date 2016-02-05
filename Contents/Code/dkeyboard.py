@@ -4,7 +4,7 @@ KEYS = list('abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./')
 SHIFT_KEYS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?')
 
 
-def Start():
+def StartKeyboard():
     if 'DumbKeyboard-History' not in Dict:
         Dict['DumbKeyboard-History'] = []
         Dict.Save()
@@ -24,14 +24,14 @@ def Keyboard(caller, query=None, shift=False, secure=False, **kwargs):
     if Dict['DumbKeyboard-History']:
         oc.add(DirectoryObject(key=Callback(History, caller=caller, secure=secure, kwargs=kwargs), title=u'%s' % 'Search History'))
     # Space
-    oc.add(DirectoryObject(key=Callback(self.Keyboard, caller=caller, query=query + " " if query else " ", secure=secure, **kwargs), title='Space'))
+    oc.add(DirectoryObject(key=Callback(Keyboard, caller=caller, query=query + " " if query else " ", secure=secure, **kwargs), title='Space'))
     # Backspace (not really needed since you can just hit back)
     if query is not None:
         oc.add(DirectoryObject(key=Callback(Keyboard, caller=caller, query=query[:-1], secure=secure, **kwargs), title='Backspace'))
     # Shift
     oc.add(DirectoryObject(key=Callback(Keyboard, caller=caller, query=query, shift=(not shift), secure=secure, **kwargs), title='Shift'))
     # Keys
-    for key in self.KEYS if not shift else self.SHIFT_KEYS:
+    for key in KEYS if not shift else SHIFT_KEYS:
         oc.add(
             DirectoryObject(key=Callback(Keyboard, caller=caller, query=query + key if query else key, secure=secure, **kwargs), title=u'%s' % key))
     return oc
