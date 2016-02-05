@@ -53,14 +53,7 @@ def Start():
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
 
-    if not 'tv' in Dict:
-        Dict['tv'] = {}
-    if not 'movie' in Dict:
-        Dict['movie'] = {}
-    if not 'register' in Dict:
-        Dict['register'] = {}
-    Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
-    Dict.Save()
+    ResetDict(0)
 
 
 ###################################################################################################
@@ -665,6 +658,28 @@ def SendToSickrage(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
+@route(PREFIX + "/managechannel")
+def ManageChannel(message="", locked='locked'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!")
+    oc = ObjectContainer(header=TITLE, message=message)
+    oc.add(key=Callback(ResetDict, complete=1, locked=locked), title="Reset Dictionary Settings")
+    return oc
+
+
+@indirect
+def ResetDict(complete=0, locked='locked'):
+    if complete == 1:
+        Dict.Reset()
+    if not 'tv' in Dict:
+        Dict['tv'] = {}
+    if not 'movie' in Dict:
+        Dict['movie'] = {}
+    if not 'register' in Dict:
+        Dict['register'] = {}
+        Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+    Dict.Save()
+    return ManageChannel(message="Dictionary has been reset!", locked=locked)
 
 # Notify user of requests
 def notifyRequest(id, type, title="", message=""):
