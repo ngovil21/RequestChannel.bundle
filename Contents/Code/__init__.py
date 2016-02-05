@@ -889,7 +889,7 @@ def Keyboard(caller, query=None, shift=False, secure='False', **kwargs):
 
     oc = ObjectContainer()
     # Submit
-    oc.add(DirectoryObject(key=Callback(Submit, query=query), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
+    oc.add(DirectoryObject(key=Callback(Submitter, query=query, caller=caller, **kwargs), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
     # Search History
     if Dict['DumbKeyboard-History']:
         oc.add(DirectoryObject(key=Callback(History, caller=caller, secure=secure, **kwargs), title=u'%s' % 'Search History'))
@@ -936,7 +936,7 @@ def AddHistory(query):
 
 
 @route(PREFIX + "/dumbkeyboard/submit")
-def Submit(caller="", query="", **kwargs):
+def Submitter(caller="", query="", **kwargs):
     AddHistory(query)
     callback_args = {'query': query}
     callback_args.update(kwargs)
