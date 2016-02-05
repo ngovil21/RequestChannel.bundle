@@ -53,7 +53,14 @@ def Start():
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
 
-    ResetDict(0)
+    if not 'tv' in Dict:
+        Dict['tv'] = {}
+    if not 'movie' in Dict:
+        Dict['movie'] = {}
+    if not 'register' in Dict:
+        Dict['register'] = {}
+        Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+    Dict.Save()
 
 
 ###################################################################################################
@@ -68,6 +75,8 @@ def MainMenu(locked='locked', message=None):
     if is_admin:
         Log.Debug("User is Admin")
     token = Request.Headers['X-Plex-Token']
+    if is_admin and token in Dict['register']:
+        del Dict['register'][token]
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
     if not is_admin and token not in Dict['register']:
