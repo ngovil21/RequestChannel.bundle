@@ -141,7 +141,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(
-            DirectoryObject(key=Callback(Keyboard, caller=SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:",
+            DirectoryObject(key=Callback(Keyboard, caller=SearchMovie, locked=locked), title=title,
                             thumb=R('search.png')))
     else:
         oc.add(
