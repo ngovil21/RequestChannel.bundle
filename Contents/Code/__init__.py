@@ -63,8 +63,6 @@ def Start():
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
     Dict.Save()
 
-    StartKeyboard()
-
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
