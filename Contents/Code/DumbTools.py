@@ -1,6 +1,8 @@
 # DumbTools for Plex v1.1 by Cory <babylonstudio@gmail.com>
 import urllib2
 
+PREFIX = "/video/plexrequestchannel"
+
 
 class DumbKeyboard:
     clients = ['Plex for iOS', 'Plex Media Player', 'Plex Web']
@@ -9,16 +11,16 @@ class DumbKeyboard:
 
     def __init__(self, prefix, oc, callback, dktitle=None, dkthumb=None,
                  dkplaceholder=None, dksecure=False, **kwargs):
-        cb_hash = hash(str(callback)+str(kwargs))
-        Route.Connect(prefix+'/dumbkeyboard/%s'%cb_hash, self.Keyboard)
-        Route.Connect(prefix+'/dumbkeyboard/%s/submit'%cb_hash, self.Submit)
-        Route.Connect(prefix+'/dumbkeyboard/%s/history'%cb_hash, self.History)
-        Route.Connect(prefix+'/dumbkeyboard/%s/history/clear'%cb_hash, self.ClearHistory)
-        Route.Connect(prefix+'/dumbkeyboard/%s/history/add/{query}'%cb_hash, self.AddHistory)
+        # cb_hash = hash(str(callback)+str(kwargs))
+        # Route.Connect(prefix+'/dumbkeyboard/%s'%cb_hash, self.Keyboard)
+        # Route.Connect(prefix+'/dumbkeyboard/%s/submit'%cb_hash, self.Submit)
+        # Route.Connect(prefix+'/dumbkeyboard/%s/history'%cb_hash, self.History)
+        # Route.Connect(prefix+'/dumbkeyboard/%s/history/clear'%cb_hash, self.ClearHistory)
+        # Route.Connect(prefix+'/dumbkeyboard/%s/history/add/{query}'%cb_hash, self.AddHistory)
         # Add our directory item
         oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder),
                                title=str(dktitle) if dktitle else \
-                                     u'%s'%L('DumbKeyboard Search'),
+                                   u'%s' % L('DumbKeyboard Search'),
                                thumb=dkthumb))
         # establish our dict entry
         if 'DumbKeyboard-History' not in Dict:
@@ -28,6 +30,7 @@ class DumbKeyboard:
         self.callback_args = kwargs
         self.secure = dksecure
 
+    @route(PREFIX + "/dumbkeyboard/keyboard")
     def Keyboard(self, query=None, shift=False):
         if self.secure and query is not None:
             string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
@@ -37,14 +40,14 @@ class DumbKeyboard:
         oc = ObjectContainer()
         # Submit
         oc.add(DirectoryObject(key=Callback(self.Submit, query=query),
-                               title=u'%s: %s'%(L('Submit'), string.replace(' ', '_'))))
+                               title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
         # Search History
         if Dict['DumbKeyboard-History']:
             oc.add(DirectoryObject(key=Callback(self.History),
-                                   title=u'%s'%L('Search History')))
+                                   title=u'%s' % 'Search History'))
         # Space
         oc.add(DirectoryObject(key=Callback(self.Keyboard,
-                                            query=query+" " if query else " "),
+                                            query=query + " " if query else " "),
                                title='Space'))
         # Backspace (not really needed since you can just hit back)
         if query is not None:
@@ -56,30 +59,37 @@ class DumbKeyboard:
         # Keys
         for key in self.KEYS if not shift else self.SHIFT_KEYS:
             oc.add(DirectoryObject(key=Callback(self.Keyboard,
-                                                query=query+key if query else key),
-                                   title=u'%s'%key))
+                                                query=query + key if query else key),
+                                   title=u'%s' % key))
         return oc
 
+    @route(PREFIX + "/dumbkeyboard/history")
     def History(self):
         oc = ObjectContainer()
         if Dict['DumbKeyboard-History']:
             oc.add(DirectoryObject(key=Callback(self.ClearHistory),
-                                   title=u'%s'%L('Clear History')))
+                                   title=u'%s' % 'Clear History'))
         for item in Dict['DumbKeyboard-History']:
             oc.add(DirectoryObject(key=Callback(self.Submit, query=item),
-                                   title=u'%s'%item))
+                                   title=u'%s' % item))
         return oc
 
+    @indirect
+    @route(PREFIX + "/dumbkeyboard/clearhistory")
     def ClearHistory(self):
         Dict['DumbKeyboard-History'] = []
         Dict.Save()
         return self.History()
 
+    @indirect
+    @route(PREFIX + "/dumbkeyboard/addhistory")
     def AddHistory(self, query):
         if query not in Dict['DumbKeyboard-History']:
             Dict['DumbKeyboard-History'].append(query)
             Dict.Save()
 
+    @indirect
+    @route(PREFIX + "/dumbkeyboard/submit")
     def Submit(self, query):
         self.AddHistory(query)
         kwargs = {'query': query}
@@ -99,10 +109,10 @@ class DumbPrefs:
             Log.Error('DumbPrefs: this user cant access prefs: %s' % str(e))
             return
 
-        Route.Connect(prefix+'/dumbprefs/list', self.ListPrefs)
-        Route.Connect(prefix+'/dumbprefs/listenum', self.ListEnum)
-        Route.Connect(prefix+'/dumbprefs/set', self.Set)
-        Route.Connect(prefix+'/dumbprefs/settext',  self.SetText)
+        Route.Connect(prefix + '/dumbprefs/list', self.ListPrefs)
+        Route.Connect(prefix + '/dumbprefs/listenum', self.ListEnum)
+        Route.Connect(prefix + '/dumbprefs/set', self.Set)
+        Route.Connect(prefix + '/dumbprefs/settext', self.SetText)
         oc.add(DirectoryObject(key=Callback(self.ListPrefs),
                                title=title if title else L('Preferences'),
                                thumb=thumb))
@@ -131,8 +141,8 @@ class DumbPrefs:
                        'default': pref.xpath("@default")[0],
                        'secure': True if pref.xpath("@secure")[0] == "true" else False,
                        'values': pref.xpath("@values")[0].split("|") \
-                                 if pref.xpath("@values") else None
-                      } for pref in prefs]
+                           if pref.xpath("@values") else None
+                       } for pref in prefs]
 
     def Set(self, key, value):
         HTTP.Request("%s/:/plugins/%s/prefs/set?%s=%s" % (self.host,
@@ -147,7 +157,7 @@ class DumbPrefs:
         for pref in self.prefs:
             do = DirectoryObject()
             value = Prefs[pref['id']] if not pref['secure'] else \
-                    ''.join(['*' for i in range(len(Prefs[pref['id']]))])
+                ''.join(['*' for i in range(len(Prefs[pref['id']]))])
             title = u'%s: %s = %s' % (L(pref['label']), pref['type'], L(value))
             if pref['type'] == 'enum':
                 do.key = Callback(self.ListEnum, id=pref['id'])
@@ -177,7 +187,7 @@ class DumbPrefs:
             if pref['id'] == id:
                 for i, option in enumerate(pref['values']):
                     oc.add(DirectoryObject(key=Callback(self.Set, key=id, value=i),
-                                           title=u'%s'%option))
+                                           title=u'%s' % option))
         return oc
 
     def SetText(self, query, id):
