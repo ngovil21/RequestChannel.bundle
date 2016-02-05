@@ -77,7 +77,7 @@ def MainMenu(locked='locked', message=None):
     token = Request.Headers['X-Plex-Token']
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
-    if token not in Dict['register']:
+    if not is_admin and token not in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
@@ -127,7 +127,7 @@ def RegisterName(query="", locked='locked'):
 def AddNewMovie(title, locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
-        if Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
+        if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
@@ -238,12 +238,15 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return MainMenu(locked=locked, message="Movie has already been requested")
     else:
+        user = ""
+        if token in Dict['register']:
+            user = Dict['register']['nickname']
+            Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         title_year = title + " (" + year + ")"
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
-                             'backdrop': backdrop, 'summary': summary}
+                             'backdrop': backdrop, 'summary': summary, 'user': user}
         Dict.Save()
         token = Request.Headers['X-Plex-Token']
-        Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
         notifyRequest(id=id, type='movie')
@@ -254,9 +257,9 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
 
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="", locked='unlocked'):
-    if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0):
+    if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
-        if Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']) and not checkAdmin():
+        if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -360,10 +363,13 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
         return MainMenu(locked=locked, message="TV Show has already been requested")
     else:
         token = Request.Headers['X-Plex-Token']
+        user = ""
+        if token in Dict['register']:
+            user = Dict['register'][token]['nickname']
+            Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
-                          'summary': summary, 'user': Dict['register'][token]['nickname']}
+                          'summary': summary, 'user': user}
         Dict.Save()
-        Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(id)
         if Prefs['sickrage_autorequest'] and Prefs['sickrage_url'] and Prefs['sickrage_api']:
@@ -399,19 +405,24 @@ def ViewRequests(query="", locked='unlocked', message=None):
                 thumb = d['poster']
             else:
                 thumb = R('no-poster.jpg')
+            summary = d['summary']
+            if d['user']:
+                summary = "Requested by " + d['user'] + "\n" + summary
             oc.add(TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
-                                summary=d['summary'], art=d['backdrop']))
-        if Dict['tv']:
-            for id in Dict['tv']:
-                d = Dict['tv'][id]
-                title_year = d['title'] + " (" + d['year'] + ")"
-                if d['poster']:
-                    thumb = d['poster']
-                else:
-                    thumb = R('no-poster.jpg')
-                oc.add(
-                    TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
-                                 summary=d['summary'], art=d['backdrop']))
+                                summary=summary, art=d['backdrop']))
+        for id in Dict['tv']:
+            d = Dict['tv'][id]
+            title_year = d['title'] + " (" + d['year'] + ")"
+            if d['poster']:
+                thumb = d['poster']
+            else:
+                thumb = R('no-poster.jpg')
+            summary = d['summary']
+            if d['user']:
+                summary = "Requested by " + d['user'] + "\n" + summary
+            oc.add(
+                TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
+                             summary=summary, art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1 and checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
@@ -661,7 +672,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if Dict['register'][token]['nickname']:
+            if token in Dict['register'] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
@@ -683,7 +694,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if Dict['register'][token]['nickname']:
+            if token in Dict['register'] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
@@ -705,7 +716,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if Dict['register'][token]['nickname']:
+            if token in Dict['register'] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
