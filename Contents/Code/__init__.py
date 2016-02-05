@@ -75,7 +75,7 @@ def MainMenu(locked='locked', message=None):
     if is_admin:
         Log.Debug("User is Admin")
     token = Request.Headers['X-Plex-Token']
-    if is_admin and token in Dict['register']:
+    if is_admin and token in Dict['register']:          #Do not save admin token in the register
         del Dict['register'][token]
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
@@ -130,7 +130,7 @@ def RegisterName(query="", locked='locked'):
 def AddNewMovie(title, locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
-        if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
+        if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
@@ -247,7 +247,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
     else:
         user = ""
         token = Request.Headers['X-Plex-Token']
-        if token in Dict['register']:
+        if Dict['register'].get(token, None):
             user = Dict['register']['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         title_year = title + " (" + year + ")"
@@ -266,7 +266,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
 def AddNewTVShow(title="", locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
-        if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
+        if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -374,7 +374,7 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
     else:
         token = Request.Headers['X-Plex-Token']
         user = ""
-        if token in Dict['register']:
+        if Dict['register'].get(token, None):
             user = Dict['register'][token]['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
@@ -676,6 +676,7 @@ def SendToSickrage(id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
+
 @route(PREFIX + "/managechannel")
 def ManageChannel(message="", locked='locked'):
     if not checkAdmin():
@@ -699,13 +700,14 @@ def ResetDict(complete=0, locked='locked'):
     Dict.Save()
     return ManageChannel(message="Dictionary has been reset!", locked=locked)
 
+
 # Notify user of requests
 def notifyRequest(id, type, title="", message=""):
     if Prefs['pushbullet_api']:
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
+            if Dict['register'].get(token, None) and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
@@ -727,7 +729,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
+            if Dict['register'].get(token, None) and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
@@ -749,7 +751,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
+            if Dict['register'].get(token, None) and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
