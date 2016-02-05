@@ -143,7 +143,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(
-            DirectoryObject(key=Callback(Keyboard, caller=SearchMovie, locked=locked), title=title,
+            DirectoryObject(key=Callback(Keyboard, caller='SearchMovie', locked=locked), title=title,
                             thumb=R('search.png')))
     else:
         oc.add(
@@ -222,7 +222,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             return oc
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        oc.add(InputDirectoryObject(key=Callback(Keyboard, caller=Callback(SearchMovie, locked=locked)), title="Search Again", thumb=R('search.png')))
+        oc.add(InputDirectoryObject(key=Callback(Keyboard, caller='SearchMovie', locked=locked), title="Search Again", thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                     prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -281,7 +281,7 @@ def AddNewTVShow(title="", locked='unlocked'):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, caller=Callback(SearchTV, locked=locked)), title="Request a TV Show",
+        oc.add(DirectoryObject(key=Callback(Keyboard, caller='SearchTV', locked=locked), title="Request a TV Show",
                                thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
@@ -300,7 +300,7 @@ def SearchTV(query, locked='unlocked'):
         if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-            oc.add(DirectoryObject(key=Callback(Keyboard, caller=Callback(SearchTV, locked=locked)), title="Search Again",
+            oc.add(DirectoryObject(key=Callback(Keyboard, caller='SearchTV', locked=locked), title="Search Again",
                                    thumb=R('search.png')))
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
@@ -880,7 +880,6 @@ def StartKeyboard():
         Dict['DumbKeyboard-History'] = []
         Dict.Save()
 
-
 @route(PREFIX + "/dumbkeyboard/keyboard")
 def Keyboard(caller, query=None, shift=False, secure='False', **kwargs):
     if secure == 'True' and query is not None:
@@ -890,7 +889,7 @@ def Keyboard(caller, query=None, shift=False, secure='False', **kwargs):
 
     oc = ObjectContainer()
     # Submit
-    oc.add(DirectoryObject(key=Callback(Submit, caller=caller, query=query, **kwargs), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
+    oc.add(DirectoryObject(key=Callback(Submit, query=query), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
     # Search History
     if Dict['DumbKeyboard-History']:
         oc.add(DirectoryObject(key=Callback(History, caller=caller, secure=secure, **kwargs), title=u'%s' % 'Search History'))
@@ -937,13 +936,18 @@ def AddHistory(query):
 
 
 @route(PREFIX + "/dumbkeyboard/submit")
-def Submit(caller=None, query="", **kwargs):
+def Submit(caller="", query="", **kwargs):
     AddHistory(query)
     callback_args = {'query': query}
     callback_args.update(kwargs)
-    oc = ObjectContainer
-    oc.add(DirectoryObject(key=Callback(caller, **callback_args)), title="Continue")
-    return oc
+    if caller == 'RegisterName':
+       return RegisterName(**kwargs)
+    if caller == 'SearchMovie':
+        return SearchMovie(**callback_args)
+    if caller == 'SearchTV':
+        return SearchTV(**callback_args)
+    if caller == 'ViewRequests':
+        return ViewRequests(**callback_args)
 
 
 
