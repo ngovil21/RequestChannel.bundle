@@ -64,6 +64,8 @@ def Start():
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
     Dict.Save()
 
+    StartKeyboard()
+
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
@@ -112,7 +114,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, caller=Callback(RegisterName, locked=locked)),
+        oc.add(DirectoryObject(key=Callback(Keyboard, caller=RegisterName, locked=locked),
                                title="Enter your name or nickname"))
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
@@ -141,7 +143,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(
-            DirectoryObject(key=Callback(Keyboard, caller=Callback(SearchMovie, locked=locked)), title=title,
+            DirectoryObject(key=Callback(Keyboard, caller=SearchMovie, locked=locked), title=title,
                             thumb=R('search.png')))
     else:
         oc.add(
@@ -935,11 +937,13 @@ def AddHistory(query):
 
 
 @route(PREFIX + "/dumbkeyboard/submit")
-def Submit(caller, query, **kwargs):
+def Submit(caller=None, query="", **kwargs):
     AddHistory(query)
     callback_args = {'query': query}
     callback_args.update(kwargs)
-    return Callback(caller, **callback_args)
+    oc = ObjectContainer
+    oc.add(DirectoryObject(key=Callback(caller, **callback_args)), title="Continue")
+    return oc
 
 
 
