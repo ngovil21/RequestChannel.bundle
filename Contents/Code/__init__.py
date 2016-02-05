@@ -93,6 +93,8 @@ def MainMenu(locked='locked', message=None):
         else:
             oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                    title="View Requests"))  # Set View Requests to locked and ask for password
+    if is_admin:
+        oc.add(DirectoryObject(key=Callback(ManageChannel,locked=locked), title="Manage Channel"))
 
     return oc
 
