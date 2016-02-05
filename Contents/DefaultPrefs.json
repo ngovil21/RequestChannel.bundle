@@ -147,56 +147,54 @@
     "id": "pushbullet_api",
     "label": "Pushbullet API",
     "type": "text",
-    "values": "",
     "default": ""
+  },
+  {
+    "id": "pushover_api",
+    "label": "Pushover API Key",
+    "type": "text",
+    "default": "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
   },
   {
     "id": "pushover_user",
     "label": "Pushover User Key",
     "type": "text",
-    "values": "",
     "default": ""
   },
   {
     "id": "email_from",
     "label": "Email to send from",
     "type": "text",
-    "values": "",
     "default": ""
   },
   {
     "id": "email_to",
     "label": "Email to send to",
     "type": "text",
-    "values": "",
     "default": ""
   },
   {
     "id": "email_server",
     "label": "SMTP Server",
     "type": "text",
-    "values": "",
     "default": ""
   },
   {
     "id": "email_port",
     "label": "SMTP Server Port",
     "type": "text",
-    "values": "",
     "default": ""
   },
   {
     "id": "email_username",
     "label": "SMTP Username",
     "type": "text",
-    "values": "",
     "default": ""
   },
   {
     "id": "email_password",
     "label": "SMTP Server Password",
     "type": "text",
-    "values": "",
     "default": "",
     "option": "hidden",
     "secure": true

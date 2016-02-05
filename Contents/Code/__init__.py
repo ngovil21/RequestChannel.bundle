@@ -769,7 +769,7 @@ def sendPushBullet(title, body):
 
 
 def sendPushover(title, message):
-    data = {'token': PUSHOVER_API_KEY, 'user': Prefs['pushover_user'], 'title': title, 'message': message}
+    data = {'token': Prefs['pushover_api'], 'user': Prefs['pushover_user'], 'title': title, 'message': message}
     return HTTP.Request(PUSHOVER_API_URL, values=data)
 
 
