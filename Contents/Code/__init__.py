@@ -934,12 +934,13 @@ def AddHistory(query):
         Dict.Save()
 
 
-@indirect
 @route(PREFIX + "/dumbkeyboard/submit")
 def Submit(caller, query, **kwargs):
     AddHistory(query)
     callback_args = {'query': query}
     callback_args.update(kwargs)
-    return caller(**callback_args)
+    return Callback(caller, **callback_args)
+
+
 
 
