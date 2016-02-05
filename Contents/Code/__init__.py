@@ -1,5 +1,7 @@
 from DumbTools import DumbKeyboard
 
+import dkeyboard
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -75,7 +77,7 @@ def MainMenu(locked='locked', message=None):
     if is_admin:
         Log.Debug("User is Admin")
     token = Request.Headers['X-Plex-Token']
-    if is_admin and token in Dict['register']:          #Do not save admin token in the register
+    if is_admin and token in Dict['register']:  # Do not save admin token in the register
         del Dict['register'][token]
     if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
@@ -109,7 +111,9 @@ def Register(message="Unrecognized device. The admin would like you to register 
     oc = ObjectContainer(header=TITLE, message=message)
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
+        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
+        oc.add(DirectoryObject(key=Callback(dkeyboard.Keyboard, caller=RegisterName, locked=locked),
+                               title="Enter your name or nickname"))
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
                                     prompt="Enter your name or nickname"))
@@ -127,7 +131,7 @@ def RegisterName(query="", locked='locked'):
 
 
 @route(PREFIX + '/addnewmovie')
-def AddNewMovie(title, locked='unlocked'):
+def AddNewMovie(title="Request a Movie", locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
@@ -135,7 +139,10 @@ def AddNewMovie(title, locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
+        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
+        oc.add(
+            DirectoryObject(key=Callback(dkeyboard.Keyboard, caller=SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:",
+                            thumb=R('search.png')))
     else:
         oc.add(
             InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -271,7 +278,9 @@ def AddNewTVShow(title="", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
+        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
+        oc.add(DirectoryObject(key=Callback(dkeyboard.Keyboard, caller=SearchTV, locked=locked), title="Request a TV Show",
+                               thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
@@ -288,7 +297,9 @@ def SearchTV(query, locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
         if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
+            # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
+            oc.add(DirectoryObject(key=Callback(dkeyboard.Keyboard, caller=SearchTV, locked=locked), title="Search Again",
+                                   thumb=R('search.png')))
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                         thumb=R('search.png')))
@@ -339,7 +350,9 @@ def SearchTV(query, locked='unlocked'):
                          rating_key=id, title=title_year, summary=summary, thumb=thumb))
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
+        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
+        oc.add(InputDirectoryObject(key=Callback(dkeyboard.Keyboard, caller=SearchTV, locked=locked), title="Search Again",
+                                    thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
@@ -444,7 +457,8 @@ def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
+        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
+        oc.add(InputDirectoryObject(key=Callback(dkeyboard.Keyboard, caller=ViewRequests, secure=True, locked=locked), title="Enter password:"))
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
