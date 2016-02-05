@@ -685,11 +685,12 @@ def ManageChannel(message="", locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!")
     oc = ObjectContainer(header=TITLE, message=message)
-    oc.add(key=Callback(ResetDict, complete=1, locked=locked), title="Reset Dictionary Settings")
+    oc.add(DirectoryObject(key=Callback(ResetDict, complete=1, locked=locked), title="Reset Dictionary Settings"))
     return oc
 
 
 @indirect
+@route(PREFIX + "/resetdict")
 def ResetDict(complete=0, locked='locked'):
     if complete == 1:
         Dict.Reset()
