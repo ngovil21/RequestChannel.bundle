@@ -1,31 +1,26 @@
 # DumbTools for Plex v1.1 by Cory <babylonstudio@gmail.com>
 import urllib2
 
-PREFIX = "/video/plexrequestchannel"
-
 
 class DumbKeyboard:
     clients = ['Plex for iOS', 'Plex Media Player', 'Plex Web']
 
-
     def __init__(self, prefix, oc, callback, dktitle=None, dkthumb=None,
                  dkplaceholder=None, dksecure=False, **kwargs):
-        cb_hash = hash(str(callback)+str(kwargs))
-        Route.Connect(prefix+'/dumbkeyboard/%s'%cb_hash, self.Keyboard)
-        Route.Connect(prefix+'/dumbkeyboard/%s/submit'%cb_hash, self.Submit)
-        Route.Connect(prefix+'/dumbkeyboard/%s/history'%cb_hash, self.History)
-        Route.Connect(prefix+'/dumbkeyboard/%s/history/clear'%cb_hash, self.ClearHistory)
-        Route.Connect(prefix+'/dumbkeyboard/%s/history/add/{query}'%cb_hash, self.AddHistory)
+        cb_hash = hash(str(callback) + str(kwargs))
+        Route.Connect(prefix + '/dumbkeyboard/%s' % cb_hash, self.Keyboard)
+        Route.Connect(prefix + '/dumbkeyboard/%s/submit' % cb_hash, self.Submit)
+        Route.Connect(prefix + '/dumbkeyboard/%s/history' % cb_hash, self.History)
+        Route.Connect(prefix + '/dumbkeyboard/%s/history/clear' % cb_hash, self.ClearHistory)
+        Route.Connect(prefix + '/dumbkeyboard/%s/history/add/{query}' % cb_hash, self.AddHistory)
         # Add our directory item
         oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder),
                                title=str(dktitle) if dktitle else u'%s' % 'DumbKeyboard Search', thumb=dkthumb))
-
 
         self.Callback = callback
         self.callback_args = kwargs
         self.secure = dksecure
 
-    @route(PREFIX + "/dumbkeyboard/history")
     def History(self):
         oc = ObjectContainer()
         if Dict['DumbKeyboard-History']:
@@ -36,22 +31,16 @@ class DumbKeyboard:
                                    title=u'%s' % item))
         return oc
 
-    @indirect
-    @route(PREFIX + "/dumbkeyboard/clearhistory")
     def ClearHistory(self):
         Dict['DumbKeyboard-History'] = []
         Dict.Save()
         return self.History()
 
-    @indirect
-    @route(PREFIX + "/dumbkeyboard/addhistory")
     def AddHistory(self, query):
         if query not in Dict['DumbKeyboard-History']:
             Dict['DumbKeyboard-History'].append(query)
             Dict.Save()
 
-    @indirect
-    @route(PREFIX + "/dumbkeyboard/submit")
     def Submit(self, query):
         self.AddHistory(query)
         kwargs = {'query': query}
