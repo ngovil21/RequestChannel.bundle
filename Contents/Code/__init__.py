@@ -99,6 +99,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
         message += "\nEnter your name in the searchbox and press enter."
     oc = ObjectContainer(header=TITLE, message=message)
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
@@ -124,6 +125,7 @@ def AddNewMovie(title, locked='unlocked'):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(
@@ -164,6 +166,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
         else:
             Log.Debug("No Results Found")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+                Log.Debug("Client does not support Input. Using DumbKeyboard")
                 DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
@@ -192,6 +195,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             Log.Debug("No Results Found")
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+                Log.Debug("Client does not support Input. Using DumbKeyboard")
                 DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
@@ -199,6 +203,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
@@ -232,6 +237,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
         return MainMenu(locked=locked, message="Movie has already been requested")
     else:
         user = ""
+        token = Request.Headers['X-Plex-Token']
         if token in Dict['register']:
             user = Dict['register']['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
@@ -239,7 +245,6 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
                              'backdrop': backdrop, 'summary': summary, 'user': user}
         Dict.Save()
-        token = Request.Headers['X-Plex-Token']
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
         notifyRequest(id=id, type='movie')
@@ -256,6 +261,7 @@ def AddNewTVShow(title="", locked='unlocked'):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
@@ -272,6 +278,7 @@ def SearchTV(query, locked='unlocked'):
     if len(series) == 0:
         oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
         if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+            Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
@@ -322,6 +329,7 @@ def SearchTV(query, locked='unlocked'):
             TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
                          rating_key=id, title=title_year, summary=summary, thumb=thumb))
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
@@ -426,6 +434,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
