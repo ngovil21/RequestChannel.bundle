@@ -891,7 +891,7 @@ def Keyboard(caller, query=None, shift=False, secure=False, **kwargs):
     oc.add(DirectoryObject(key=Callback(Submit, caller=caller, query=query, **kwargs), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
     # Search History
     if Dict['DumbKeyboard-History']:
-        oc.add(DirectoryObject(key=Callback(History, caller=caller, secure=secure, kwargs=kwargs), title=u'%s' % 'Search History'))
+        oc.add(DirectoryObject(key=Callback(History, caller=caller, secure=secure, **kwargs), title=u'%s' % 'Search History'))
     # Space
     oc.add(DirectoryObject(key=Callback(Keyboard, caller=caller, query=query + " " if query else " ", secure=secure, **kwargs), title='Space'))
     # Backspace (not really needed since you can just hit back)
@@ -936,10 +936,10 @@ def AddHistory(query):
 
 @indirect
 @route(PREFIX + "/dumbkeyboard/submit")
-def Submit(caller, query, **callback_args):
+def Submit(caller, query, **kwargs):
     AddHistory(query)
-    kwargs = {'query': query}
-    kwargs.update(callback_args)
-    return caller(**kwargs)
+    callback_args = {'query': query}
+    callback_args.update(kwargs)
+    return caller(**callback_args)
 
 
