@@ -112,7 +112,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, caller=RegisterName, locked=locked),
+        oc.add(DirectoryObject(key=Callback(Keyboard, caller=Callback(RegisterName, locked=locked)),
                                title="Enter your name or nickname"))
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
@@ -141,7 +141,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(
-            DirectoryObject(key=Callback(Keyboard, caller=SearchMovie, locked=locked), title=title,
+            DirectoryObject(key=Callback(Keyboard, caller=Callback(SearchMovie, locked=locked)), title=title,
                             thumb=R('search.png')))
     else:
         oc.add(
@@ -220,7 +220,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             return oc
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
+        oc.add(InputDirectoryObject(key=Callback(Keyboard, caller=Callback(SearchMovie, locked=locked)), title="Search Again", thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                     prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -279,7 +279,7 @@ def AddNewTVShow(title="", locked='unlocked'):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, caller=SearchTV, locked=locked), title="Request a TV Show",
+        oc.add(DirectoryObject(key=Callback(Keyboard, caller=Callback(SearchTV, locked=locked)), title="Request a TV Show",
                                thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
@@ -298,7 +298,7 @@ def SearchTV(query, locked='unlocked'):
         if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-            oc.add(DirectoryObject(key=Callback(Keyboard, caller=SearchTV, locked=locked), title="Search Again",
+            oc.add(DirectoryObject(key=Callback(Keyboard, caller=Callback(SearchTV, locked=locked)), title="Search Again",
                                    thumb=R('search.png')))
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
@@ -458,7 +458,7 @@ def ViewRequestsPassword(locked='locked'):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
-        oc.add(InputDirectoryObject(key=Callback(Keyboard, caller=ViewRequests, secure=True, locked=locked), title="Enter password:"))
+        oc.add(InputDirectoryObject(key=Callback(Keyboard, caller=Callback(ViewRequests, secure='True', locked=locked)), title="Enter password:"))
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
@@ -880,8 +880,8 @@ def StartKeyboard():
 
 
 @route(PREFIX + "/dumbkeyboard/keyboard")
-def Keyboard(caller, query=None, shift=False, secure=False, **kwargs):
-    if secure and query is not None:
+def Keyboard(caller, query=None, shift=False, secure='False', **kwargs):
+    if secure == 'True' and query is not None:
         string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
     else:
         string = query if query else ""

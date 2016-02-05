@@ -11,8 +11,8 @@ def StartKeyboard():
 
 
 @route(PREFIX + "/dumbkeyboard/keyboard")
-def Keyboard(caller, query=None, shift=False, secure=False, **kwargs):
-    if secure and query is not None:
+def Keyboard(caller, query=None, shift=False, secure='False', **kwargs):
+    if secure == 'True' and query is not None:
         string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
     else:
         string = query if query else ""
