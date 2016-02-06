@@ -1,5 +1,5 @@
-KEYS = 'abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./'
-SHIFT_KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?'
+KEYS = list('abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./')
+SHIFT_KEYS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?')
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
