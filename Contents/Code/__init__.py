@@ -414,6 +414,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
             if d['automated']:
+                Log.Debug("Movie has already been sent for automation: " + title_year)
                 title_year = "+ " + title_year
             if d['poster']:
                 thumb = d['poster']
@@ -428,6 +429,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
             d = Dict['tv'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
             if d['automated']:
+                Log.Debug("Show has been sent for automation: "+ title_year)
                 title_year = "+ " + title_year
             if d['poster']:
                 thumb = d['poster']
