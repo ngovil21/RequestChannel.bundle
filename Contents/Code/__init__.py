@@ -796,8 +796,8 @@ def notifyRequest(id, type, title="", message=""):
             message = user + " has made a new request! <br><br>\n" + \
                       "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
                       "(" + id_type + " id: " + id + ") <br>\n" + \
-                      summary + " <br>\n" \
-                                "<Poster:><img src= '" + poster + "' width='300'>"
+                      summary + \
+                      "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, message, 'html')
             Log.Debug("Email notification sent for: " + id)
         except Exception as e:
