@@ -435,7 +435,7 @@ def DeleteRequest(id, type, locked='unlocked'):
 def SendToCouchpotato(id, locked='unlocked'):
     if not id.startswith("tt"):  # Check if id is an imdb id
         # we need to convert tmdb id to imdb
-        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/id/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
+        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + id + "/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
             imdb_id = json['imdb_id']
         else:
