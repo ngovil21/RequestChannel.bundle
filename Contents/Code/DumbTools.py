@@ -5,14 +5,20 @@ import urllib2
 class DumbKeyboard:
     clients = ['Plex for iOS', 'Plex Media Player', 'Plex Web']
 
+    KEYS = ['abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./']
+    SHIFT_KEYS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?')
+
     def __init__(self, prefix, oc, callback, dktitle=None, dkthumb=None,
                  dkplaceholder=None, dksecure=False, **kwargs):
         cb_hash = hash(str(callback) + str(kwargs))
-        Route.Connect(prefix + '/dumbkeyboard/%s' % cb_hash, self.Keyboard)
+        Log.Debug("Generated callback hash: " + str(cb_hash))
+        Route.Connect(prefix + '/dumbkeyboard/%s/keyboard' % cb_hash, self.Keyboard)
         Route.Connect(prefix + '/dumbkeyboard/%s/submit' % cb_hash, self.Submit)
         Route.Connect(prefix + '/dumbkeyboard/%s/history' % cb_hash, self.History)
         Route.Connect(prefix + '/dumbkeyboard/%s/history/clear' % cb_hash, self.ClearHistory)
         Route.Connect(prefix + '/dumbkeyboard/%s/history/add/{query}' % cb_hash, self.AddHistory)
+        Log.Debug("Generated Routes")
+        Log.Debug(str(Callback(self.Keyboard)))
         # Add our directory item
         oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder),
                                title=str(dktitle) if dktitle else u'%s' % 'DumbKeyboard Search', thumb=dkthumb))
@@ -20,6 +26,46 @@ class DumbKeyboard:
         self.Callback = callback
         self.callback_args = kwargs
         self.secure = dksecure
+
+    def Keyboard(self, query=None, shift=False):
+        Log.Debug("Keyboard created.")
+        if self.secure and query is not None:
+            string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
+        else:
+            string = query if query else ""
+
+        oc = ObjectContainer()
+        # Submit
+        Log.Debug("Create Submit key")
+        oc.add(DirectoryObject(key=Callback(self.Submit, query=query),
+                               title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
+        # Search History
+        if Dict['DumbKeyboard-History']:
+            Log.Debug("Create History")
+            oc.add(DirectoryObject(key=Callback(self.History),
+                                   title=u'%s' % 'Search History'))
+        # Space
+        Log.Debug("Create Space Key")
+        oc.add(DirectoryObject(key=Callback(self.Keyboard,
+                                            query=query + " " if query else " "),
+                               title='Space'))
+        # Backspace (not really needed since you can just hit back)
+        if query is not None:
+            Log.Debug("Create backspace key")
+            oc.add(DirectoryObject(key=Callback(self.Keyboard, query=query[:-1]),
+                                   title='Backspace'))
+        # Shift
+        Log.Debug("Create Shift Key")
+        oc.add(DirectoryObject(key=Callback(self.Keyboard, query=query, shift=True),
+                               title='Shift'))
+        # Keys
+        Log.Debug("Generating keys")
+        for key in self.KEYS if not shift else self.SHIFT_KEYS:
+            oc.add(DirectoryObject(key=Callback(self.Keyboard,
+                                                query=query + key if query else key),
+                                   title=u'%s' % key))
+        Log.Debug("Return Object Container")
+        return oc
 
     def History(self):
         oc = ObjectContainer()
@@ -65,7 +111,7 @@ class DumbPrefs:
         Route.Connect(prefix + '/dumbprefs/set', self.Set)
         Route.Connect(prefix + '/dumbprefs/settext', self.SetText)
         oc.add(DirectoryObject(key=Callback(self.ListPrefs),
-                               title=title if title else L('Preferences'),
+                               title=title if title else 'Preferences',
                                thumb=thumb))
         self.prefix = prefix
         self.GetPrefs()
