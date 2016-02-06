@@ -566,7 +566,7 @@ def SendToCouchpotato(id, locked='unlocked'):
         json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
         if 'success' in json and json['success']:
             oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
-            Dict['tv'][id]['automated'] = True
+            Dict['movie'][id]['automated'] = True
         else:
             oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
     except:
