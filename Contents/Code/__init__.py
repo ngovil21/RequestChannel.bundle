@@ -691,6 +691,10 @@ def ManageChannel(message="", locked='locked'):
 @route(PREFIX + "/resetdict")
 def ResetDict(complete='0', locked='locked'):
     Dict.Reset()
+    Dict['tv'] = {}
+    Dict['movie'] = {}
+    Dict['register'] = {}
+    Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
     if 'tv' not in Dict:
         Dict['tv'] = {}
     if 'movie' not in Dict:
