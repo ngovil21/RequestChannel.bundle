@@ -254,7 +254,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         title_year = title + " (" + year + ")"
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
-                             'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': True}
+                             'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
