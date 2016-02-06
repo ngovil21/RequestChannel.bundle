@@ -5,7 +5,7 @@ import urllib2
 class DumbKeyboard:
     clients = ['Plex for iOS', 'Plex Media Player', 'Plex Web']
 
-    KEYS = ['abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./']
+    KEYS = list('abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./')
     SHIFT_KEYS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?')
 
     def __init__(self, prefix, oc, callback, dktitle=None, dkthumb=None,
