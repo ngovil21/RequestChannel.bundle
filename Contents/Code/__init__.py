@@ -692,7 +692,7 @@ def ManageChannel(message="", locked='locked'):
 @indirect
 @route(PREFIX + "/resetdict")
 def ResetDict(complete=0, locked='locked'):
-    if int(complete) == '1':
+    if int(complete) == 1:
         Dict.Reset()
     if not 'tv' in Dict:
         Dict['tv'] = {}
