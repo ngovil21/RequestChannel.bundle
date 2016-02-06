@@ -23,7 +23,7 @@ def Keyboard(query=None, callback=None, shift=False, secure='False', locked='loc
     # Search History
     if Dict['DumbKeyboard-History']:
         Log.Debug("Create History")
-        oc.add(DirectoryObject(key=Callback(History, callback=callback, locked=locked), title=u'%s' % 'Search History'))
+        oc.add(DirectoryObject(key=Callback(History, query=query, callback=callback, locked=locked, secure=secure), title=u'%s' % 'Search History'))
     # Space
     Log.Debug("Create Space Key")
     oc.add(DirectoryObject(key=Callback(Keyboard, query=query + " " if query else " ", callback=callback, locked=locked, secure=secure),
@@ -45,22 +45,23 @@ def Keyboard(query=None, callback=None, shift=False, secure='False', locked='loc
 
 
 @route(PREFIX + "/dumbtools/history")
-def History(callback=None, locked='locked'):
+def History(query=None, callback=None, locked='locked', secure='False'):
     oc = ObjectContainer()
+    oc.add(DirectoryObject(key=Callback(Keyboard, query=query, callback=callback, locked=locked, secure=secure), title="Return to Keyboard"))
     if Dict['DumbKeyboard-History']:
-        oc.add(DirectoryObject(key=Callback(ClearHistory, callback=callback, locked=locked),
+        oc.add(DirectoryObject(key=Callback(ClearHistory, callback=callback, locked=locked, secure=secure),
                                title=u'%s' % 'Clear History'))
     for item in Dict['DumbKeyboard-History']:
-        oc.add(DirectoryObject(key=Callback(self.Submit, query=item),
+        oc.add(DirectoryObject(key=Callback(callback, query=item, locked=locked),
                                title=u'%s' % item))
     return oc
 
 
 @route(PREFIX + "/dumbtools/clearhistory")
-def ClearHistory(callback=callback, locked=locked):
+def ClearHistory(query="", callback=None, locked='locked', secure='False'):
     Dict['DumbKeyboard-History'] = []
     Dict.Save()
-    return History(callback=callback, locked=locked)
+    return Keyboard(query=query, callback=callback, locked=locked, secure=secure)
 
 
 @route(PREFIX + "/dumbtools/addhistory")
