@@ -1,6 +1,5 @@
 from DumbTools import DumbKeyboard
 
-
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -94,7 +93,7 @@ def MainMenu(locked='locked', message=None):
             oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if is_admin:
-        oc.add(DirectoryObject(key=Callback(ManageChannel,locked=locked), title="Manage Channel"))
+        oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
 
     return oc
 
@@ -685,20 +684,19 @@ def ManageChannel(message="", locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!")
     oc = ObjectContainer(header=TITLE, message=message)
-    oc.add(DirectoryObject(key=Callback(ResetDict, complete=1, locked=locked), title="Reset Dictionary Settings"))
+    oc.add(DirectoryObject(key=Callback(ResetDict, complete='1', locked=locked), title="Reset Dictionary Settings"))
     return oc
 
 
-@indirect
 @route(PREFIX + "/resetdict")
-def ResetDict(complete=0, locked='locked'):
-    if int(complete) == 1:
+def ResetDict(complete='0', locked='locked'):
+    if complete == '1':
         Dict.Reset()
-    if not 'tv' in Dict:
+    if 'tv' not in Dict:
         Dict['tv'] = {}
-    if not 'movie' in Dict:
+    if 'movie' not in Dict:
         Dict['movie'] = {}
-    if not 'register' in Dict:
+    if 'register' not in Dict:
         Dict['register'] = {}
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
     Dict.Save()
@@ -856,7 +854,3 @@ def checkAdmin():
     except:
         pass
     return False
-
-
-
-
