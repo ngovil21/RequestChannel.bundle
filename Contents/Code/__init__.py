@@ -531,16 +531,20 @@ def DeleteRequest(id, type, locked='unlocked'):
 
 @route(PREFIX + '/sendtocouchpotato')
 def SendToCouchpotato(id, locked='unlocked'):
-    if not id.startswith("tt"):  # Check if id is an imdb id
+    if id not in Dict['movie']:
+        return MessageContainer("Error", "The movie id was not found in the database")
+    movie = Dict['movie'][id]
+    if 'source' in movie and movie['source'] == 'tmdb':  # Check if id source is tmdb
         # we need to convert tmdb id to imdb
         json = JSON.ObjectFromURL(TMDB_API_URL + "movie/id/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
             imdb_id = json['imdb_id']
         else:
+            imdb_id = ""
             oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
             return oc
-    else:
+    else:   #Assume we have an imdb_id by default
         imdb_id = id
     # we have an imdb id, add to couchpotato
     if not Prefs['couchpotato_url'].startswith("http"):
@@ -549,8 +553,7 @@ def SendToCouchpotato(id, locked='unlocked'):
         couchpotato_url = Prefs['couchpotato_url']
     if not couchpotato_url.endswith("/"):
         couchpotato_url += "/"
-    values = {}
-    values['identifier'] = imdb_id
+    values = {'identifier': imdb_id}
     if Prefs['couchpotato_profile']:
         cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
         if cat['success']:
