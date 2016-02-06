@@ -249,7 +249,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
     else:
         user = ""
         token = Request.Headers['X-Plex-Token']
-        if Dict['register'].get(token, None):
+        if token in Dict['register'] and Dict['register'][token]['nickname']:
             user = Dict['register']['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         title_year = title + " (" + year + ")"
@@ -268,7 +268,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
 def AddNewTVShow(title="", locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
-        if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
+        if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -376,7 +376,7 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
     else:
         token = Request.Headers['X-Plex-Token']
         user = ""
-        if Dict['register'].get(token, None):
+        if token in Dict['register'] and Dict['register'][token]['nickname']:
             user = Dict['register'][token]['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
@@ -727,7 +727,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if Dict['register'].get(token, None) and Dict['register'][token]['nickname']:
+            if token in Dict['register'] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
@@ -749,7 +749,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if Dict['register'].get(token, None) and Dict['register'][token]['nickname']:
+            if token in Dict['register'] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
@@ -771,7 +771,7 @@ def notifyRequest(id, type, title="", message=""):
         try:
             user = "A user"
             token = Request.Headers['X-Plex-Token']
-            if Dict['register'].get(token, None) and Dict['register'][token]['nickname']:
+            if token in Dict['register'] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             if type == 'movie':
                 movie = Dict['movie'][id]
