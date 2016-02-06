@@ -536,7 +536,7 @@ def SendToCouchpotato(id, locked='unlocked'):
     movie = Dict['movie'][id]
     if 'source' in movie and movie['source'] == 'tmdb':  # Check if id source is tmdb
         # we need to convert tmdb id to imdb
-        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/id/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
+        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + id + "/?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
             imdb_id = json['imdb_id']
         else:
