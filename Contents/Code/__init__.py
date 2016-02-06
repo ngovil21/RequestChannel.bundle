@@ -425,7 +425,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
             else:
                 summary = ""
             if d['user']:
-                summary = "Requested by " + d['user'] + "\n" + summary
+                summary = "(Requested by " + d['user'] + ")\n " + summary
             oc.add(TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
                                 summary=summary, art=d['backdrop']))
         for id in Dict['tv']:
@@ -438,9 +438,11 @@ def ViewRequests(query="", locked='unlocked', message=None):
                 thumb = d['poster']
             else:
                 thumb = R('no-poster.jpg')
-            summary = d['summary']
+            summary = ""
+            if d['summary']:
+                summary = d['summary']
             if d['user']:
-                summary = "Requested by " + d['user'] + "\n" + summary
+                summary = "(Requested by " + d['user'] + ")\n " + summary
             oc.add(
                 TVShowObject(key=Callback(ViewRequest, id=id, type=d['type'], locked=locked), rating_key=id, title=title_year, thumb=thumb,
                              summary=summary, art=d['backdrop']))
