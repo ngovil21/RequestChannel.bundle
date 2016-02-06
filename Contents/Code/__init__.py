@@ -413,7 +413,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['movie']:
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
-            if d['automated']:
+            if d['automated'] and d['automated'] is True:
                 Log.Debug("Movie has already been sent for automation: " + title_year)
                 title_year = "+ " + title_year
             if d['poster']:
@@ -428,8 +428,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['tv']:
             d = Dict['tv'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
-            if d['automated']:
-                Log.Debug("Show has been sent for automation: "+ title_year)
+            if d['automated'] and d['automated'] is True:
+                Log.Debug("Show has been sent for automation: " + title_year)
                 title_year = "+ " + title_year
             if d['poster']:
                 thumb = d['poster']
@@ -700,7 +700,8 @@ def ManageChannel(message=None, locked='locked'):
 @route(PREFIX + "/resetdict")
 def ResetDict(locked='locked', confirm='False'):
     if confirm == 'False':
-        oc = ObjectContainer(header=TITLE, message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
+        oc = ObjectContainer(header=TITLE,
+                             message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
         oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked, confirm='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="No"))
         return oc
