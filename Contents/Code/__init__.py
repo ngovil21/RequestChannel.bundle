@@ -250,7 +250,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
         user = ""
         token = Request.Headers['X-Plex-Token']
         if token in Dict['register'] and Dict['register'][token]['nickname']:
-            user = Dict['register']['nickname']
+            user = Dict['register'][token]['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         title_year = title + " (" + year + ")"
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
