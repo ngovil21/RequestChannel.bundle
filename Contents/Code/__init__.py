@@ -254,7 +254,7 @@ def AddMovieRequest(id, title, source='', year="", poster="", backdrop="", summa
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         title_year = title + " (" + year + ")"
         Dict['movie'][id] = {'type': 'movie', 'id': id, 'source': source, 'title': title, 'year': year, 'title_year': title_year, 'poster': poster,
-                             'backdrop': backdrop, 'summary': summary, 'user': user}
+                             'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': True}
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(id)
@@ -380,7 +380,7 @@ def AddTVRequest(id, title, source='', year="", poster="", backdrop="", summary=
             user = Dict['register'][token]['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
         Dict['tv'][id] = {'type': 'tv', 'id': id, 'source': source, 'title': title, 'year': year, 'poster': poster, 'backdrop': backdrop,
-                          'summary': summary, 'user': user}
+                          'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(id)
@@ -413,6 +413,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['movie']:
             d = Dict['movie'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
+            if d['automated']:
+                title_year = "+ " + title_year
             if d['poster']:
                 thumb = d['poster']
             else:
@@ -425,6 +427,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
         for id in Dict['tv']:
             d = Dict['tv'][id]
             title_year = d['title'] + " (" + d['year'] + ")"
+            if d['automated']:
+                title_year = "+ " + title_year
             if d['poster']:
                 thumb = d['poster']
             else:
@@ -537,7 +541,7 @@ def SendToCouchpotato(id, locked='unlocked'):
     else:
         couchpotato_url = Prefs['couchpotato_url']
     if not couchpotato_url.endswith("/"):
-        couchpotato_url = couchpotato_url + "/"
+        couchpotato_url += "/"
     values = {}
     values['identifier'] = imdb_id
     if Prefs['couchpotato_profile']:
@@ -560,6 +564,7 @@ def SendToCouchpotato(id, locked='unlocked'):
         json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
         if 'success' in json and json['success']:
             oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
+            Dict['tv'][id]['automated'] = True
         else:
             oc = ObjectContainer(header=TITLE, message="Movie Request failed!")
     except:
@@ -636,6 +641,7 @@ def SendToSonarr(id, locked='unlocked'):
     try:
         HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
         oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
+        Dict['tv'][id]['automated'] = True
     except:
         oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
     if checkAdmin():
@@ -668,6 +674,7 @@ def SendToSickrage(id, locked='unlocked'):
         resp = JSON.ObjectFromURL(sickrage_url + "api/" + Prefs['sickrage_api'] + "/", values=data)
         if 'success' in resp and resp['success']:
             oc = ObjectContainer(header=TITLE, message="Show added to SickRage")
+            Dict['tv'][id]['automated'] = True
         else:
             oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
     except:
@@ -680,16 +687,21 @@ def SendToSickrage(id, locked='unlocked'):
 
 
 @route(PREFIX + "/managechannel")
-def ManageChannel(message="", locked='locked'):
+def ManageChannel(message=None, locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!")
     oc = ObjectContainer(header=TITLE, message=message)
-    oc.add(DirectoryObject(key=Callback(ResetDict, complete='1', locked=locked), title="Reset Dictionary Settings"))
+    oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
     return oc
 
 
 @route(PREFIX + "/resetdict")
-def ResetDict(complete='0', locked='locked'):
+def ResetDict(locked='locked', confirm='False'):
+    if confirm == 'False':
+        oc = ObjectContainer(header=TITLE, message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
+        oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked, confirm='True'), title="Yes"))
+        oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="No"))
+        return oc
     Dict.Reset()
     Dict['tv'] = {}
     Dict['movie'] = {}
