@@ -98,9 +98,9 @@ def MainMenu(locked='locked', message=None):
         oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
     else:
         oc.add(
-            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:"))
+            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search for Movie", prompt="Enter the name of the movie:"))
         oc.add(
-            InputDirectoryObject(key=Callback(SearchTV, locked=locked), title=title, prompt="Enter the name of the TV Show:"))
+            InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search for TV Show", prompt="Enter the name of the TV Show:"))
     if Prefs['usersviewrequests'] or is_admin:
         if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
