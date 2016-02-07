@@ -138,7 +138,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
+    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
         oc = ObjectContainer()
         oc.add(DirectoryObject(key="/empty", title="Empty Object"))                                   #For iOS try adding an empty space holder object like in Android
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -149,6 +149,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
     else:
         oc.add(
             InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
