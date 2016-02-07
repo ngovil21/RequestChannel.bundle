@@ -140,7 +140,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
         oc = ObjectContainer()
-        oc.add(DirectoryObject(key="", title=""))                                   #For iOS try adding an empty space holder object like in Android
+        oc.add(DirectoryObject(key="/empty", title="Empty Object"))                                   #For iOS try adding an empty space holder object like in Android
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(key="", title=""))
