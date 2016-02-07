@@ -287,7 +287,7 @@ def AddNewTVShow(title="", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
         oc = ObjectContainer()
-        oc.add(DirectoryObject(key="", title=""))  # For iOS try adding an empty space holder object like in Android
+        oc.add(DirectoryObject(key="/empty", title="Empty"))  # For iOS try adding an empty space holder object like in Android
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
@@ -295,6 +295,7 @@ def AddNewTVShow(title="", locked='unlocked'):
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
