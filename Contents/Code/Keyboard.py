@@ -6,7 +6,7 @@ PREFIX = '/video/plexrequestchannel'
 
 
 @route(PREFIX + "/dumbtools/keyboard")
-def Keyboard(query=None, callback=None, shift=False, secure='False', locked='locked'):
+def Keyboard(query=None, callback=None, shift=False, secure='False', locked='locked', title="Search"):
     if 'DumbKeyboard-History' not in Dict:
         Dict['DumbKeyboard-History'] = []
 
@@ -16,7 +16,7 @@ def Keyboard(query=None, callback=None, shift=False, secure='False', locked='loc
     else:
         string = query if query else ""
 
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2=title)
     # Submit
     Log.Debug("Create Submit key")
     oc.add(DirectoryObject(key=Callback(callback, query=query, locked=locked), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
@@ -26,20 +26,23 @@ def Keyboard(query=None, callback=None, shift=False, secure='False', locked='loc
         oc.add(DirectoryObject(key=Callback(History, query=query, callback=callback, locked=locked, secure=secure), title=u'%s' % 'Search History'))
     # Space
     Log.Debug("Create Space Key")
-    oc.add(DirectoryObject(key=Callback(Keyboard, query=query + " " if query else " ", callback=callback, locked=locked, secure=secure),
+    oc.add(DirectoryObject(key=Callback(Keyboard, query=query + " " if query else " ", callback=callback, locked=locked, secure=secure, title=title),
                            title='Space'))
     # Backspace (not really needed since you can just hit back)
     if query is not None:
         Log.Debug("Create backspace key")
-        oc.add(DirectoryObject(key=Callback(Keyboard, query=query[:-1], callback=callback, locked=locked, secure=secure), title='Backspace'))
+        oc.add(DirectoryObject(key=Callback(Keyboard, query=query[:-1], callback=callback, locked=locked, secure=secure, title=title
+                                            ), title='Backspace'))
     # Shift
     Log.Debug("Create Shift Key")
-    oc.add(DirectoryObject(key=Callback(Keyboard, query=query, callback=callback, locked=locked, secure=secure, shift=True), title='Shift'))
+    oc.add(
+        DirectoryObject(key=Callback(Keyboard, query=query, callback=callback, locked=locked, secure=secure, shift=True, title=title), title='Shift'))
     # Keys
     Log.Debug("Generating keys")
     for key in KEYS if not shift else SHIFT_KEYS:
-        oc.add(DirectoryObject(key=Callback(Keyboard, query=query + key if query else key, callback=callback, locked=locked, secure=secure),
-                               title=u'%s' % key))
+        oc.add(
+            DirectoryObject(key=Callback(Keyboard, query=query + key if query else key, callback=callback, locked=locked, secure=secure, title=title),
+                            title=u'%s' % key))
     Log.Debug("Return Object Container")
     return oc
 
@@ -69,7 +72,6 @@ def AddHistory(query):
     if query not in Dict['DumbKeyboard-History']:
         Dict['DumbKeyboard-History'].append(query)
         Dict.Save()
-
 
 # @route(PREFIX + "/dumbtools/submit")
 # def Submit(query, callback=callback, locked=locked):

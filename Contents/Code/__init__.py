@@ -86,8 +86,21 @@ def MainMenu(locked='locked', message=None):
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
-    oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
-    oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
+        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            oc.add(DirectoryObject(key="/empty", title="Empty Object"))
+        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, locked=locked, title="Search for Movie"), title="Request a Movie"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, locked=locked, title="Search for TV Show"), title="Request a TV Show"))
+    elif Client.Product == "Plex Web":
+        oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
+        oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
+    else:
+        oc.add(
+            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
+        oc.add(
+            InputDirectoryObject(key=Callback(SearchTV, locked=locked), title=title, prompt="Enter the name of the TV Show:"))
     if Prefs['usersviewrequests'] or is_admin:
         if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
@@ -113,6 +126,8 @@ def Register(message="Unrecognized device. The admin would like you to register 
     oc = ObjectContainer(header=TITLE, message=message)
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
+        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            oc.add(DirectoryObject(key="/empty", title="Empty Object"))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, locked=locked), title="Enter your name or nickname"))
     else:
@@ -133,10 +148,6 @@ def RegisterName(query="", locked='locked'):
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
-    if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
-        token = Request.Headers['X-Plex-Token']
-        if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
-            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
         oc = ObjectContainer()
@@ -157,6 +168,10 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
 def SearchMovie(title="Search Results", query="", locked='unlocked'):
     oc = ObjectContainer(title1=title, content=ContainerContent.Movies, view_group="Details")
     query = String.Quote(query, usePlus=True)
+    if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
+        token = Request.Headers['X-Plex-Token']
+        if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked)
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
