@@ -34,7 +34,8 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
-DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo', 'Plex for Apple TV']
+DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
+                         'Plex for Apple TV']
 
 
 ########################################################
@@ -42,7 +43,6 @@ DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater
 ########################################################
 
 def Start():
-
     ObjectContainer.title1 = TITLE
     ObjectContainer.art = R(ART)
 
@@ -86,17 +86,21 @@ def MainMenu(locked='locked', message=None):
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:         #Clients in this list do not support InputDirectoryObjects
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":      #Create an empty filler first item in iOS, not sure about Apple TV
+        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":  # Create an empty filler first item in iOS, not sure about Apple TV
             oc.add(DirectoryObject(key="/empty", title="Empty Object"))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, locked=locked, title="Search for Movie", message="Enter the name of the movie"), title="Request a Movie"))
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, locked=locked, title="Search for TV Show", message="Enter the name of the TV Show"), title="Request a TV Show"))
-    elif Client.Product == "Plex Web":                                                                      #Plex Web does not create a popup input directory object, so use an intermediate menu
+        oc.add(DirectoryObject(
+            key=Callback(Keyboard, callback=SearchMovie, locked=locked, title="Search for Movie", message="Enter the name of the movie"),
+            title="Request a Movie"))
+        oc.add(DirectoryObject(
+            key=Callback(Keyboard, callback=SearchTV, locked=locked, title="Search for TV Show", message="Enter the name of the TV Show"),
+            title="Request a TV Show"))
+    elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
         oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
         oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
-    else:                                                                                                   #All other clients
+    else:  # All other clients
         oc.add(
             InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search for Movie", prompt="Enter the name of the movie:"))
         oc.add(
@@ -151,7 +155,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
         oc = ObjectContainer()
-        oc.add(DirectoryObject(key="/empty", title="Empty Object"))                                   #For iOS try adding an empty space holder object like in Android
+        oc.add(DirectoryObject(key="/empty", title="Empty Object"))  # For iOS try adding an empty space holder object like in Android
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # oc.add(DirectoryObject(key="", title=""))
@@ -587,7 +591,7 @@ def SendToCouchpotato(id, locked='unlocked'):
             oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
             return oc
-    else:   #Assume we have an imdb_id by default
+    else:  # Assume we have an imdb_id by default
         imdb_id = id
     # we have an imdb id, add to couchpotato
     if not Prefs['couchpotato_url'].startswith("http"):
@@ -713,7 +717,7 @@ def SendToSickrage(id, locked='unlocked'):
     if not sickrage_url.endswith("/"):
         sickrage_url += "/"
     title = Dict['tv'][id]['title']
-    data = {'tvdbid': id}
+    data = dict(cmd='show.addnew', tvdbid=id)
     if Prefs['sickrage_location']:
         data['location'] = Prefs['sickrage_location']
     if Prefs['sickrage_status']:
