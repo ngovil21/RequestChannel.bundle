@@ -143,7 +143,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         oc.add(DirectoryObject(key="/empty", title="Empty Object"))                                   #For iOS try adding an empty space holder object like in Android
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        oc.add(DirectoryObject(key="", title=""))
+        # oc.add(DirectoryObject(key="", title=""))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, locked=locked), title=title, thumb=R('search.png')))
     else:
