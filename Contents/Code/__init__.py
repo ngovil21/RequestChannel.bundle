@@ -727,6 +727,8 @@ def SendToSickrage(id, locked='unlocked'):
     if Prefs['sickrage_archive']:
         data['archive'] = Prefs['sickrage_archive']
 
+    data['lang'] = 'en'
+
     Log.Debug(str(data))
 
     try:
