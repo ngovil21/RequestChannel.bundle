@@ -6,7 +6,7 @@ PREFIX = '/video/plexrequestchannel'
 
 
 @route(PREFIX + "/dumbtools/keyboard")
-def Keyboard(query=None, callback=None, shift=False, secure='False', locked='locked', title="Search"):
+def Keyboard(query=None, callback=None, shift=False, secure='False', locked='locked', title="Search", message=None):
     if 'DumbKeyboard-History' not in Dict:
         Dict['DumbKeyboard-History'] = []
 
@@ -16,7 +16,7 @@ def Keyboard(query=None, callback=None, shift=False, secure='False', locked='loc
     else:
         string = query if query else ""
 
-    oc = ObjectContainer(title2=title)
+    oc = ObjectContainer(title2=title, header=TITLE, message=message)
     # Submit
     Log.Debug("Create Submit key")
     oc.add(DirectoryObject(key=Callback(callback, query=query, locked=locked), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
