@@ -1,3 +1,5 @@
+#Modified version of DumbTools for Plex v1.1 by Cory <babylonstudio@gmail.com>
+
 KEYS = list('abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./')
 SHIFT_KEYS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?')
 
