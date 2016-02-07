@@ -728,7 +728,7 @@ def SendToSickrage(id, locked='unlocked'):
         data['archive'] = Prefs['sickrage_archive']
 
     data['lang'] = 'en'
-    daa['anime'] = False
+    data['anime'] = False
 
     Log.Debug(str(data))
 
