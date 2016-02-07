@@ -98,7 +98,7 @@ def MainMenu(locked='locked', message=None):
         oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
     else:
         oc.add(
-            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
+            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:"))
         oc.add(
             InputDirectoryObject(key=Callback(SearchTV, locked=locked), title=title, prompt="Enter the name of the TV Show:"))
     if Prefs['usersviewrequests'] or is_admin:
