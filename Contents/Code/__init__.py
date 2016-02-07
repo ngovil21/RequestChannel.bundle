@@ -91,8 +91,8 @@ def MainMenu(locked='locked', message=None):
         if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
             oc.add(DirectoryObject(key="/empty", title="Empty Object"))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, locked=locked, title="Search for Movie"), title="Request a Movie"))
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, locked=locked, title="Search for TV Show"), title="Request a TV Show"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, locked=locked, title="Search for Movie", message="Enter the name of the movie"), title="Request a Movie"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, locked=locked, title="Search for TV Show", message="Enter the name of the TV Show"), title="Request a TV Show"))
     elif Client.Product == "Plex Web":
         oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
         oc.add(DirectoryObject(key=Callback(AddNewTVShow, title="Request a TV Show", locked=locked), title="Request a TV Show"))
