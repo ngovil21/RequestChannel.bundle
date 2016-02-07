@@ -731,6 +731,7 @@ def SendToSickrage(id, locked='unlocked'):
 
     try:
         resp = JSON.ObjectFromURL(sickrage_url + "api/" + Prefs['sickrage_api'], values=data)
+        Log.Debug(JSON.StringFromObject(resp))
         if 'success' in resp and resp['success']:
             oc = ObjectContainer(header=TITLE, message="Show added to SickRage")
             Dict['tv'][id]['automated'] = True
