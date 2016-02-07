@@ -745,6 +745,7 @@ def ManageChannel(message=None, locked='locked'):
         return MainMenu("Only an admin can manage the channel!")
     oc = ObjectContainer(header=TITLE, message=message)
     oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
