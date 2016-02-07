@@ -727,6 +727,8 @@ def SendToSickrage(id, locked='unlocked'):
     if Prefs['sickrage_archive']:
         data['archive'] = Prefs['sickrage_archive']
 
+    Log.Debug(str(data))
+
     try:
         resp = JSON.ObjectFromURL(sickrage_url + "api/" + Prefs['sickrage_api'], values=data)
         if 'success' in resp and resp['success']:
@@ -734,8 +736,9 @@ def SendToSickrage(id, locked='unlocked'):
             Dict['tv'][id]['automated'] = True
         else:
             oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
-    except:
+    except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
+        Log.Debug(e.message)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, id=id, type='tv', title_year=title, locked=locked), title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
