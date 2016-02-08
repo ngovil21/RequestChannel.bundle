@@ -454,7 +454,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
             if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'show':
                 Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
                 summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
-                oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title), title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb'], ratingKey=series_id))
+                oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title), title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb']))
                 found_match = True
 
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
