@@ -240,7 +240,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 else:
                     thumb = R('no-poster.jpg')
                 oc.add(TVShowObject(
-                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'], poster=key['Poster'],
+                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'],
+                                 poster=key['Poster'],
                                  locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
@@ -421,7 +422,8 @@ def SearchTV(query, locked='unlocked'):
             thumb = R('no-poster.jpg')
         oc.add(
             TVShowObject(
-                key=Callback(ConfirmTVRequest, series_id=series_id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
+                key=Callback(ConfirmTVRequest, series_id=series_id, source='tvdb', title=title, year=year, poster=poster, summary=summary,
+                             locked=locked),
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
@@ -459,8 +461,9 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
                 if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'show':
                     Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
                     summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
-                    oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
-                                        rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
+                    oc.add(
+                        TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
+                                     rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
                     found_match = True
                     break
     except:
@@ -619,7 +622,8 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(
-                DirectoryObject(key=Callback(SendToCouchpotato, movie_id=req_id, locked=locked), title="Send to CouchPotato", thumb=R('couchpotato.png')))
+                DirectoryObject(key=Callback(SendToCouchpotato, movie_id=req_id, locked=locked), title="Send to CouchPotato",
+                                thumb=R('couchpotato.png')))
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
             oc.add(DirectoryObject(key=Callback(SendToSonarr, series_id=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
@@ -796,7 +800,8 @@ def SendToSonarr(series_id, locked='unlocked'):
         else:
             oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
     if checkAdmin():
-        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked), title="Delete Request"))
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
+                               title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
@@ -844,20 +849,60 @@ def SendToSickrage(series_id, locked='unlocked'):
 
 
 @route(PREFIX + "/managechannel")
-def ManageChannel(message=None, locked='locked'):
+def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
-        return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
         oc = ObjectContainer(title1="Manage", title2=message)
     else:
         oc = ObjectContainer(header=TITLE, message=message)
+    oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Registered Users"))
     oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
+@route(PREFIX + "/manageusers")
+def ManageUsers(locked='locked'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+    oc = ObjectContainer()
+    if len(Dict['register']) > 0:
+        for token in Dict['register']:
+            if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
+                oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=Dict['register'][token]['nickname']))
+    oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
+    return oc
+
+
+@route(PREFIX + "/manageuser")
+def ManageUser(token, locked='locked'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+    oc = ObjectContainer(title1="Manage User", title2=Dict['register'][token]['nickname'])
+    oc.add(DirectoryObject(key=Callback(ManageUser,token=token, locked=locked), title=Dict['register'][token]['nickname'] + "has made " + str(Dict['register'][token]['requests']) + " requests."))
+    oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
+    oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
+
+    return oc
+
+
+@route(PREFIX + "/deleteuser")
+def DeleteUser(token, locked='locked', confirmed='False'):
+    oc = ObjectContainer(title1="Confirm Delete User?", title2=Dict['register'][token]['nickname'])
+    if confirmed=='False':
+        oc.add(DirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='True'), title="Yes"))
+        oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
+    elif confirmed=='True':
+        del Dict['register'][token]
+        return MessageContainer(message="User has been deleted.")
+    return oc
+
+
 @route(PREFIX + "/resetdict")
 def ResetDict(locked='locked', confirm='False'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
     if confirm == 'False':
         if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
             oc = ObjectContainer(title1="Reset", title2="Confirm")
