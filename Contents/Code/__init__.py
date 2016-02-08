@@ -280,20 +280,27 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
                              header=TITLE, message="Request movie " + title_year + "?")
     found_match = False
-    local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
-    if local_search:
-        # Log.Debug(XML.StringFromElement(local_search))
-        videos = local_search.xpath("//Video")
-        for video in videos:
-            video_attr = video.attrib
-            if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'movie':
-                Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
-                summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
-                oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
-                                    rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
-                found_match = True
-                break
-
+    try:
+        local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
+        if local_search:
+            # Log.Debug(XML.StringFromElement(local_search))
+            videos = local_search.xpath("//Video")
+            for video in videos:
+                video_attr = video.attrib
+                if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'movie':
+                    Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
+                    summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
+                    oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
+                                        rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
+                    found_match = True
+                    break
+    except:
+        pass
+    if found_match:
+        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            oc.title1 = "Movie Already Exists"
+        else:
+            oc.message("Movie appears to already exist in the library. Are you sure you would still like to request it?")
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
     #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
@@ -442,20 +449,28 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
                              header=TITLE, message="Request tv show " + title_year + "?")
 
     found_match = False
-    local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
-    if local_search:
-        # Log.Debug(XML.StringFromElement(local_search))
-        videos = local_search.xpath("//Video")
-        for video in videos:
-            video_attr = video.attrib
-            if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'show':
-                Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
-                summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
-                oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
-                                    rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
-                found_match = True
-                break
+    try:
+        local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
+        if local_search:
+            # Log.Debug(XML.StringFromElement(local_search))
+            videos = local_search.xpath("//Video")
+            for video in videos:
+                video_attr = video.attrib
+                if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'show':
+                    Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
+                    summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
+                    oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
+                                        rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
+                    found_match = True
+                    break
+    except:
+        pass
 
+    if found_match:
+        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            oc.title1 = "Show Already Exists"
+        else:
+            oc.message("TV Show appears to already exist in the library. Are you sure you would still like to request it?")
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
     #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
