@@ -895,7 +895,7 @@ def DeleteUser(token, locked='locked', confirmed='False'):
         oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
     elif confirmed=='True':
         del Dict['register'][token]
-        return MessageContainer(message="User has been deleted.")
+        return MessageContainer(header=TITLE, message="User has been deleted.")
     return oc
 
 
@@ -905,7 +905,7 @@ def ResetDict(locked='locked', confirm='False'):
         return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
     if confirm == 'False':
         if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
-            oc = ObjectContainer(title1="Reset", title2="Confirm")
+            oc = ObjectContainer(title1="Reset Info", title2="Confirm")
         else:
             oc = ObjectContainer(header=TITLE,
                                  message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
