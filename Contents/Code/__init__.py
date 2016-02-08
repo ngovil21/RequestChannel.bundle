@@ -1,5 +1,6 @@
 from DumbTools import DumbKeyboard
-from Keyboard import Keyboard
+
+import Keyboard
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
