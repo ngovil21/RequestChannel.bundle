@@ -62,6 +62,8 @@ def Start():
     if 'register' not in Dict:
         Dict['register'] = {}
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+    if 'blocked' not in Dict:
+        Dict['blocked'] = []
     Dict.Save()
 
 
@@ -177,11 +179,15 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
 def SearchMovie(title="Search Results", query="", locked='unlocked'):
     oc = ObjectContainer(title1=title, content=ContainerContent.Movies, view_group="Details")
     query = String.Quote(query, usePlus=True)
+    token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
-        token = Request.Headers['X-Plex-Token']
+
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
                             title1="Main Menu", title2="Weekly Limit")
+    if token in Dict['blocked']:
+        return MainMenu(message="Sorry you have been blocked.", locked=locked,
+                        title1="Main Menu", title2="User Blocked")
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
@@ -339,11 +345,14 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
 
 @route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
+    token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
-        token = Request.Headers['X-Plex-Token']
         if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
                             title1="Main Menu", title2="Weekly Limit")
+    if token in Dict['blocked']:
+        return MainMenu(message="Sorry you have been blocked.", locked=locked,
+                        title1="Main Menu", title2="User Blocked")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
         oc = ObjectContainer(title2=title)
     else:
@@ -872,8 +881,9 @@ def ManageUsers(locked='locked', message=None):
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             else:
-                user = "User " + Hash.SHA1(token)
-            oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + str(Dict['register'][token]['requests'])))
+                user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
+            oc.add(
+                DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + str(Dict['register'][token]['requests'])))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
     return oc
 
@@ -882,14 +892,39 @@ def ManageUsers(locked='locked', message=None):
 def ManageUser(token, locked='locked', message=None):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    oc = ObjectContainer(title1="Manage User", title2=Dict['register'][token]['nickname'], message=message)
+    if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
+        user = Dict['register'][token]['nickname']
+    else:
+        user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
+    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        oc = ObjectContainer(title1="Manage User", title2=message)
+    else:
+        oc = ObjectContainer(title1="Manage User", title2=user, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked),
-                           title=Dict['register'][token]['nickname'] + " has made " + str(Dict['register'][token]['requests']) + " requests."))
+                           title=user + " has made " + str(Dict['register'][token]['requests']) + " requests."))
+    if token in Dict['blocked']:
+        oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='False', locked=locked), title="Unblock User"))
+    else:
+        oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='True', locked=locked), title="Block User"))
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
 
     return oc
 
+
+@route(PREFIX + "/blockuser")
+def BlockUser(token, set, locked='locked'):
+    if set == 'True':
+        if token in Dict['blocked']:
+            return ManageUser(token=token, locked=locked, message="User is already blocked.")
+        else:
+            Dict['blocked'].append(token)
+            return ManageUser(token=token, locked=locked, message="User has been blocked.")
+    elif set == 'False':
+        if token in Dict['blocked']:
+            Dict['blocked'].remove(token)
+            return ManageUser(token=token, locked=locked, message="User has been unblocked.")
+    return ManageUser(token=token, locked=locked)
 
 @route(PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
@@ -918,18 +953,13 @@ def ResetDict(locked='locked', confirm='False'):
         oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked, confirm='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="No"))
         return oc
-    Dict.Reset()
-    Dict['tv'] = {}
-    Dict['movie'] = {}
-    Dict['register'] = {}
-    Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
-    if 'tv' not in Dict:
+    elif confirm == 'True':
+        Dict.Reset()
         Dict['tv'] = {}
-    if 'movie' not in Dict:
         Dict['movie'] = {}
-    if 'register' not in Dict:
         Dict['register'] = {}
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+        Dict['blocked'] = []
 
     return ManageChannel(message="Dictionary has been reset!", locked=locked)
 
