@@ -34,10 +34,6 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
-DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
-                         'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One']
-
-
 ########################################################
 #   Start Code
 ########################################################
@@ -90,11 +86,8 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        # if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":  # Create an empty filler first item in iOS, not sure about Apple TV
-        #      oc.add(DirectoryObject(key="/empty", title="Empty Object"))
-        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(
             key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie",
                          message="Enter the name of the movie"),
@@ -137,7 +130,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
         oc = ObjectContainer(title1="Unrecognized Device", title2="Please register")
     else:
         oc = ObjectContainer(header=TITLE, message=message)
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
             oc.add(DirectoryObject(key="/empty", title="Empty Object"))
@@ -164,7 +157,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
         oc = ObjectContainer()
         oc.add(DirectoryObject(key="/empty", title="Empty Object"))  # For iOS try adding an empty space holder object like in Android
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # oc.add(DirectoryObject(key="", title=""))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
@@ -220,7 +213,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             else:
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             Log.Debug("No Results Found")
-            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+            if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 oc.add(DirectoryObject(key="", title=""))
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
@@ -255,7 +248,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 oc = ObjectContainer(title2="No results")
             else:
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+            if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
@@ -265,10 +258,9 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                                             prompt="Enter the name of the movie:"))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key="", title=""))
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                thumb=R('search.png')))
     else:
@@ -308,8 +300,8 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
             oc.title1 = "Movie Already Exists"
         else:
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
-    # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
-    #     oc.add(DirectoryObject(key=None, title=""))
+    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+        oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
         key=Callback(AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
@@ -357,7 +349,7 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
         oc = ObjectContainer(title2=title)
     else:
         oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Request a TV Show",
@@ -379,7 +371,7 @@ def SearchTV(query, locked='unlocked'):
             oc = ObjectContainer(title2="No Results")
         else:
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
-        if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again",
@@ -434,7 +426,7 @@ def SearchTV(query, locked='unlocked'):
                 key=Callback(ConfirmTVRequest, series_id=series_id, source='tvdb', title=title, year=year, poster=poster, summary=summary,
                              locked=locked),
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         oc.add(
@@ -589,7 +581,7 @@ def ViewRequestsPassword(locked='locked'):
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
         oc = ObjectContainer()
         oc.add(DirectoryObject(key="", title=""))  # For iOS try adding an empty space holder object like in Android
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent=MainMenu, locked=locked), title="Enter password:"))
@@ -865,7 +857,7 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
         oc = ObjectContainer(title1="Manage", title2=message)
     else:
         oc = ObjectContainer(header=TITLE, message=message)
-    oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Registered Users"))
+    oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Users"))
     oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
