@@ -282,7 +282,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
     found_match = False
     local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
     if local_search:
-        Log.Debug(XML.StringFromElement(local_search))
+        # Log.Debug(XML.StringFromElement(local_search))
         videos = local_search.xpath("//Video")
         for video in videos:
             video_attr = video.attrib
@@ -444,7 +444,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     found_match = False
     local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
     if local_search:
-        Log.Debug(XML.StringFromElement(local_search))
+        # Log.Debug(XML.StringFromElement(local_search))
         videos = local_search.xpath("//Video")
         for video in videos:
             video_attr = video.attrib
