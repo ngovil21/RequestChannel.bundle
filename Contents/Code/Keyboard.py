@@ -41,6 +41,7 @@ def Keyboard(query=None, callback=None, shift=False, secure='False', locked='loc
         DirectoryObject(key=Callback(Keyboard, query=query, callback=callback, locked=locked, secure=secure, shift=True, title=title), title='Shift'))
     # Keys
     Log.Debug("Generating keys")
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Cancel"))
     for key in KEYS if not shift else SHIFT_KEYS:
         oc.add(
             DirectoryObject(key=Callback(Keyboard, query=query + key if query else key, callback=callback, locked=locked, secure=secure, title=title),

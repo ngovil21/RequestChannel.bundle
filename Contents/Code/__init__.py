@@ -79,7 +79,7 @@ def MainMenu(locked='locked', message=None):
     token = Request.Headers['X-Plex-Token']
     if is_admin and token in Dict['register']:  # Do not save admin token in the register
         del Dict['register'][token]
-    if not is_admin and Dict['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
+    if Prefs['register'] and not is_admin and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
     if not is_admin and token not in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
@@ -88,8 +88,8 @@ def MainMenu(locked='locked', message=None):
         resetRegister()
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":  # Create an empty filler first item in iOS, not sure about Apple TV
-            oc.add(DirectoryObject(key="/empty", title="Empty Object"))
+        # if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":  # Create an empty filler first item in iOS, not sure about Apple TV
+        #      oc.add(DirectoryObject(key="/empty", title="Empty Object"))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(
             key=Callback(Keyboard, callback=SearchMovie, locked=locked, title="Search for Movie", message="Enter the name of the movie"),
@@ -727,8 +727,6 @@ def SendToSickrage(id, locked='unlocked'):
     if Prefs['sickrage_archive']:
         data['archive'] = Prefs['sickrage_archive']
 
-    data['lang'] = 'en'
-    data['anime'] = False
 
     Log.Debug(str(data))
 
