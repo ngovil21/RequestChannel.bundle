@@ -35,7 +35,7 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
-                         'Plex for Apple TV']
+                         'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One']
 
 
 ########################################################
