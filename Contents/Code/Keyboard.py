@@ -17,8 +17,9 @@ def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False'
         string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
     else:
         string = query if query else ""
-
-    oc = ObjectContainer(title2=title)
+    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        message = None
+    oc = ObjectContainer(title2=title, message=message)
     # Submit
     Log.Debug("Create Submit key")
     oc.add(DirectoryObject(key=Callback(callback, query=query, locked=locked), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
