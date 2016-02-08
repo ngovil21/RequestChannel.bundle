@@ -18,7 +18,7 @@ def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False'
     else:
         string = query if query else ""
 
-    oc = ObjectContainer(title2=title, header=TITLE, message=message)
+    oc = ObjectContainer(title2=title)
     # Submit
     Log.Debug("Create Submit key")
     oc.add(DirectoryObject(key=Callback(callback, query=query, locked=locked), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
