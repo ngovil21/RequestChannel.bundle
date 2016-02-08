@@ -873,7 +873,7 @@ def ManageUsers(locked='locked', message=None):
                 user = Dict['register'][token]['nickname']
             else:
                 user = "User " + Hash.SHA1(token)
-            oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + Doct['register'][token]['requests']))
+            oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + str(Dict['register'][token]['requests'])))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
     return oc
 
