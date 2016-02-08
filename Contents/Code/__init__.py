@@ -285,11 +285,12 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
         Log.Debug(XML.StringFromElement(local_search))
         videos = local_search.xpath("//Video")
         for video in videos:
-            if video['title'] == title and video['year'] == year and video['type'] == 'movie':
-                Log.Debug("Possible match found: " + str(video['ratingKey']))
-                summary = "(In Library: " + video['librarySectionTitle'] + ") " + (video['summary'] if video['summary'] else "")
+            video_attr = video.attrib
+            if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'movie':
+                Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
+                summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
                 oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
-                                    title="+ " + title, summary=video['summary'], thumb=video['thumb'], ratingKey=video['ratingKey']))
+                                    title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb'], ratingKey=video_attr['ratingKey']))
                 found_match = True
 
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
@@ -449,10 +450,11 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         Log.Debug(XML.StringFromElement(local_search))
         videos = local_search.xpath("//Video")
         for video in videos:
-            if video['title'] == title and video['year'] == year and video['type'] == 'show':
-                Log.Debug("Possible match found: " + str(video['ratingKey']))
-                summary = "(In Library: " + video['librarySectionTitle'] + ") " + (video['summary'] if video['summary'] else "")
-                oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title), title="+ " + title, summary=video['summary'], thumb=video['thumb']))
+            video_attr = video.attrib
+            if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'show':
+                Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
+                summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
+                oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title), title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb']))
                 found_match = True
 
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
