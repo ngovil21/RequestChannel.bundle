@@ -291,6 +291,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
                 summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
                 oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
                                     ratingKey=movie_id, title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb']))
+                break
                 found_match = True
 
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
