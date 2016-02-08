@@ -300,7 +300,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
         if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
             oc.title1 = "Movie Already Exists"
         else:
-            oc.message("Movie appears to already exist in the library. Are you sure you would still like to request it?")
+            oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
     #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
@@ -470,7 +470,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
             oc.title1 = "Show Already Exists"
         else:
-            oc.message("TV Show appears to already exist in the library. Are you sure you would still like to request it?")
+            oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
     #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
