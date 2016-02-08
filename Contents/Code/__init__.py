@@ -145,7 +145,6 @@ def Register(message="Unrecognized device. The admin would like you to register 
     return oc
 
 
-@indirect
 @route(PREFIX + '/registername')
 def RegisterName(query="", locked='locked'):
     if not query:
