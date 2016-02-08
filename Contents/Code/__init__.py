@@ -290,7 +290,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
                 Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
                 summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
                 oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
-                                    rating_key=video['ratingKey'], title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb']))
+                                    rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
                 found_match = True
                 break
 
@@ -301,10 +301,6 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
     #     oc.add(DirectoryObject(key=None, title=""))
-    # oc.add(DirectoryObject(
-    #     key=Callback(AddMovieRequest, id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
-    #                  locked=locked),
-    #     title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
@@ -456,7 +452,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
                 Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
                 summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
                 oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
-                                    rating_key=video['ratingKey'], title="+ " + title, summary=video_attr['summary'], thumb=video_attr['thumb']))
+                                    rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
                 found_match = True
                 break
 
