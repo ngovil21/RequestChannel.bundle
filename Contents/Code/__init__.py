@@ -880,7 +880,7 @@ def ManageUser(token, locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     oc = ObjectContainer(title1="Manage User", title2=Dict['register'][token]['nickname'])
-    oc.add(DirectoryObject(key=Callback(ManageUser,token=token, locked=locked), title=Dict['register'][token]['nickname'] + "has made " + str(Dict['register'][token]['requests']) + " requests."))
+    oc.add(DirectoryObject(key=Callback(ManageUser,token=token, locked=locked), title=Dict['register'][token]['nickname'] + " has made " + str(Dict['register'][token]['requests']) + " requests."))
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
 
