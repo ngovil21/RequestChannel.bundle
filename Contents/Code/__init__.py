@@ -857,30 +857,34 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
     else:
         oc = ObjectContainer(header=TITLE, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Registered Users"))
-    oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
+    oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
 @route(PREFIX + "/manageusers")
-def ManageUsers(locked='locked'):
+def ManageUsers(locked='locked', message=None):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    oc = ObjectContainer()
+    oc = ObjectContainer(message=message)
     if len(Dict['register']) > 0:
         for token in Dict['register']:
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
-                oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=Dict['register'][token]['nickname']))
+                user = Dict['register'][token]['nickname']
+            else:
+                user = "User " + Hash.SHA1(token)
+            oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + Doct['register'][token]['requests']))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
     return oc
 
 
 @route(PREFIX + "/manageuser")
-def ManageUser(token, locked='locked'):
+def ManageUser(token, locked='locked', message=None):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    oc = ObjectContainer(title1="Manage User", title2=Dict['register'][token]['nickname'])
-    oc.add(DirectoryObject(key=Callback(ManageUser,token=token, locked=locked), title=Dict['register'][token]['nickname'] + " has made " + str(Dict['register'][token]['requests']) + " requests."))
+    oc = ObjectContainer(title1="Manage User", title2=Dict['register'][token]['nickname'], message=message)
+    oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked),
+                           title=Dict['register'][token]['nickname'] + " has made " + str(Dict['register'][token]['requests']) + " requests."))
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
 
@@ -889,13 +893,15 @@ def ManageUser(token, locked='locked'):
 
 @route(PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     oc = ObjectContainer(title1="Confirm Delete User?", title2=Dict['register'][token]['nickname'])
-    if confirmed=='False':
+    if confirmed == 'False':
         oc.add(DirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
-    elif confirmed=='True':
+    elif confirmed == 'True':
         del Dict['register'][token]
-        return MessageContainer(header=TITLE, message="User has been deleted.")
+        return ManageUser(locked=locked, message="User registration has been deleted.")
     return oc
 
 
