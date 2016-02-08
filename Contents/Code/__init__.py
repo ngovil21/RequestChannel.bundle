@@ -94,10 +94,12 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
         #      oc.add(DirectoryObject(key="/empty", title="Empty Object"))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(
-            key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie", message="Enter the name of the movie"),
+            key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie",
+                         message="Enter the name of the movie"),
             title="Request a Movie"))
         oc.add(DirectoryObject(
-            key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked, title="Search for TV Show", message="Enter the name of the TV Show"),
+            key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked, title="Search for TV Show",
+                         message="Enter the name of the TV Show"),
             title="Request a TV Show"))
     elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
         oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
@@ -178,7 +180,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
-            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked, title1="Main Menu", title2="Weekly Limit")
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
+                            title1="Main Menu", title2="Weekly Limit")
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
@@ -215,7 +218,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 oc.add(DirectoryObject(key="", title=""))
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                                       thumb=R('search.png')))
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                             prompt="Enter the name of the movie:"))
@@ -247,7 +251,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                                       thumb=R('search.png')))
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                             prompt="Enter the name of the movie:"))
@@ -257,7 +262,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key="", title=""))
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                               thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                     prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -272,10 +278,10 @@ def ConfirmMovieRequest(id, title, source='', year="", poster="", backdrop="", s
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
-                         header=TITLE, message="Request movie " + title_year + "?")
+                             header=TITLE, message="Request movie " + title_year + "?")
 
-    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
-        oc.add(DirectoryObject(key=None, title=""))
+    # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
         key=Callback(AddMovieRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
         title="Yes", thumb=R('check.png')))
@@ -311,14 +317,16 @@ def AddNewTVShow(title="", locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
         token = Request.Headers['X-Plex-Token']
         if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
-            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked, title1="Main Menu", title2="Weekly Limit")
+            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
+                            title1="Main Menu", title2="Weekly Limit")
     oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the searchbox and press enter.")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
         oc = ObjectContainer()
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Request a TV Show", thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Request a TV Show",
+                               thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
@@ -327,7 +335,7 @@ def AddNewTVShow(title="", locked='unlocked'):
 
 @route(PREFIX + '/searchtv')
 def SearchTV(query, locked='unlocked'):
-    oc = ObjectContainer(title1="Search Results", content=ContainerContent.Shows, view_group="Details")
+    oc = ObjectContainer(title1="Search Results", title2=query, content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
@@ -339,7 +347,8 @@ def SearchTV(query, locked='unlocked'):
         if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-            oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+            oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again",
+                                   thumb=R('search.png')))
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                         thumb=R('search.png')))
@@ -388,13 +397,11 @@ def SearchTV(query, locked='unlocked'):
         oc.add(
             TVShowObject(key=Callback(ConfirmTVRequest, id=id, source='tvdb', title=title, year=year, poster=poster, summary=summary, locked=locked),
                          rating_key=id, title=title_year, summary=summary, thumb=thumb))
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
-        oc = ObjectContainer()
-        oc.add(DirectoryObject(key=None))  # For iOS try adding an empty space holder object like in Android
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+        oc.add(
+            DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
@@ -409,13 +416,13 @@ def ConfirmTVRequest(id, title, source="", year="", poster="", backdrop="", summ
     else:
         title_year = title
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
-        ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
+        oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
-                         header=TITLE, message="Request tv show " + title_year + "?")
+                             header=TITLE, message="Request tv show " + title_year + "?")
 
-    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
-        oc.add(DirectoryObject(key=None, title=""))
+    # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
         key=Callback(AddTVRequest, id=id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked),
         title="Yes", thumb=R('check.png')))
@@ -802,7 +809,7 @@ def ResetDict(locked='locked', confirm='False'):
             oc = ObjectContainer(title1="Reset", title2="Confirm")
         else:
             oc = ObjectContainer(header=TITLE,
-                             message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
+                                 message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
         oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked, confirm='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="No"))
         return oc
