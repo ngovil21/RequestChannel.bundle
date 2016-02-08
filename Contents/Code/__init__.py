@@ -71,7 +71,7 @@ def Start():
 def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
         message = None
     oc = ObjectContainer(replace_parent=True, message=message, title1=title1, title2=title2)
     is_admin = checkAdmin()
@@ -127,14 +127,12 @@ def resetRegister():
 def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
     if Client.Product == "Plex Web":
         message += "\nEnter your name in the searchbox and press enter."
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Unrecognized Device", title2="Please register")
     else:
         oc = ObjectContainer(header=TITLE, message=message)
     if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
-            oc.add(DirectoryObject(key="/empty", title="Empty Object"))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=RegisterName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
     else:
@@ -155,7 +153,7 @@ def RegisterName(query="", locked='locked'):
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer()
         oc.add(DirectoryObject(key="/empty", title="Empty Object"))  # For iOS try adding an empty space holder object like in Android
     if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
@@ -209,7 +207,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
                                  summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
         else:
-            if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
             else:
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
@@ -245,7 +243,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                                  locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
-            if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
             else:
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
@@ -274,7 +272,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " " + "(" + year + ")"
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
@@ -297,7 +295,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
     except:
         pass
     if found_match:
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc.title1 = "Movie Already Exists"
         else:
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
@@ -368,7 +366,7 @@ def SearchTV(query, locked='unlocked'):
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
     if len(series) == 0:
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2="No Results")
         else:
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
@@ -472,7 +470,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         pass
 
     if found_match:
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc.title1 = "Show Already Exists"
         else:
             oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
@@ -512,13 +510,13 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked='unlocked', message=None):
     if locked == 'unlocked':
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2=message)
         else:
             oc = ObjectContainer(content=ContainerContent.Mixed, message=message)
     elif query == Prefs['password']:
         locked = 'unlocked'
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2="Password correct")
         else:
             oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
@@ -526,7 +524,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
         return MainMenu(locked='locked', message="Password incorrect", title1="Main Menu", title2="Password incorrect")
     if not Dict['movie'] and not Dict['tv']:
         Log.Debug("There are no requests")
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="View Requests", title2="No Requests")
         else:
             oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
@@ -579,9 +577,6 @@ def ViewRequests(query="", locked='unlocked', message=None):
 @route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
-        oc = ObjectContainer()
-        oc.add(DirectoryObject(key="", title=""))  # For iOS try adding an empty space holder object like in Android
     if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
@@ -669,7 +664,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
             imdb_id = json['imdb_id']
         else:
             imdb_id = ""
-            if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
                 oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
@@ -704,18 +699,18 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     try:
         json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
         if 'success' in json and json['success']:
-            if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="Couchpotato", title2="Success")
             else:
                 oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
             Dict['movie'][movie_id]['automated'] = True
         else:
-            if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
                 oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
     except:
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
         else:
             oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
@@ -791,13 +786,13 @@ def SendToSonarr(series_id, locked='unlocked'):
     values = JSON.StringFromObject(options)
     try:
         HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Sonarr", title2="Success")
         else:
             oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
         Dict['tv'][series_id]['automated'] = True
     except:
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
         else:
             oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
@@ -854,7 +849,7 @@ def SendToSickrage(series_id, locked='unlocked'):
 def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage", title2=message)
     else:
         oc = ObjectContainer(header=TITLE, message=message)
@@ -889,7 +884,7 @@ def ManageUser(token, locked='locked', message=None):
         user = Dict['register'][token]['nickname']
     else:
         user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage User", title2=message)
     else:
         oc = ObjectContainer(title1="Manage User", title2=user, message=message)
@@ -938,7 +933,7 @@ def ResetDict(locked='locked', confirm='False'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
     if confirm == 'False':
-        if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Reset Info", title2="Confirm")
         else:
             oc = ObjectContainer(header=TITLE,
