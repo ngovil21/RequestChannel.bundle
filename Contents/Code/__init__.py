@@ -453,7 +453,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
         if local_search:
             # Log.Debug(XML.StringFromElement(local_search))
-            videos = local_search.xpath("//Video")
+            videos = local_search.xpath("//Directory")
             for video in videos:
                 video_attr = video.attrib
                 if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'show':
