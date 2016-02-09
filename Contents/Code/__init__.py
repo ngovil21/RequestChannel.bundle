@@ -1,6 +1,8 @@
 from DumbTools import DumbKeyboard
 
-import Keyboard
+# import Keyboard
+
+from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
@@ -71,7 +73,7 @@ def Start():
 def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
-    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         message = None
     oc = ObjectContainer(replace_parent=True, message=message, title1=title1, title2=title2)
     is_admin = checkAdmin()
@@ -87,14 +89,14 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(
-            key=Callback(Keyboard.Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie",
+            key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie",
                          message="Enter the name of the movie"),
             title="Request a Movie"))
         oc.add(DirectoryObject(
-            key=Callback(Keyboard.Keyboard, callback=SearchTV, parent=MainMenu, locked=locked, title="Search for TV Show",
+            key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked, title="Search for TV Show",
                          message="Enter the name of the TV Show"),
             title="Request a TV Show"))
     elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
@@ -114,7 +116,10 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if is_admin:
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
-        oc.add(DirectoryObject(key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked), title="Register Device"))
+        oc.add(DirectoryObject(
+            key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked),
+            title="Register Device"))
+
     return oc
 
 
@@ -128,14 +133,14 @@ def resetRegister():
 def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
     if Client.Product == "Plex Web":
         message += "\nEnter your name in the searchbox and press enter."
-    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Unrecognized Device", title2="Please register")
     else:
         oc = ObjectContainer(header=TITLE, message=message)
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=RegisterName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
                                     prompt="Enter your name or nickname"))
@@ -154,14 +159,14 @@ def RegisterName(query="", locked='locked'):
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer()
         oc.add(DirectoryObject(key="/empty", title="Empty Object"))  # For iOS try adding an empty space holder object like in Android
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # oc.add(DirectoryObject(key="", title=""))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
     else:
         oc.add(
             InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -208,16 +213,16 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
                                  summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
         else:
-            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
             else:
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             Log.Debug("No Results Found")
-            if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 oc.add(DirectoryObject(key="", title=""))
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-                oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
@@ -244,24 +249,24 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                                  locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
-            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
             else:
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-            if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-                oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                             prompt="Enter the name of the movie:"))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
@@ -273,7 +278,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " " + "(" + year + ")"
-    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
@@ -296,7 +301,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
     except:
         pass
     if found_match:
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc.title1 = "Movie Already Exists"
         else:
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
@@ -349,10 +354,10 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
         oc = ObjectContainer(title2=title)
     else:
         oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Request a TV Show",
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Request a TV Show",
                                thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
@@ -367,14 +372,14 @@ def SearchTV(query, locked='unlocked'):
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
     if len(series) == 0:
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2="No Results")
         else:
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
-        if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+        if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-            oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again",
+            oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again",
                                    thumb=R('search.png')))
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
@@ -426,11 +431,11 @@ def SearchTV(query, locked='unlocked'):
                 key=Callback(ConfirmTVRequest, series_id=series_id, source='tvdb', title=title, year=year, poster=poster, summary=summary,
                              locked=locked),
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         oc.add(
-            DirectoryObject(key=Callback(Keyboard.Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+            DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
@@ -471,7 +476,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         pass
 
     if found_match:
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc.title1 = "Show Already Exists"
         else:
             oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
@@ -511,13 +516,13 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked='unlocked', message=None):
     if locked == 'unlocked':
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2=message)
         else:
             oc = ObjectContainer(content=ContainerContent.Mixed, message=message)
     elif query == Prefs['password']:
         locked = 'unlocked'
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2="Password correct")
         else:
             oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
@@ -525,7 +530,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
         return MainMenu(locked='locked', message="Password incorrect", title1="Main Menu", title2="Password incorrect")
     if not Dict['movie'] and not Dict['tv']:
         Log.Debug("There are no requests")
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="View Requests", title2="No Requests")
         else:
             oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
@@ -578,10 +583,10 @@ def ViewRequests(query="", locked='unlocked', message=None):
 @route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    if Client.Product in Keyboard.DUMB_KEYBOARD_CLIENTS or Client.Platform in Keyboard.DUMB_KEYBOARD_CLIENTS:
+    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard.Keyboard, callback=ViewRequests, parent=MainMenu, locked=locked), title="Enter password:"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent=MainMenu, locked=locked), title="Enter password:"))
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc
@@ -665,7 +670,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
             imdb_id = json['imdb_id']
         else:
             imdb_id = ""
-            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
                 oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
@@ -700,18 +705,18 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     try:
         json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
         if 'success' in json and json['success']:
-            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="Couchpotato", title2="Success")
             else:
                 oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
             Dict['movie'][movie_id]['automated'] = True
         else:
-            if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
                 oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
     except:
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
         else:
             oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
@@ -787,13 +792,13 @@ def SendToSonarr(series_id, locked='unlocked'):
     values = JSON.StringFromObject(options)
     try:
         HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Sonarr", title2="Success")
         else:
             oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
         Dict['tv'][series_id]['automated'] = True
     except:
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
         else:
             oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
@@ -850,7 +855,7 @@ def SendToSickrage(series_id, locked='unlocked'):
 def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage", title2=message)
     else:
         oc = ObjectContainer(header=TITLE, message=message)
@@ -885,7 +890,7 @@ def ManageUser(token, locked='locked', message=None):
         user = Dict['register'][token]['nickname']
     else:
         user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
-    if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage User", title2=message)
     else:
         oc = ObjectContainer(title1="Manage User", title2=user, message=message)
@@ -915,6 +920,7 @@ def BlockUser(token, set, locked='locked'):
             return ManageUser(token=token, locked=locked, message="User has been unblocked.")
     return ManageUser(token=token, locked=locked)
 
+
 @route(PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
     if not checkAdmin():
@@ -934,7 +940,7 @@ def ResetDict(locked='locked', confirm='False'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
     if confirm == 'False':
-        if Client.Platform in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in Keyboard.NO_MESSAGE_CONTAINER_CLIENTS:
+        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Reset Info", title2="Confirm")
         else:
             oc = ObjectContainer(header=TITLE,
@@ -965,11 +971,11 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 movie = Dict['movie'][req_id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB req_id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB req_id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushBullet(title, message)
@@ -987,11 +993,11 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 movie = Dict['movie'][req_id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB req_id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB req_id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushover(title, message)
@@ -1027,7 +1033,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 return
             message = user + " has made a new request! <br><br>\n" + \
                       "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
-                      "(" + id_type + " req_id: " + req_id + ") <br>\n" + \
+                      "(" + id_type + " id: " + req_id + ") <br>\n" + \
                       summary + \
                       "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, message, 'html')
