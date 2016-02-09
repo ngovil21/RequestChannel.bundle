@@ -113,6 +113,8 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if is_admin:
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
+    elif not Dict['register'][token]['nickname']:
+        oc.add(DirectoryObject(key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked), title="Register Device"))
 
     return oc
 
