@@ -210,7 +210,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 else:
                     art = None
                 title_year = key['title'] + " (" + year + ")"
-                oc.add(DirectoryObject(
+                oc.add(TVShowObject(
                     key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
                                  summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
         else:
