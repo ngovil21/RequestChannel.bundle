@@ -37,6 +37,7 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
+
 ########################################################
 #   Start Code
 ########################################################
@@ -116,7 +117,9 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if is_admin:
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
-        oc.add(DirectoryObject(key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked), title="Register Device"))
+        oc.add(DirectoryObject(
+            key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked),
+            title="Register Device"))
 
     return oc
 
@@ -918,6 +921,7 @@ def BlockUser(token, set, locked='locked'):
             return ManageUser(token=token, locked=locked, message="User has been unblocked.")
     return ManageUser(token=token, locked=locked)
 
+
 @route(PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
     if not checkAdmin():
@@ -968,11 +972,11 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 movie = Dict['movie'][req_id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB req_id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB req_id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushBullet(title, message)
@@ -990,11 +994,11 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 movie = Dict['movie'][req_id]
                 title_year = movie['title'] + " (" + movie['year'] + ")"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB req_id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB req_id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushover(title, message)
@@ -1030,7 +1034,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 return
             message = user + " has made a new request! <br><br>\n" + \
                       "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
-                      "(" + id_type + " req_id: " + req_id + ") <br>\n" + \
+                      "(" + id_type + " id: " + req_id + ") <br>\n" + \
                       summary + \
                       "<Poster:><img src= '" + poster + "' width='300'>"
             sendEmail(subject, message, 'html')

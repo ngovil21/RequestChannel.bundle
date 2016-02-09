@@ -22,7 +22,7 @@ def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False'
         string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
     else:
         string = query if query else ""
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS" or Client.Platform == "tvOS" or Client.Product == "Plex for Apple TV":
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         message = None
     oc = ObjectContainer(title1=title, title2=string, message=message)
     # Submit
