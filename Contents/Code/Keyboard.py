@@ -8,7 +8,7 @@ PREFIX = '/video/plexrequestchannel'
 
 
 DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
-                         'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One']
+                         'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One', 'Xbox One']
 
 NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Plex for Xbox One', 'iOS']
 
@@ -23,8 +23,9 @@ def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False'
     else:
         string = query if query else ""
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        message = None
-    oc = ObjectContainer(title1=title, title2=string, message=message)
+        oc = ObjectContainer(title1=title, title2=string)
+    else:
+        oc = ObjectContainer(title1=title, title2=string, message=message)
     # Submit
     # Log.Debug("Create Submit key")
     oc.add(DirectoryObject(key=Callback(callback, query=query, locked=locked), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))

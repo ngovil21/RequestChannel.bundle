@@ -74,8 +74,9 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        message = None
-    oc = ObjectContainer(replace_parent=True, message=message, title1=title1, title2=title2)
+        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2)
+    else:
+        oc = ObjectContainer(replace_parent=True, message=message, title1=title1, title2=title2)
     is_admin = checkAdmin()
     if is_admin:
         Log.Debug("User is Admin")
@@ -507,8 +508,8 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
         Dict.Save()
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
             SendToSonarr(series_id)
-        if Prefs['sickrage_autorequest'] and Prefs['sickrage_url'] and Prefs['sickrage_api']:
-            SendToSickrage(series_id)
+        if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
+            SendToSickbeard(series_id)
         notifyRequest(req_id=series_id, req_type='tv')
         return MainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
 
@@ -630,8 +631,8 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
             oc.add(DirectoryObject(key=Callback(SendToSonarr, series_id=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
-        if Prefs['sickrage_url'] and Prefs['sickrage_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSickrage, series_id=req_id, locked=locked), title="Send to Sickrage", thumb=R('sickrage.png')))
+        if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
+            oc.add(DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to Sickbeard", thumb=R('sickbeard.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -810,45 +811,45 @@ def SendToSonarr(series_id, locked='unlocked'):
     return oc
 
 
-@route(PREFIX + "/sendtosickrage")
-def SendToSickrage(series_id, locked='unlocked'):
-    return ViewRequests(locked=locked, message="Sorry, SickRage is not available yet.")
-    # if not Prefs['sickrage_url'].startswith("http"):
-    #     sickrage_url = "http://" + Prefs['sickrage_url']
-    # else:
-    #     sickrage_url = Prefs['sickrage_url']
-    # if not sickrage_url.endswith("/"):
-    #     sickrage_url += "/"
-    # title = Dict['tv'][series_id]['title']
-    # data = dict(cmd='show.addnew', tvdbid=series_id)
-    # if Prefs['sickrage_location']:
-    #     data['location'] = Prefs['sickrage_location']
-    # if Prefs['sickrage_status']:
-    #     data['status'] = Prefs['sickrage_status']
-    # if Prefs['sickrage_initial']:
-    #     data['initial'] = Prefs['sickrage_initial']
-    # if Prefs['sickrage_archive']:
-    #     data['archive'] = Prefs['sickrage_archive']
-    #
-    #
-    # Log.Debug(str(data))
-    #
-    # try:
-    #     resp = JSON.ObjectFromURL(sickrage_url + "api/" + Prefs['sickrage_api'], values=data)
-    #     Log.Debug(JSON.StringFromObject(resp))
-    #     if 'success' in resp and resp['success']:
-    #         oc = ObjectContainer(header=TITLE, message="Show added to SickRage")
-    #         Dict['tv'][series_id]['automated'] = True
-    #     else:
-    #         oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
-    # except Exception as e:
-    #     oc = ObjectContainer(header=TITLE, message="Could not add show to SickRage!")
-    #     Log.Debug(e.message)
-    # if checkAdmin():
-    #     oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked), title="Delete Request"))
-    # oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    # oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
-    # return oc
+@route(PREFIX + "/sendtosickbeard")
+def SendToSickbeard(series_id, locked='unlocked'):
+    # return ViewRequests(locked=locked, message="Sorry, Sickbeard is not available yet.")
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    title = Dict['tv'][series_id]['title']
+    data = dict(cmd='show.addnew', tvdbid=series_id)
+    if Prefs['sickbeard_location']:
+        data['location'] = Prefs['sickbeard_location']
+    if Prefs['sickbeard_status']:
+        data['status'] = Prefs['sickbeard_status']
+    if Prefs['sickbeard_initial']:
+        data['initial'] = Prefs['sickbeard_initial']
+    if Prefs['sickbeard_archive']:
+        data['archive'] = Prefs['sickbeard_archive']
+
+
+    Log.Debug(str(data))
+
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        Log.Debug(JSON.StringFromObject(resp))
+        if 'success' in resp and resp['success']:
+            oc = ObjectContainer(header=TITLE, message="Show added to Sickbeard")
+            Dict['tv'][series_id]['automated'] = True
+        else:
+            oc = ObjectContainer(header=TITLE, message="Could not add show to Sickbeard!")
+    except Exception as e:
+        oc = ObjectContainer(header=TITLE, message="Could not add show to Sickbeard!")
+        Log.Debug(e.message)
+    if checkAdmin():
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked), title="Delete Request"))
+    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    return oc
 
 
 @route(PREFIX + "/managechannel")
@@ -869,7 +870,10 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
 def ManageUsers(locked='locked', message=None):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    oc = ObjectContainer(message=message)
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(title1="Manage Users", title2=message)
+    else:
+        oc = ObjectContainer(header=TITLE, message=message)
     if len(Dict['register']) > 0:
         for token in Dict['register']:
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
