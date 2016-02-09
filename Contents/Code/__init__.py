@@ -212,7 +212,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 title_year = key['title'] + " (" + year + ")"
                 oc.add(TVShowObject(
                     key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
-                                 summary=key['overview'], locked=locked), title=title_year, thumb=thumb, summary=key['overview'], art=art))
+                                 summary=key['overview'], locked=locked),rating_key=key['id'], title=title_year, thumb=thumb, summary=key['overview'], art=art))
         else:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
