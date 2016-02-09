@@ -307,7 +307,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
         else:
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
     if not found_match and Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
-        oc.add(DirectoryObject(key="", title=""))
+        oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
         key=Callback(AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
