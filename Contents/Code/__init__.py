@@ -1,6 +1,6 @@
 from DumbTools import DumbKeyboard
 
-import Keyboard
+# import Keyboard
 
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 
