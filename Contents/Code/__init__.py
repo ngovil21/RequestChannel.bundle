@@ -176,7 +176,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
 
 @route(PREFIX + '/searchmovie')
 def SearchMovie(title="Search Results", query="", locked='unlocked'):
-    oc = ObjectContainer(title1=title, content=ContainerContent.Movies, view_group="Details")
+    oc = ObjectContainer(title1=title, content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
     token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
