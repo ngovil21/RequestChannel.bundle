@@ -21,8 +21,7 @@ OMDB_API_URL = "http://www.omdbapi.com/"
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
     oc = ObjectContainer(header=Channel.TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        oc = ObjectContainer()
-        oc.add(DirectoryObject(key="/empty", title="Empty Object"))  # For iOS try adding an empty space holder object like in Android
+        oc.message = None
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # oc.add(DirectoryObject(key="", title=""))
