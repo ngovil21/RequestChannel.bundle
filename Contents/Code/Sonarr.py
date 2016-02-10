@@ -1,5 +1,5 @@
 # Sonarr Methods
-from Channel import MainMenu, TITLE, PREFIX
+from Channel import CMainMenu, TITLE, PREFIX
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Requests import ViewRequests, ConfirmDeleteRequest, ViewRequest
 
@@ -85,7 +85,7 @@ def SendToSonarr(tvdbid, locked='unlocked'):
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
@@ -114,7 +114,7 @@ def ManageSonarr(locked='unlocked'):
         oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'],
                             title=show['title'], thumb=poster, summary=show['overview']))
 
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
@@ -227,9 +227,9 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc.message = None
         oc.add(DirectoryObject(key=callback, title="Go Back"))
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
         return oc
-    return MainMenu(locked=locked)
+    return CMainMenu(locked=locked)
 
 
 def ShowExists(tvdbid):

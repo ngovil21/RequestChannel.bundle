@@ -21,7 +21,7 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 
 @route(PREFIX + '/mainmenu')
-def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
+def CMainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
@@ -44,11 +44,11 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(
-            key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie",
+            key=Callback(Keyboard, callback=SearchMovie, parent=CMainMenu, locked=locked, title="Search for Movie",
                          message="Enter the name of the movie"),
             title="Request a Movie"))
         oc.add(DirectoryObject(
-            key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked, title="Search for TV Show",
+            key=Callback(Keyboard, callback=SearchTV, parent=CMainMenu, locked=locked, title="Search for TV Show",
                          message="Enter the name of the TV Show"),
             title="Request a TV Show"))
     elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
@@ -94,7 +94,7 @@ def Register(message="Unrecognized device. The admin would like you to register 
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent=CMainMenu, locked=locked), title="Enter your name or nickname"))
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
                                     prompt="Enter your name or nickname"))
@@ -107,7 +107,7 @@ def RegisterName(query="", locked='locked'):
         return Register(message="You must enter a name. Try again.", locked=locked)
     token = Request.Headers['X-Plex-Token']
     Dict['register'][token] = {'nickname': query, 'requests': 0}
-    return MainMenu(message="Your device has been registered. Thank you.", locked=locked, title1="Main Menu", title2="Registered")
+    return CMainMenu(message="Your device has been registered. Thank you.", locked=locked, title1="Main Menu", title2="Registered")
 
 
 def checkAdmin():

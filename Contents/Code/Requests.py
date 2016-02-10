@@ -1,5 +1,5 @@
 #Request Functions
-from Channel import MainMenu, PREFIX, TITLE
+from Channel import CMainMenu, PREFIX, TITLE
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from CouchPotato import SendToCouchpotato
 from Sickbeard import SendToSickbeard
@@ -20,14 +20,14 @@ def ViewRequests(query="", locked='unlocked', message=None):
         else:
             oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
     else:
-        return MainMenu(locked='locked', message="Password incorrect", title1="Main Menu", title2="Password incorrect")
+        return CMainMenu(locked='locked', message="Password incorrect", title1="Main Menu", title2="Password incorrect")
     if not Dict['movie'] and not Dict['tv']:
         Log.Debug("There are no requests")
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="View Requests", title2="No Requests")
         else:
             oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
-        oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(CMainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
         for movie_id in Dict['movie']:
@@ -67,7 +67,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
             oc.add(
                 TVShowObject(key=Callback(ViewRequest, req_id=series_id, req_type=d['type'], locked=locked), rating_key=series_id, title=title_year,
                              thumb=thumb, summary=summary, art=d['backdrop']))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1 and checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
     return oc
@@ -79,7 +79,7 @@ def ViewRequestsPassword(locked='locked'):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent=MainMenu, locked=locked), title="Enter password:"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent=CMainMenu, locked=locked), title="Enter password:"))
     else:
         oc.add(InputDirectoryObject(key=Callback(ViewRequests, locked=locked), title="Enter password:", prompt="Please enter the password:"))
     return oc

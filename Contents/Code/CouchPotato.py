@@ -1,5 +1,5 @@
 #CouchPotato Functions
-from Channel import MainMenu, TITLE, PREFIX, checkAdmin
+from Channel import CMainMenu, TITLE, PREFIX, checkAdmin
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Requests import ViewRequests, ConfirmDeleteRequest
 from Movie import TMDB_API_URL, TMDB_API_KEY

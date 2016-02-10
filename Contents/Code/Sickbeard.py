@@ -1,5 +1,5 @@
 #Sickbeard Functions
-from Channel import MainMenu, TITLE, PREFIX
+from Channel import CMainMenu, TITLE, PREFIX
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Requests import ViewRequests, ConfirmDeleteRequest
 
@@ -55,5 +55,5 @@ def SendToSickbeard(series_id, locked='unlocked'):
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc

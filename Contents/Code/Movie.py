@@ -1,5 +1,5 @@
 #Movie Functions
-from Channel import MainMenu, TITLE, PREFIX
+from Channel import CMainMenu, TITLE, PREFIX
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from CouchPotato import SendToCouchpotato
 from Notifications import notifyRequest
@@ -27,7 +27,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # oc.add(DirectoryObject(key="", title=""))
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=CMainMenu, locked=locked), title=title, thumb=R('search.png')))
     else:
         oc.add(
             InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -42,10 +42,10 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
 
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
-            return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
+            return CMainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
                             title1="Main Menu", title2="Weekly Limit")
     if token in Dict['blocked']:
-        return MainMenu(message="Sorry you have been blocked.", locked=locked,
+        return CMainMenu(message="Sorry you have been blocked.", locked=locked,
                         title1="Main Menu", title2="User Blocked")
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
@@ -84,12 +84,12 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # oc.add(DirectoryObject(key="", title=""))
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=CMainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                             prompt="Enter the name of the movie:"))
-            oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
     else:  # Use OMDB By Default
         request = JSON.ObjectFromURL(url=OMDB_API_URL + "?s=" + query + "&r=json")
@@ -118,22 +118,22 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=CMainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
                 oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                             prompt="Enter the name of the movie:"))
-            oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=CMainMenu, locked=locked), title="Search Again",
                                thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                     prompt="Enter the name of the movie:", thumb=R('search.png')))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
@@ -155,7 +155,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
                 if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                     Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
                     summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (video.attrib['summary'] if video.attrib['summary'] else "")
-                    oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
+                    oc.add(TVShowObject(key=Callback(CMainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
                                         rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary, thumb=video.attrib['thumb']))
                     found_match = True
                     break
@@ -173,7 +173,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
     # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
     #     oc.add(DirectoryObject(key=None, title=""))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
+    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
 
@@ -181,7 +181,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
 def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if movie_id in Dict['movie']:
         Log.Debug("Movie is already requested")
-        return MainMenu(locked=locked, message="Movie has already been requested", title1=title, title2="Already Requested")
+        return CMainMenu(locked=locked, message="Movie has already been requested", title1=title, title2="Already Requested")
     else:
         user = ""
         token = Request.Headers['X-Plex-Token']
@@ -196,4 +196,4 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(movie_id)
         notifyRequest(req_id=movie_id, req_type='movie')
-        return MainMenu(locked=locked, message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
+        return CMainMenu(locked=locked, message="Movie has been requested", title1="Main Menu", title2="Movie Requested")

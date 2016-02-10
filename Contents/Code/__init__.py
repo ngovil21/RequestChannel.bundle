@@ -64,6 +64,6 @@ def Start():
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + "/init_mainmenu")
 def MainMenu():
-    return Channel.MainMenu()
+    return Channel.CMainMenu()
 
 
