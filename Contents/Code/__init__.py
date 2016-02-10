@@ -929,7 +929,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
     return MainMenu(locked=locked)
 
 
-@route(PREFIX + '/sonarrmonitorshow')
+@route(PREFIX + '/sonarrmanageseason')
 def SonarrManageSeason(series_id, season, locked='unlocked'):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
