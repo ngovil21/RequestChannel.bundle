@@ -838,11 +838,12 @@ def ManageSonarr(locked='unlocked'):
         for image in show['images']:
             if image['coverType'] == 'poster':
                 poster = sonarr_url + image['url']
-        oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'], title=show['title'],
-                        poster=poster, summary=show['overview']))
+        oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'],
+                            title=show['title'], thumb=poster, summary=show['overview']))
 
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
+
 
 @route(PREFIX + '/managesonarrshow')
 def ManageSonarrShow(series_id, title="", locked='unlocked'):
@@ -865,7 +866,9 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
     for season in show['seasons']:
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
-        oc.add(SeasonObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked), rating_key=series_id, index=season_number, title=mark + "Season " + str(season_number), show=show['title']))
+        oc.add(
+            SeasonObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked), rating_key=series_id, index=season_number,
+                         title=mark + "Season " + str(season_number), show=show['title']))
     return oc
 
 
