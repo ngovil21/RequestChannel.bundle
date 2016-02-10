@@ -829,7 +829,7 @@ def ManageSonarr(locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        shows = JSON.ElementFromURL(sonarr_url + "/api/Series")
+        shows = JSON.ObjectFromURL(sonarr_url + "/api/Series")
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Shows")
@@ -856,7 +856,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        show = JSON.ElementFromURL(sonarr_url + "/api/Series?id=" + series_id)
+        show = JSON.ObjectFromURL(sonarr_url + "/api/Series?id=" + series_id)
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
@@ -868,6 +868,15 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         oc.add(SeasonObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked), rating_key=series_id, index=season_number, title=mark + "Season " + str(season_number), show=show['title']))
     return oc
 
+
+@route(PREFIX + '/sonarrmonitorshow')
+def SonarrMonitorShow(series_id, season, locked='unlocked'):
+    pass
+
+
+@route(PREFIX + '/sonarrmonitorshow')
+def SonarrMManageSEason(series_id, season, locked='unlocked'):
+    pass
 
 
 @route(PREFIX + "/sendtosickbeard")
