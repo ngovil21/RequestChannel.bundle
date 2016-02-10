@@ -858,7 +858,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        show = JSON.ObjectFromURL(sonarr_url + "/api/series?id=" + series_id, headers=api_header)[0]
+        show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
