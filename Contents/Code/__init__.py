@@ -897,15 +897,18 @@ def SonarrManageSeason(series_id, season, locked='unlocked', callback=None):
         'X-Api-Key': Prefs['sonarr_api']
     }
     oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
-    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback), title="Get All Episodes"))
+    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
+                           title="Get All Episodes"))
     # data = JSON.StringFromObject({'seriesId': series_id})
     episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
     # Log.Debug(JSON.StringFromObject(episodes))
     for episode in episodes:
         if not episode['seasonNumber'] == int(season):
             continue
+        marked = "* " if episode['monitored'] else ""
         oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id'])),
-                               title=str(episode['episodeNumber']) + ". " + episode['title'], summary=(episode['overview'] if 'overview' in episode else None)))
+                               title=marked + str(episode['episodeNumber']) + ". " + episode['title'],
+                               summary=(episode['overview'] if 'overview' in episode else None)))
     return oc
 
 
