@@ -1,8 +1,4 @@
 #CouchPotato Functions
-import Channel
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-import Requests
-import Movie
 
 
 @route(Channel.PREFIX + '/sendtocouchpotato')

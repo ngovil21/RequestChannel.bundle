@@ -1,4 +1,14 @@
 import Channel
+from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
+import CouchPotato
+import Sickbeard
+import Sonarr
+import ManageChannel
+import Notifications
+import Requests
+import TVShow
+import Movie
+
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'

@@ -1,12 +1,5 @@
 # Main Channel Methods
 
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-import Movie
-import TVShow
-import Requests
-import Sonarr
-import ManageChannel
-
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 

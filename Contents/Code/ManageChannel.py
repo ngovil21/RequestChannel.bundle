@@ -1,6 +1,4 @@
 #ManageChannel Functions
-import Channel
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 
 @route(Channel.PREFIX + "/managechannel")
 def ManageChannel(message=None, title1=Channel.TITLE, title2="Manage Channel", locked='locked'):
