@@ -940,17 +940,17 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                 Log.Debug("Sonarr Monitor failed: " + e.message)
         else:
             episode_list = episodes.split()
-            try:
-                for e in episode_list:
-                    episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
-                    episode['monitored'] = True
-                    data = JSON.StringFromObject(episode)
-                    HTTP.Request(sonarr_url + "/api/Episode/", headers=api_header, data=data)
-                data2 = JSON.StringFromObject({'episodeIds': episodes})
-                HTTP.Request(sonarr_url + "/api/command/EpisodeSearch/", headers=api_header, data=data2)
-            except Exception as e:
-                Log.Debug("Sonarr Monitor failed: " + e.message)
-    return MainMenu(locked=locked)
+            # try:
+            for e in episode_list:
+                episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
+                episode['monitored'] = True
+                data = JSON.StringFromObject(episode)
+                HTTP.Request(sonarr_url + "/api/Episode/" + str(e), headers=api_header, data=data)
+            data2 = JSON.StringFromObject({'episodeIds': episodes})
+            HTTP.Request(sonarr_url + "/api/command/EpisodeSearch/", headers=api_header, data=data2)
+            # except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + e.message)
+    # return MainMenu(locked=locked)
 
 
 @route(PREFIX + "/sendtosickbeard")
