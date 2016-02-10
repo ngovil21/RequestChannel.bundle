@@ -905,7 +905,7 @@ def SonarrManageSeason(series_id, season, locked='unlocked', callback=None):
         if not episode['seasonNumber'] == int(season):
             continue
         oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id'])),
-                               title=str(episode['episodeNumber']) + ". " + episode['title'], summary=episode['overview']))
+                               title=str(episode['episodeNumber']) + ". " + episode['title'], summary=(episode['overview'] if 'overview' in episode else None)))
     return oc
 
 
