@@ -822,10 +822,9 @@ def SendToSickbeard(series_id, locked='unlocked'):
         sickbeard_url += "/"
     title = Dict['tv'][series_id]['title']
     data = dict(cmd='show.addnew', tvdbid=series_id)
-    if Prefs['sickbeard_sickrage'] == 'SickRage':
-        use_sickrage = True
-    else:
-        use_sickrage = False
+
+    use_sickrage = (Prefs['sickbeard_sickrage'] == 'SickRage')
+
     if Prefs['sickbeard_location']:
         data['location'] = Prefs['sickbeard_location']
     if Prefs['sickbeard_status']:
@@ -846,12 +845,12 @@ def SendToSickbeard(series_id, locked='unlocked'):
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
         # Log.Debug(JSON.StringFromObject(resp))
         if 'success' in resp and resp['success']:
-            oc = ObjectContainer(header=TITLE, message="Show added to Sickbeard")
+            oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_sickrage'])
             Dict['tv'][series_id]['automated'] = True
         else:
-            oc = ObjectContainer(header=TITLE, message="Could not add show to Sickbeard!")
+            oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
     except Exception as e:
-        oc = ObjectContainer(header=TITLE, message="Could not add show to Sickbeard!")
+        oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
         Log.Debug(e.message)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked), title="Delete Request"))
