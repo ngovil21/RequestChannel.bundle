@@ -1,29 +1,29 @@
 #ManageChannel Functions
-from Channel import CMainMenu, TITLE, PREFIX
+import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 
-@route(PREFIX + "/managechannel")
-def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
+@route(Channel.PREFIX + "/managechannel")
+def ManageChannel(message=None, title1=Channel.TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
-        return CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+        return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage", title2=message)
     else:
-        oc = ObjectContainer(header=TITLE, message=message)
+        oc = ObjectContainer(header=Channel.TITLE, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Users"))
     oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
-    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
-@route(PREFIX + "/manageusers")
+@route(Channel.PREFIX + "/manageusers")
 def ManageUsers(locked='locked', message=None):
     if not checkAdmin():
-        return CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+        return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage Users", title2=message)
     else:
-        oc = ObjectContainer(header=TITLE, message=message)
+        oc = ObjectContainer(header=Channel.TITLE, message=message)
     if len(Dict['register']) > 0:
         for token in Dict['register']:
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
@@ -36,10 +36,10 @@ def ManageUsers(locked='locked', message=None):
     return oc
 
 
-@route(PREFIX + "/manageuser")
+@route(Channel.PREFIX + "/manageuser")
 def ManageUser(token, locked='locked', message=None):
     if not checkAdmin():
-        return CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+        return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
         user = Dict['register'][token]['nickname']
     else:
@@ -60,7 +60,7 @@ def ManageUser(token, locked='locked', message=None):
     return oc
 
 
-@route(PREFIX + "/blockuser")
+@route(Channel.PREFIX + "/blockuser")
 def BlockUser(token, set, locked='locked'):
     if set == 'True':
         if token in Dict['blocked']:
@@ -75,10 +75,10 @@ def BlockUser(token, set, locked='locked'):
     return ManageUser(token=token, locked=locked)
 
 
-@route(PREFIX + "/deleteuser")
+@route(Channel.PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
     if not checkAdmin():
-        return CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+        return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     oc = ObjectContainer(title1="Confirm Delete User?", title2=Dict['register'][token]['nickname'])
     if confirmed == 'False':
         oc.add(DirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='True'), title="Yes"))
@@ -89,15 +89,15 @@ def DeleteUser(token, locked='locked', confirmed='False'):
     return oc
 
 
-@route(PREFIX + "/resetdict")
+@route(Channel.PREFIX + "/resetdict")
 def ResetDict(locked='locked', confirm='False'):
     if not checkAdmin():
-        return CMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+        return Channel.CMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
     if confirm == 'False':
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Reset Info", title2="Confirm")
         else:
-            oc = ObjectContainer(header=TITLE,
+            oc = ObjectContainer(header=Channel.TITLE,
                                  message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
         oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked, confirm='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="No"))

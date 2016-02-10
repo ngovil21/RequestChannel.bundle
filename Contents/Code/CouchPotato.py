@@ -1,11 +1,11 @@
 #CouchPotato Functions
-from Channel import CMainMenu, TITLE, PREFIX, checkAdmin
+import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Requests import ViewRequests, ConfirmDeleteRequest
 from Movie import TMDB_API_URL, TMDB_API_KEY
 
 
-@route(PREFIX + '/sendtocouchpotato')
+@route(Channel.PREFIX + '/sendtocouchpotato')
 def SendToCouchpotato(movie_id, locked='unlocked'):
     if movie_id not in Dict['movie']:
         return MessageContainer("Error", "The movie id was not found in the database")
@@ -20,7 +20,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
-                oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
+                oc = ObjectContainer(header=Channel.TITLE, message="Unable to get IMDB id for movie, add failed...")
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
             return oc
     else:  # Assume we have an imdb_id by default
@@ -55,21 +55,21 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="Couchpotato", title2="Success")
             else:
-                oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
+                oc = ObjectContainer(header=Channel.TITLE, message="Movie Request Sent to CouchPotato!")
             Dict['movie'][movie_id]['automated'] = True
         else:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
-                oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
+                oc = ObjectContainer(header=Channel.TITLE, message="CouchPotato Send Failed!")
     except:
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
         else:
-            oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
+            oc = ObjectContainer(header=Channel.TITLE, message="CouchPotato Send Failed!")
     key = Dict['movie'][movie_id]
     title_year = key['title'] + " (" + key['year'] + ")"
-    if checkAdmin():
+    if Channel.checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))

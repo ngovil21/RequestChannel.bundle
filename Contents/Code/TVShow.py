@@ -1,6 +1,6 @@
 #TVShow Functions
 
-from Channel import CMainMenu, PREFIX, TITLE
+import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Sonarr import SendToSonarr
 from Sickbeard import SendToSickbeard
@@ -13,24 +13,24 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 #######################################################
 
 
-@route(PREFIX + '/addtvshow')
+@route(Channel.PREFIX + '/addtvshow')
 def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
         if token in Dict['register'] and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
-            return CMainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
+            return Channel.CMainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
                             title1="Main Menu", title2="Weekly Limit")
     if token in Dict['blocked']:
-        return CMainMenu(message="Sorry you have been blocked.", locked=locked,
+        return Channel.CMainMenu(message="Sorry you have been blocked.", locked=locked,
                         title1="Main Menu", title2="User Blocked")
     if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
         oc = ObjectContainer(title2=title)
     else:
-        oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
+        oc = ObjectContainer(header=Channel.TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=CMainMenu, locked=locked), title="Request a TV Show",
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=Channel.CMainMenu, locked=locked), title="Request a TV Show",
                                thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Request a TV Show", prompt="Enter the name of the TV Show:",
@@ -38,7 +38,7 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     return oc
 
 
-@route(PREFIX + '/searchtv')
+@route(Channel.PREFIX + '/searchtv')
 def SearchTV(query, locked='unlocked'):
     oc = ObjectContainer(title1="Search Results", title2=query, content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
@@ -48,16 +48,16 @@ def SearchTV(query, locked='unlocked'):
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title2="No Results")
         else:
-            oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
+            oc = ObjectContainer(header=Channel.TITLE, message="Sorry there were no results found.")
         if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
-            oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=CMainMenu, locked=locked), title="Search Again",
+            oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=Channel.CMainMenu, locked=locked), title="Search Again",
                                    thumb=R('search.png')))
         else:
             oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                         thumb=R('search.png')))
-        oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     count = 0
     for serie in series:
@@ -108,15 +108,15 @@ def SearchTV(query, locked='unlocked'):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         oc.add(
-            DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=CMainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+            DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=Channel.CMainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
-    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
+    oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     return oc
 
 
-@route(PREFIX + '/confirmtvrequest')
+@route(Channel.PREFIX + '/confirmtvrequest')
 def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
     if year:
         title_year = title + " " + "(" + year + ")"
@@ -127,7 +127,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
-                             header=TITLE, message="Request tv show " + title_year + "?")
+                             header=Channel.TITLE, message="Request tv show " + title_year + "?")
 
     found_match = False
     try:
@@ -141,7 +141,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
                     Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
                     summary = "(In Library: " + video_attr['librarySectionTitle'] + ") " + (video_attr['summary'] if video_attr['summary'] else "")
                     oc.add(
-                        TVShowObject(key=Callback(CMainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
+                        TVShowObject(key=Callback(Channel.CMainMenu, locked=locked, message="TV Show already in library.", title1="In Library", title2=title),
                                      rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
                     found_match = True
                     break
@@ -158,17 +158,17 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     oc.add(DirectoryObject(
         key=Callback(AddTVRequest, series_id=series_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
-    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
+    oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
 
 
 @indirect
-@route(PREFIX + '/addtvrequest')
+@route(Channel.PREFIX + '/addtvrequest')
 def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if series_id in Dict['tv']:
         Log.Debug("TV Show is already requested")
-        return CMainMenu(locked=locked, message="TV Show has already been requested", title1=title, title2="Already Requested")
+        return Channel.CMainMenu(locked=locked, message="TV Show has already been requested", title1=title, title2="Already Requested")
     else:
         token = Request.Headers['X-Plex-Token']
         user = ""
@@ -183,4 +183,4 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
         if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             SendToSickbeard(series_id)
         notifyRequest(req_id=series_id, req_type='tv')
-        return CMainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
+        return Channel.CMainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")

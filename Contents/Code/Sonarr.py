@@ -1,10 +1,10 @@
 # Sonarr Methods
-from Channel import CMainMenu, TITLE, PREFIX
+import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Requests import ViewRequests, ConfirmDeleteRequest, ViewRequest
 
 
-@route(PREFIX + '/sendtosonarr')
+@route(Channel.PREFIX + '/sendtosonarr')
 def SendToSonarr(tvdbid, locked='unlocked'):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -74,24 +74,24 @@ def SendToSonarr(tvdbid, locked='unlocked'):
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Sonarr", title2="Success")
         else:
-            oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr.")
+            oc = ObjectContainer(header=Channel.TITLE, message="Show has been sent to Sonarr.")
         Dict['tv'][series_id]['automated'] = True
     except:
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
         else:
-            oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
+            oc = ObjectContainer(header=Channel.TITLE, message="Could not send show to Sonarr!")
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
-@route(PREFIX + '/managesonarr')
+@route(Channel.PREFIX + '/managesonarr')
 def ManageSonarr(locked='unlocked'):
-    oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
+    oc = ObjectContainer(title1=Channel.TITLE, title2="Manage Sonarr")
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -105,7 +105,7 @@ def ManageSonarr(locked='unlocked'):
         shows = JSON.ObjectFromURL(sonarr_url + "/api/Series", headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Shows")
+        return MessageContainer(header=Channel.TITLE, message="Error retrieving Sonarr Shows")
     for show in shows:
         poster = None
         for image in show['images']:
@@ -114,11 +114,11 @@ def ManageSonarr(locked='unlocked'):
         oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'],
                             title=show['title'], thumb=poster, summary=show['overview']))
 
-    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
-@route(PREFIX + '/managesonarrshow')
+@route(Channel.PREFIX + '/managesonarrshow')
 def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -133,7 +133,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None):
         show = JSON.ObjectFromURL(sonarr_url + "/api/Series/" + series_id, headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
+        return MessageContainer(header=Channel.TITLE, message="Error retrieving Sonarr Show: " + title)
     oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback), title="Monitor All Seasons"))
     # Log.Debug(show['seasons'])
@@ -145,7 +145,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None):
     return oc
 
 
-@route(PREFIX + '/sonarrmanageseason')
+@route(Channel.PREFIX + '/sonarrmanageseason')
 def SonarrManageSeason(series_id, season, locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -169,7 +169,7 @@ def SonarrManageSeason(series_id, season, locked='unlocked', callback=None):
     return oc
 
 
-@route(PREFIX + '/sonarrmonitorshow')
+@route(Channel.PREFIX + '/sonarrmonitorshow')
 def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -184,7 +184,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
         show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
+        return MessageContainer(header=Channel.TITLE, message="Error retrieving Sonarr Show: " + title)
     if seasons == 'all':
         for s in show['seasons']:
             s['monitored'] = True
@@ -227,9 +227,9 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
             oc.message = None
         oc.add(DirectoryObject(key=callback, title="Go Back"))
-        oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
         return oc
-    return CMainMenu(locked=locked)
+    return Channel.CMainMenu(locked=locked)
 
 
 def ShowExists(tvdbid):

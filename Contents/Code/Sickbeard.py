@@ -1,10 +1,10 @@
 #Sickbeard Functions
-from Channel import CMainMenu, TITLE, PREFIX
+import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 from Requests import ViewRequests, ConfirmDeleteRequest
 
 
-@route(PREFIX + "/sendtosickbeard")
+@route(Channel.PREFIX + "/sendtosickbeard")
 def SendToSickbeard(series_id, locked='unlocked'):
     # return ViewRequests(locked=locked, message="Sorry, Sickbeard is not available yet.")
     if not Prefs['sickbeard_url'].startswith("http"):
@@ -41,19 +41,19 @@ def SendToSickbeard(series_id, locked='unlocked'):
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_sickrage'], title2="Success")
             else:
-                oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_sickrage'])
+                oc = ObjectContainer(header=Channel.TITLE, message="Show added to " + Prefs['sickbeard_sickrage'])
             Dict['tv'][series_id]['automated'] = True
         else:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_sickrage'], title2="Error")
             else:
-                oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
+                oc = ObjectContainer(header=Channel.TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
     except Exception as e:
-        oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
+        oc = ObjectContainer(header=Channel.TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
         Log.Debug(e.message)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    oc.add(DirectoryObject(key=Callback(CMainMenu, locked=locked), title="Return to Main Menu"))
+    oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
