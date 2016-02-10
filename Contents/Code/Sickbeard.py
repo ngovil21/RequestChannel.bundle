@@ -1,7 +1,7 @@
 #Sickbeard Functions
 
 
-@route(Channel.PREFIX + "/sendtosickbeard")
+@route(PREFIX + "/sendtosickbeard")
 def SendToSickbeard(series_id, locked='unlocked'):
     # return ViewRequests(locked=locked, message="Sorry, Sickbeard is not available yet.")
     if not Prefs['sickbeard_url'].startswith("http"):

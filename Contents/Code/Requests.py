@@ -1,6 +1,6 @@
 #Request Functions
 
-@route(Channel.PREFIX + '/viewrequests')
+@route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked='unlocked', message=None):
     if locked == 'unlocked':
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
@@ -65,7 +65,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
     return oc
 
 
-@route(Channel.PREFIX + '/getrequestspassword')
+@route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=Channel.TITLE, message="Please enter the password in the searchbox")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -77,7 +77,7 @@ def ViewRequestsPassword(locked='locked'):
     return oc
 
 
-@route(Channel.PREFIX + '/confirmclearrequests')
+@route(PREFIX + '/confirmclearrequests')
 def ConfirmDeleteRequests(locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
     if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
@@ -88,7 +88,7 @@ def ConfirmDeleteRequests(locked='unlocked'):
 
 
 @indirect
-@route(Channel.PREFIX + '/clearrequests')
+@route(PREFIX + '/clearrequests')
 def ClearRequests(locked='unlocked'):
     Dict['tv'] = {}
     Dict['movie'] = {}
@@ -96,7 +96,7 @@ def ClearRequests(locked='unlocked'):
     return ViewRequests(locked=locked, message="All requests have been cleared")
 
 
-@route(Channel.PREFIX + '/viewrequest')
+@route(PREFIX + '/viewrequest')
 def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
     title_year = key['title'] + " (" + key['year'] + ")"
@@ -122,7 +122,7 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/confirmdeleterequest')
+@route(PREFIX + '/confirmdeleterequest')
 def ConfirmDeleteRequest(req_id, req_type, title_year="", locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
     if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
@@ -133,7 +133,7 @@ def ConfirmDeleteRequest(req_id, req_type, title_year="", locked='unlocked'):
 
 
 @indirect
-@route(Channel.PREFIX + '/deleterequest')
+@route(PREFIX + '/deleterequest')
 def DeleteRequest(req_id, req_type, locked='unlocked'):
     if req_id in Dict[req_type]:
         message = "Request was deleted"

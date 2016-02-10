@@ -14,9 +14,9 @@ OMDB_API_URL = "http://www.omdbapi.com/"
 ########################################################
 
 
-@route(Channel.PREFIX + '/addnewmovie')
+@route(PREFIX + '/addnewmovie')
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
-    oc = ObjectContainer(header=Channel.TITLE, message="Please enter the movie name in the searchbox and press enter.")
+    oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc.message = None
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -30,7 +30,7 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/searchmovie')
+@route(PREFIX + '/searchmovie')
 def SearchMovie(title="Search Results", query="", locked='unlocked'):
     oc = ObjectContainer(title1=title, title2=query, content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
@@ -74,7 +74,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
             else:
-                oc = ObjectContainer(header=Channel.TITLE, message="Sorry there were no results found for your search.")
+                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             Log.Debug("No Results Found")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
@@ -110,7 +110,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
             else:
-                oc = ObjectContainer(header=Channel.TITLE, message="Sorry there were no results found for your search.")
+                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
@@ -133,14 +133,14 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/confirmmovierequest')
+@route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " " + "(" + year + ")"
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
-                             header=Channel.TITLE, message="Request movie " + title_year + "?")
+                             header=TITLE, message="Request movie " + title_year + "?")
     found_match = False
     try:
         local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
@@ -173,7 +173,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
 
     return oc
 
-@route(Channel.PREFIX + '/addmovierequest')
+@route(PREFIX + '/addmovierequest')
 def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if movie_id in Dict['movie']:
         Log.Debug("Movie is already requested")

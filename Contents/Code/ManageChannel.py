@@ -1,6 +1,6 @@
 #ManageChannel Functions
 
-@route(Channel.PREFIX + "/managechannel")
+@route(PREFIX + "/managechannel")
 def ManageChannel(message=None, title1=Channel.TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
         return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
@@ -14,7 +14,7 @@ def ManageChannel(message=None, title1=Channel.TITLE, title2="Manage Channel", l
     return oc
 
 
-@route(Channel.PREFIX + "/manageusers")
+@route(PREFIX + "/manageusers")
 def ManageUsers(locked='locked', message=None):
     if not checkAdmin():
         return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
@@ -34,7 +34,7 @@ def ManageUsers(locked='locked', message=None):
     return oc
 
 
-@route(Channel.PREFIX + "/manageuser")
+@route(PREFIX + "/manageuser")
 def ManageUser(token, locked='locked', message=None):
     if not checkAdmin():
         return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
@@ -58,7 +58,7 @@ def ManageUser(token, locked='locked', message=None):
     return oc
 
 
-@route(Channel.PREFIX + "/blockuser")
+@route(PREFIX + "/blockuser")
 def BlockUser(token, set, locked='locked'):
     if set == 'True':
         if token in Dict['blocked']:
@@ -73,7 +73,7 @@ def BlockUser(token, set, locked='locked'):
     return ManageUser(token=token, locked=locked)
 
 
-@route(Channel.PREFIX + "/deleteuser")
+@route(PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
     if not checkAdmin():
         return Channel.CMainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
@@ -87,7 +87,7 @@ def DeleteUser(token, locked='locked', confirmed='False'):
     return oc
 
 
-@route(Channel.PREFIX + "/resetdict")
+@route(PREFIX + "/resetdict")
 def ResetDict(locked='locked', confirm='False'):
     if not checkAdmin():
         return Channel.CMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
