@@ -920,7 +920,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
         data = JSON.StringFromObject(show)
         data2 = JSON.StringFromObject({'seriesId': int(series_id)})
         try:
-            HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header)  # Post Series to monitor
+            HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
             HTTP.Request(url=sonarr_url + "/api/command/SeriesSearch/", data=data2, headers=api_header)  # Search for all episodes in series
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
@@ -932,7 +932,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                     s['monitored'] = True
             data = JSON.StringFromObject(show)
             try:
-                HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header)  # Post seasons to monitor
+                HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header, method='PUT')  # Post seasons to monitor
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'seriesId': int(series_id), 'seasonNumber': int(s)})
                     HTTP.Request(sonarr_url + "/api/command/SeasonSearch", headers=api_header, data=data2)
@@ -945,11 +945,11 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                 episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
                 episode['monitored'] = True
                 data = JSON.StringFromObject(list(episode))
-                HTTP.Request(sonarr_url + "/api/Episode", data=data, headers=api_header)
+                HTTP.Request(sonarr_url + "/api/Episode", data=data, headers=api_header, method='PUT')
             data2 = JSON.StringFromObject({'episodeIds': episodes})
             HTTP.Request(sonarr_url + "/api/command/EpisodeSearch/", headers=api_header, data=data2)
             # except Exception as e:
-            Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
+            #     Log.Debug("Sonarr Monitor failed: " + e.message)
     # return MainMenu(locked=locked)
 
 
