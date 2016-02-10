@@ -4,7 +4,7 @@ from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIEN
 import Requests
 
 
-@route(Channel.PREFIX + '/sendtosonarr')
+@route(PREFIX + '/sendtosonarr')
 def SendToSonarr(tvdbid, locked='unlocked'):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -89,7 +89,7 @@ def SendToSonarr(tvdbid, locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/managesonarr')
+@route(PREFIX + '/managesonarr')
 def ManageSonarr(locked='unlocked'):
     oc = ObjectContainer(title1=Channel.TITLE, title2="Manage Sonarr")
     if not Prefs['sonarr_url'].startswith("http"):
@@ -118,7 +118,7 @@ def ManageSonarr(locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/managesonarrshow')
+@route(PREFIX + '/managesonarrshow')
 def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -145,7 +145,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None):
     return oc
 
 
-@route(Channel.PREFIX + '/sonarrmanageseason')
+@route(PREFIX + '/sonarrmanageseason')
 def SonarrManageSeason(series_id, season, locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
@@ -169,7 +169,7 @@ def SonarrManageSeason(series_id, season, locked='unlocked', callback=None):
     return oc
 
 
-@route(Channel.PREFIX + '/sonarrmonitorshow')
+@route(PREFIX + '/sonarrmonitorshow')
 def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']

@@ -13,7 +13,7 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 #######################################################
 
 
-@route(Channel.PREFIX + '/addtvshow')
+@route(PREFIX + '/addtvshow')
 def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not checkAdmin():
@@ -38,7 +38,7 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/searchtv')
+@route(PREFIX + '/searchtv')
 def SearchTV(query, locked='unlocked'):
     oc = ObjectContainer(title1="Search Results", title2=query, content=ContainerContent.Shows, view_group="Details")
     query = String.Quote(query, usePlus=True)
@@ -116,7 +116,7 @@ def SearchTV(query, locked='unlocked'):
     return oc
 
 
-@route(Channel.PREFIX + '/confirmtvrequest')
+@route(PREFIX + '/confirmtvrequest')
 def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
     if year:
         title_year = title + " " + "(" + year + ")"
@@ -164,7 +164,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
 
 
 @indirect
-@route(Channel.PREFIX + '/addtvrequest')
+@route(PREFIX + '/addtvrequest')
 def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if series_id in Dict['tv']:
         Log.Debug("TV Show is already requested")

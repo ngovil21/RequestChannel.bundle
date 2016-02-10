@@ -1,7 +1,7 @@
 #CouchPotato Functions
 
 
-@route(Channel.PREFIX + '/sendtocouchpotato')
+@route(PREFIX + '/sendtocouchpotato')
 def SendToCouchpotato(movie_id, locked='unlocked'):
     if movie_id not in Dict['movie']:
         return MessageContainer("Error", "The movie id was not found in the database")
