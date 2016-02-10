@@ -869,7 +869,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
         oc.add(
-            SeasonObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked), rating_key=series_id, index=season_number,
+            SeasonObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked), rating_key=series_id + str(season_number), index=season_number,
                          title=mark + "Season " + str(season_number), show=show['title']))
     return oc
 
