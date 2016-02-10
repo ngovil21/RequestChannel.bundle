@@ -838,7 +838,7 @@ def ManageSonarr(locked='unlocked'):
         for image in show['images']:
             if image['coverType'] == 'poster':
                 poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):]
-                Log.Debug(poster)
+                # Log.Debug(poster)
         oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'],
                             title=show['title'], thumb=poster, summary=show['overview']))
 
@@ -874,13 +874,15 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
 
 
 @route(PREFIX + '/sonarrmonitorshow')
-def SonarrMonitorShow(series_id, season, locked='unlocked'):
-    pass
+def SonarrMonitorShow(series_id, season, episode='all', locked='unlocked'):
+    oc = ObjectContainer()
+    return oc
 
 
 @route(PREFIX + '/sonarrmonitorshow')
-def SonarrMManageSEason(series_id, season, locked='unlocked'):
-    pass
+def SonarrManageSeason(series_id, season, locked='unlocked'):
+    oc = ObjectContainer()
+    return oc
 
 
 @route(PREFIX + "/sendtosickbeard")
