@@ -838,7 +838,7 @@ def ManageSonarr(locked='unlocked'):
         for image in show['images']:
             if image['coverType'] == 'poster':
                 poster = sonarr_url + image['url']
-        oc.add(TVObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'], title=show['title'],
+        oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'], title=show['title'],
                         poster=poster, summary=show['overview']))
 
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
