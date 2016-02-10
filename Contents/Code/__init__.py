@@ -823,7 +823,7 @@ def ManageSonarr(locked='unlocked'):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
         sonarr_url = Prefs['sonarr_url']
-    if not sonarr_url.endswith("/"):
+    if sonarr_url.endswith("/"):
         sonarr_url = sonarr_url[:-1]
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
@@ -850,7 +850,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
         sonarr_url = Prefs['sonarr_url']
-    if not sonarr_url.endswith("/"):
+    if sonarr_url.endswith("/"):
         sonarr_url = sonarr_url[:-1]
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
