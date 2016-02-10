@@ -829,7 +829,7 @@ def ManageSonarr(locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        shows = JSON.ObjectFromURL(sonarr_url + "/api/series", headers=api_header)
+        shows = JSON.ObjectFromURL(sonarr_url + "/api/Series", headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Shows")
@@ -858,7 +858,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
+        show = JSON.ObjectFromURL(sonarr_url + "/api/Series/" + series_id, headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
@@ -920,8 +920,8 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
         data = JSON.StringFromObject(show)
         data2 = JSON.StringFromObject({'seriesId': int(series_id)})
         try:
-            HTTP.Request(sonarr_url + "/api/series/", headers=api_header, data=data)  # Post Series to monitor
-            HTTP.Request(sonarr_url + "/api/command/SeriesSearch/", headers=api_header, data=data2)  # Search for all episodes in series
+            HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header)  # Post Series to monitor
+            HTTP.Request(url=sonarr_url + "/api/command/SeriesSearch/", data=data2, headers=api_header)  # Search for all episodes in series
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + Log.Debug(HTTP.Status) + " - " + e.message)
     else:
@@ -945,7 +945,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                 episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
                 episode['monitored'] = True
                 data = JSON.StringFromObject(list(episode))
-                HTTP.Request(sonarr_url + "/api/Episode", headers=api_header, data=data)
+                HTTP.Request(sonarr_url + "/api/Episode", data=data, headers=api_header)
             data2 = JSON.StringFromObject({'episodeIds': episodes})
             HTTP.Request(sonarr_url + "/api/command/EpisodeSearch/", headers=api_header, data=data2)
             # except Exception as e:
