@@ -638,7 +638,7 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
             oc.add(DirectoryObject(key=Callback(SendToSonarr, tvdbid=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             oc.add(
-                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_sickrage'], thumb=R(Prefs['sickbeard_sickrage'].lower() + '.png')))
+                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'], thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -1005,7 +1005,7 @@ def SendToSickbeard(series_id, locked='unlocked'):
     title = Dict['tv'][series_id]['title']
     data = dict(cmd='show.addnew', tvdbid=series_id)
 
-    use_sickrage = (Prefs['sickbeard_sickrage'] == 'SickRage')
+    use_sickrage = (Prefs['sickbeard_fork'] == 'SickRage')
 
     if Prefs['sickbeard_location']:
         data['location'] = Prefs['sickbeard_location']
@@ -1028,17 +1028,17 @@ def SendToSickbeard(series_id, locked='unlocked'):
         # Log.Debug(JSON.StringFromObject(resp))
         if 'success' in resp and resp['success']:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                oc = ObjectContainer(title1=Prefs['sickbeard_sickrage'], title2="Success")
+                oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
             else:
-                oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_sickrage'])
+                oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_fork'])
             Dict['tv'][series_id]['automated'] = True
         else:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                oc = ObjectContainer(title1=Prefs['sickbeard_sickrage'], title2="Error")
+                oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
             else:
-                oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
+                oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
     except Exception as e:
-        oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
+        oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
