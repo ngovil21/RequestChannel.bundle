@@ -870,7 +870,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         mark = "* " if season['monitored'] else ""
         oc.add(
             DirectoryObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked),
-                         title=mark + "Season " + str(season_number)))
+                            title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials")))
     return oc
 
 
