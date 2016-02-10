@@ -822,6 +822,10 @@ def SendToSickbeard(series_id, locked='unlocked'):
         sickbeard_url += "/"
     title = Dict['tv'][series_id]['title']
     data = dict(cmd='show.addnew', tvdbid=series_id)
+    if Prefs['sickbeard_sickrage'] == 'SickRage':
+        use_sickrage = True
+    else:
+        use_sickrage = False
     if Prefs['sickbeard_location']:
         data['location'] = Prefs['sickbeard_location']
     if Prefs['sickbeard_status']:
@@ -830,13 +834,17 @@ def SendToSickbeard(series_id, locked='unlocked'):
         data['initial'] = Prefs['sickbeard_initial']
     if Prefs['sickbeard_archive']:
         data['archive'] = Prefs['sickbeard_archive']
+    if Prefs['sickbeard_langauge'] or use_sickrage:
+        data['lang'] = Prefs['sickbeard_language'] if Prefs['sickbeard_language'] else "en"         #SickRage requires lang set
 
+    if use_sickrage:
+        data['anime'] = False                                                                       #SickRage requires anime set
 
-    Log.Debug(str(data))
+    # Log.Debug(str(data))
 
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
-        Log.Debug(JSON.StringFromObject(resp))
+        # Log.Debug(JSON.StringFromObject(resp))
         if 'success' in resp and resp['success']:
             oc = ObjectContainer(header=TITLE, message="Show added to Sickbeard")
             Dict['tv'][series_id]['automated'] = True

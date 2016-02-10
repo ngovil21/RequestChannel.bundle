@@ -89,7 +89,7 @@
   },
   {
     "id": "sonarr_path",
-    "label": "Sonarr Path",
+    "label": "Sonarr Download Path",
     "type": "text",
     "default": ""
   },
@@ -99,6 +99,13 @@
     "type": "enum",
     "values": ["all", "future", "latest", "first", "missing", "existing", "none"],
     "default": "none"
+  },
+  {
+    "id": "sickbeard_fork",
+    "label": "Sickbeard/Sickrage",
+    "type": "enum",
+    "values": ["Sickbeard", "SickRage"],
+    "default": "Sickbeard"
   },
   {
     "id": "sickbeard_url",
@@ -117,6 +124,12 @@
     "label": "Automatically add request to SickRage?",
     "type": "bool",
     "default": false
+  },
+  {
+    "id": "sickbeard_language",
+    "label": "Sickbeard Language",
+    "type": "text",
+    "default": ""
   },
   {
     "id": "sickbeard_location",
