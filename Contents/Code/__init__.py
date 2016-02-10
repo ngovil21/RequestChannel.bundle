@@ -886,15 +886,15 @@ def SonarrManageSeason(series_id, season, locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
-    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[season], locked=locked), title="Get All Episodes"))
+    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[season,], locked=locked), title="Get All Episodes"))
     # data = JSON.StringFromObject({'seriesId': series_id})
     episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
     Log.Debug(JSON.StringFromObject(episodes))
     for episode in episodes:
         if not episode['seasonNumber'] == int(season):
             continue
-        oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[int(season)], episodes=[episode['id']]),
-                               title=episode['title']))
+        oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[int(season),], episodes=[episode['id'],]),
+                               title=str(episode['episodeNumber']) + ". " + episode['title']))
     return oc
 
 @route(PREFIX + '/sonarrmonitorshow')
