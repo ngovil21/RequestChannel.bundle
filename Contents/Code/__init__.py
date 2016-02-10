@@ -946,7 +946,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                 episode['monitored'] = True
                 data = JSON.StringFromObject(episode)
                 HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
-            data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episodes})
+            data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
             HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
             # except Exception as e:
             #     Log.Debug("Sonarr Monitor failed: " + e.message)
