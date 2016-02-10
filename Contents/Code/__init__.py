@@ -889,7 +889,7 @@ def SonarrManageSeason(series_id, season, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), locked=locked), title="Get All Episodes"))
     # data = JSON.StringFromObject({'seriesId': series_id})
     episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
-    Log.Debug(JSON.StringFromObject(episodes))
+    # Log.Debug(JSON.StringFromObject(episodes))
     for episode in episodes:
         if not episode['seasonNumber'] == int(season):
             continue
@@ -932,10 +932,10 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                     s['monitored'] = True
             data = JSON.StringFromObject(show)
             try:
-                HTTP.Request(sonarr_url + "/api/series/", headers=api_header, data=data)  # Post seasons to monitor
+                HTTP.Request(sonarr_url + "/api/series", headers=api_header, data=data)  # Post seasons to monitor
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'seriesId': int(series_id), 'seasonNumber': int(s)})
-                    HTTP.Request(sonarr_url + "/api/command/SeasonSearch/", headers=api_header, data=data2)
+                    HTTP.Request(sonarr_url + "/api/command/SeasonSearch", headers=api_header, data=data2)
             except Exception as e:
                 Log.Debug("Sonarr Monitor failed: " + e.message)
         else:
