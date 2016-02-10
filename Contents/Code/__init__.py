@@ -920,7 +920,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
         data = JSON.StringFromObject(show)
         data2 = JSON.StringFromObject({'seriesId': int(series_id)})
         try:
-            HTTP.Request(sonarr_url + "/api/series/" + series_id, headers=api_header, data=data)  # Post Series to monitor
+            HTTP.Request(sonarr_url + "/api/series/", headers=api_header, data=data)  # Post Series to monitor
             HTTP.Request(sonarr_url + "/api/command/SeriesSearch/", headers=api_header, data=data2)  # Search for all episodes in series
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + e.message)
@@ -932,7 +932,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                     s['monitored'] = True
             data = JSON.StringFromObject(show)
             try:
-                HTTP.Request(sonarr_url + "/api/series/" + series_id, headers=api_header, data=data)  # Post seasons to monitor
+                HTTP.Request(sonarr_url + "/api/series/", headers=api_header, data=data)  # Post seasons to monitor
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'seriesId': int(series_id), 'seasonNumber': int(s)})
                     HTTP.Request(sonarr_url + "/api/command/SeasonSearch/", headers=api_header, data=data2)
