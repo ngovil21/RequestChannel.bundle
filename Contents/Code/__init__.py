@@ -37,6 +37,7 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
+
 ########################################################
 #   Start Code
 ########################################################
@@ -115,6 +116,8 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
             oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if is_admin:
+        if Prefs['sonarr_api']:
+            oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
         oc.add(DirectoryObject(
@@ -212,7 +215,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 title_year = key['title'] + " (" + year + ")"
                 oc.add(TVShowObject(
                     key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
-                                 summary=key['overview'], locked=locked),rating_key=key['id'], title=title_year, thumb=thumb, summary=key['overview'], art=art))
+                                 summary=key['overview'], locked=locked), rating_key=key['id'], title=title_year, thumb=thumb,
+                    summary=key['overview'], art=art))
         else:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title2="No results")
@@ -632,7 +636,8 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
             oc.add(DirectoryObject(key=Callback(SendToSonarr, series_id=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to Sickbeard", thumb=R('sickbeard.png')))
+            oc.add(
+                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to Sickbeard", thumb=R('sickbeard.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -811,6 +816,60 @@ def SendToSonarr(series_id, locked='unlocked'):
     return oc
 
 
+@route(PREFIX + '/managesonarr')
+def ManageSonarr(locked='unlocked'):
+    oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
+    if not Prefs['sonarr_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sonarr_url']
+    else:
+        sonarr_url = Prefs['sonarr_url']
+    if not sonarr_url.endswith("/"):
+        sonarr_url = sonarr_url[:-1]
+    api_header = {
+        'X-Api-Key': Prefs['sonarr_api']
+    }
+    try:
+        shows = JSON.ElementFromURL(sonarr_url + "/api/Series")
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Shows")
+    for show in shows:
+        poster = None
+        for image in show['images']:
+            if image['coverType'] == 'poster':
+                poster = sonarr_url + image['url']
+        oc.add(TVObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'], title=show['title'],
+                        poster=poster, summary=show['overview']))
+
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    return oc
+
+@route(PREFIX + '/managesonarrshow')
+def ManageSonarrShow(series_id, title="", locked='unlocked'):
+    if not Prefs['sonarr_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sonarr_url']
+    else:
+        sonarr_url = Prefs['sonarr_url']
+    if not sonarr_url.endswith("/"):
+        sonarr_url = sonarr_url[:-1]
+    api_header = {
+        'X-Api-Key': Prefs['sonarr_api']
+    }
+    try:
+        show = JSON.ElementFromURL(sonarr_url + "/api/Series?id=" + series_id)
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
+    oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
+    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, season='all', locked=locked), title="Monitor All Seasons"))
+    for season in show['seasons']:
+        season_number = int(season['seasonNumber'])
+        mark = "* " if season['monitored'] else ""
+        oc.add(SeasonObject(key=Callback(SonarrManageSeason, series_id, season=season_number, locked=locked), rating_key=series_id, index=season_number, title=mark + "Season " + str(season_number), show=show['title']))
+    return oc
+
+
+
 @route(PREFIX + "/sendtosickbeard")
 def SendToSickbeard(series_id, locked='unlocked'):
     # return ViewRequests(locked=locked, message="Sorry, Sickbeard is not available yet.")
@@ -834,10 +893,10 @@ def SendToSickbeard(series_id, locked='unlocked'):
     if Prefs['sickbeard_archive']:
         data['archive'] = Prefs['sickbeard_archive']
     if Prefs['sickbeard_langauge'] or use_sickrage:
-        data['lang'] = Prefs['sickbeard_language'] if Prefs['sickbeard_language'] else "en"         #SickRage requires lang set
+        data['lang'] = Prefs['sickbeard_language'] if Prefs['sickbeard_language'] else "en"  # SickRage requires lang set
 
     if use_sickrage:
-        data['anime'] = False                                                                       #SickRage requires anime set
+        data['anime'] = False  # SickRage requires anime set
 
     # Log.Debug(str(data))
 
@@ -853,7 +912,8 @@ def SendToSickbeard(series_id, locked='unlocked'):
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
         Log.Debug(e.message)
     if checkAdmin():
-        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked), title="Delete Request"))
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
+                               title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
