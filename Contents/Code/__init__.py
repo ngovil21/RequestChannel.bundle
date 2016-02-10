@@ -864,7 +864,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
     oc = ObjectContainer(title1="Manage Sonarr Show", title2=title)
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons='all', locked=locked), title="Monitor All Seasons"))
-    Log.Debug(show['seasons'])
+    # Log.Debug(show['seasons'])
     for season in show['seasons']:
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
@@ -889,8 +889,9 @@ def SonarrManageSeason(series_id, season, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[season], locked=locked), title="Get All Episodes"))
     # data = JSON.StringFromObject({'seriesId': series_id})
     episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
+    Log.Debug(JSON.StringFromObject(episodes))
     for episode in episodes:
-        if not episode['seasonNumber'] == season:
+        if not episode['seasonNumber'] == int(season):
             continue
         oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[int(season)], episodes=[episode['id']]),
                                title=episode['title']))
