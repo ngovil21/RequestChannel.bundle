@@ -862,9 +862,9 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
-    Log.Debug(JSON.StringFromObject(show))
     oc = ObjectContainer(title1="Manage Sonarr Show", title2=title)
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, season='all', locked=locked), title="Monitor All Seasons"))
+    Log.Debug(show['seasons'])
     for season in show['seasons']:
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
