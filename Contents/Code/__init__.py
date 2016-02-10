@@ -875,14 +875,80 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
 
 
 @route(PREFIX + '/sonarrmonitorshow')
-def SonarrMonitorShow(series_id, season, episode='all', locked='unlocked'):
-    oc = ObjectContainer()
-    return oc
+def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
+    if not Prefs['sonarr_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sonarr_url']
+    else:
+        sonarr_url = Prefs['sonarr_url']
+    if sonarr_url.endswith("/"):
+        sonarr_url = sonarr_url[:-1]
+    api_header = {
+        'X-Api-Key': Prefs['sonarr_api']
+    }
+    try:
+        show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
+    if seasons == 'all':
+        for s in show['seasons']:
+            s['monitored'] = True
+        data = JSON.StringFromObject(show)
+        data2 = JSON.StringFromObject({'seriesId': int(series_id)})
+        try:
+            HTTP.Request(sonarr_url + "/api/series/" + series_id, headers=api_header, data=data)  # Post Series to monitor
+            HTTP.Request(sonarr_url + "/api/command/SeriesSearch/", headers=api_header, data=data2)  # Search for all episodes in series
+        except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + e.message)
+    else:
+        if episodes == 'all':
+            for s in show['seasons']:
+                if str(s['seasonNumber']) in seasons:
+                    s['monitored'] = True
+            data = JSON.StringFromObject(show)
+            try:
+                HTTP.Request(sonarr_url + "/api/series/" + series_id, headers=api_header, data=data)  # Post seasons to monitor
+                for s in seasons:  # Search for each chosen season
+                    data2 = JSON.StringFromObject({'seriesId': int(series_id), 'seasonNumber': int(s)})
+                    HTTP.Request(sonarr_url + "/api/command/SeasonSearch/", headers=api_header, data=data2)
+            except Exception as e:
+                Log.Debug("Sonarr Monitor failed: " + e.message)
+        else:
+            post_data = []
+            for e in episodes:
+                episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
+                episode['monitored'] = True
+                post_data.append(episode)
+            data = JSON.StringFromObject(post_data)
+            data2 = JSON.StringFromObject({'episodeIds': episodes})
+            try:
+                HTTP.Request(sonarr_url + "/api/Episode/", headers=api_header, data=data)
+                HTTP.Request(sonarr_url + "/api/command/EpisodeSearch/", headers=api_header, data=data2)
+            except Exception as e:
+                Log.Debug("Sonarr Monitor failed: " + e.message)
+    return MainMenu(locked=locked)
 
 
 @route(PREFIX + '/sonarrmonitorshow')
 def SonarrManageSeason(series_id, season, locked='unlocked'):
-    oc = ObjectContainer()
+    if not Prefs['sonarr_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sonarr_url']
+    else:
+        sonarr_url = Prefs['sonarr_url']
+    if sonarr_url.endswith("/"):
+        sonarr_url = sonarr_url[:-1]
+    api_header = {
+        'X-Api-Key': Prefs['sonarr_api']
+    }
+    oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
+    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[season], locked=locked), title="Get All Episodes"))
+    # data = JSON.StringFromObject({'seriesId': series_id})
+    episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
+    for episode in episodes:
+        if not episode['seasonNumber'] == season:
+            continue
+        oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=[int(season)], episodes=[episode['id']]),
+                               title=episode['title']))
     return oc
 
 
