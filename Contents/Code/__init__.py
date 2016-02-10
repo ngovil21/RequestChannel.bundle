@@ -858,11 +858,11 @@ def ManageSonarrShow(series_id, title="", locked='unlocked'):
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        show = JSON.ObjectFromURL(sonarr_url + "/api/series?id=" + series_id, headers=api_header)
+        show = JSON.ObjectFromURL(sonarr_url + "/api/series?id=" + series_id, headers=api_header)[0]
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
-    oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
+    oc = ObjectContainer(title1="Manage Sonarr Show", title2=title)
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, season='all', locked=locked), title="Monitor All Seasons"))
     for season in show['seasons']:
         season_number = int(season['seasonNumber'])
