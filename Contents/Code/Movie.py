@@ -1,8 +1,8 @@
 #Movie Functions
 import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from CouchPotato import SendToCouchpotato
-from Notifications import notifyRequest
+import CouchPotato
+import Notifications
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -193,6 +193,6 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
                                    'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
-            SendToCouchpotato(movie_id)
-        notifyRequest(req_id=movie_id, req_type='movie')
+            CouchPotato.SendToCouchpotato(movie_id)
+        Notifications.notifyRequest(req_id=movie_id, req_type='movie')
         return Channel.CMainMenu(locked=locked, message="Movie has been requested", title1="Main Menu", title2="Movie Requested")

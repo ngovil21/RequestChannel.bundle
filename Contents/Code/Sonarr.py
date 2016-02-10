@@ -1,7 +1,7 @@
 # Sonarr Methods
 import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from Requests import ViewRequests, ConfirmDeleteRequest, ViewRequest
+import Requests
 
 
 @route(Channel.PREFIX + '/sendtosonarr')
@@ -19,7 +19,7 @@ def SendToSonarr(tvdbid, locked='unlocked'):
     series_id = ShowExists(tvdbid)
     if series_id:
         Dict['tv'][tvdbid]['automated'] = True
-        return ManageSonarrShow(series_id=series_id, locked=locked, callback=Callback(ViewRequest, req_id=tvdbid, type='tv', locked=locked))
+        return ManageSonarrShow(series_id=series_id, locked=locked, callback=Callback(Requests.ViewRequest, req_id=tvdbid, type='tv', locked=locked))
     lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=tvdbid:" + series_id, headers=api_header)
     found_show = None
     for show in lookup_json:
@@ -82,9 +82,9 @@ def SendToSonarr(tvdbid, locked='unlocked'):
         else:
             oc = ObjectContainer(header=Channel.TITLE, message="Could not send show to Sonarr!")
     if checkAdmin():
-        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
+        oc.add(DirectoryObject(key=Callback(Requests.ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(Requests.ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 

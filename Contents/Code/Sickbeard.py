@@ -1,7 +1,7 @@
 #Sickbeard Functions
 import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from Requests import ViewRequests, ConfirmDeleteRequest
+import Requests
 
 
 @route(Channel.PREFIX + "/sendtosickbeard")
@@ -52,8 +52,8 @@ def SendToSickbeard(series_id, locked='unlocked'):
         oc = ObjectContainer(header=Channel.TITLE, message="Could not add show to " + Prefs['sickbeard_sickrage'])
         Log.Debug(e.message)
     if checkAdmin():
-        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
+        oc.add(DirectoryObject(key=Callback(Requests.ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(Requests.ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(Channel.CMainMenu, locked=locked), title="Return to Main Menu"))
     return oc

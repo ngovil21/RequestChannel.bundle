@@ -1,8 +1,8 @@
 #CouchPotato Functions
 import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from Requests import ViewRequests, ConfirmDeleteRequest
-from Movie import TMDB_API_URL, TMDB_API_KEY
+import Requests
+import Movie
 
 
 @route(Channel.PREFIX + '/sendtocouchpotato')
@@ -12,7 +12,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     movie = Dict['movie'][movie_id]
     if 'source' in movie and movie['source'] == 'tmdb':  # Check if id source is tmdb
         # we need to convert tmdb id to imdb
-        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
+        json = JSON.ObjectFromURL(Movie.TMDB_API_URL + "movie/" + movie_id + "?api_key=" + Movie.TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
             imdb_id = json['imdb_id']
         else:
@@ -21,7 +21,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
                 oc = ObjectContainer(header=Channel.TITLE, message="Unable to get IMDB id for movie, add failed...")
-            oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+            oc.add(DirectoryObject(key=Callback(Requests.ViewRequests, locked=locked), title="Return to View Requests"))
             return oc
     else:  # Assume we have an imdb_id by default
         imdb_id = movie_id
@@ -70,7 +70,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     key = Dict['movie'][movie_id]
     title_year = key['title'] + " (" + key['year'] + ")"
     if Channel.checkAdmin():
-        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
+        oc.add(DirectoryObject(key=Callback(Requests.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
                                title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(Requests.ViewRequests, locked=locked), title="Return to View Requests"))
     return oc

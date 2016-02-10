@@ -1,9 +1,9 @@
 #Request Functions
 import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from CouchPotato import SendToCouchpotato
-from Sickbeard import SendToSickbeard
-from Sonarr import SendToSonarr, ManageSonarrShow
+import CouchPotato
+import Sickbeard
+import Sonarr
 
 
 @route(Channel.PREFIX + '/viewrequests')
@@ -118,14 +118,14 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     if key['type'] == 'movie':
         if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
             oc.add(
-                DirectoryObject(key=Callback(SendToCouchpotato, movie_id=req_id, locked=locked), title="Send to CouchPotato",
+                DirectoryObject(key=Callback(CouchPotato.SendToCouchpotato, movie_id=req_id, locked=locked), title="Send to CouchPotato",
                                 thumb=R('couchpotato.png')))
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSonarr, tvdbid=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
+            oc.add(DirectoryObject(key=Callback(Sonarr.SendToSonarr, tvdbid=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             oc.add(
-                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_sickrage'], thumb=R(Prefs['sickbeard_sickrage'].lower() + '.png')))
+                DirectoryObject(key=Callback(Sickbeard.SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_sickrage'], thumb=R(Prefs['sickbeard_sickrage'].lower() + '.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 

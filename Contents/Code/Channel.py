@@ -1,11 +1,11 @@
 # Main Channel Methods
 
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from Movie import AddNewMovie, SearchMovie
-from TVShow import AddNewTVShow, SearchTV
-from Requests import ViewRequests, ViewRequestsPassword
-from Sonarr import ManageSonarr
-from ManageChannel import ManageChannel
+import Movie
+import TVShow
+import Requests
+import Sonarr
+import ManageChannel
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
@@ -44,31 +44,31 @@ def CMainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(
-            key=Callback(Keyboard, callback=SearchMovie, parent=CMainMenu, locked=locked, title="Search for Movie",
+            key=Callback(Keyboard, callback=Movie.SearchMovie, parent=CMainMenu, locked=locked, title="Search for Movie",
                          message="Enter the name of the movie"),
             title="Request a Movie"))
         oc.add(DirectoryObject(
-            key=Callback(Keyboard, callback=SearchTV, parent=CMainMenu, locked=locked, title="Search for TV Show",
+            key=Callback(Keyboard, callback=TVShow.SearchTV, parent=CMainMenu, locked=locked, title="Search for TV Show",
                          message="Enter the name of the TV Show"),
             title="Request a TV Show"))
     elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-        oc.add(DirectoryObject(key=Callback(AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
-        oc.add(DirectoryObject(key=Callback(AddNewTVShow, locked=locked), title="Request a TV Show"))
+        oc.add(DirectoryObject(key=Callback(Movie.AddNewMovie, title="Request a Movie", locked=locked), title="Request a Movie"))
+        oc.add(DirectoryObject(key=Callback(TVShow.AddNewTVShow, locked=locked), title="Request a TV Show"))
     else:  # All other clients
         oc.add(
-            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search for Movie", prompt="Enter the name of the movie:"))
+            InputDirectoryObject(key=Callback(Movie.SearchMovie, locked=locked), title="Search for Movie", prompt="Enter the name of the movie:"))
         oc.add(
-            InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search for TV Show", prompt="Enter the name of the TV Show:"))
+            InputDirectoryObject(key=Callback(TVShow.SearchTV, locked=locked), title="Search for TV Show", prompt="Enter the name of the TV Show:"))
     if Prefs['usersviewrequests'] or is_admin:
         if locked == 'unlocked' or Prefs['password'] is None or Prefs['password'] == "":
-            oc.add(DirectoryObject(key=Callback(ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
+            oc.add(DirectoryObject(key=Callback(Requests.ViewRequests, locked='unlocked'), title="View Requests"))  # No password needed this session
         else:
-            oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
+            oc.add(DirectoryObject(key=Callback(Requests.ViewRequestsPassword, locked='locked'),
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if is_admin:
         if Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
-        oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
+            oc.add(DirectoryObject(key=Callback(Sonarr.ManageSonarr, locked=locked), title="Manage Sonarr"))
+        oc.add(DirectoryObject(key=Callback(ManageChannel.ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
         oc.add(DirectoryObject(
             key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked),

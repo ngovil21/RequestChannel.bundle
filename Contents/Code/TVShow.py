@@ -2,9 +2,9 @@
 
 import Channel
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-from Sonarr import SendToSonarr
-from Sickbeard import SendToSickbeard
-from Notifications import notifyRequest
+import Sonarr
+import Sickbeard
+import Notifications
 
 ### URL Constants for TheTVDB ##########################
 TVDB_API_KEY = "B93EF22D769A70CB"
@@ -179,8 +179,8 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
                                  'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            SendToSonarr(tvdbid=series_id)
+            Sonarr.SendToSonarr(tvdbid=series_id)
         if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            SendToSickbeard(series_id)
-        notifyRequest(req_id=series_id, req_type='tv')
+            Sickbeard.SendToSickbeard(series_id)
+        Notifications.notifyRequest(req_id=series_id, req_type='tv')
         return Channel.CMainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
