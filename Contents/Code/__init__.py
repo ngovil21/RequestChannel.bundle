@@ -932,12 +932,12 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked'):
                     s['monitored'] = True
             data = JSON.StringFromObject(show)
             try:
-                HTTP.Request(sonarr_url + "/api/series", headers=api_header, data=data)  # Post seasons to monitor
+                HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header)  # Post seasons to monitor
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'seriesId': int(series_id), 'seasonNumber': int(s)})
                     HTTP.Request(sonarr_url + "/api/command/SeasonSearch", headers=api_header, data=data2)
             except Exception as e:
-                Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
+                Log.Debug("Sonarr Monitor failed: " + e.message)
         else:
             episode_list = episodes.split()
             # try:
@@ -1132,9 +1132,16 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
-            response = sendPushBullet(title, message)
-            if response:
-                Log.Debug("Pushbullet notification sent for :" + req_id)
+            if Prefs['pushbullet_devices']:
+                devices = Prefs['pushbullet_devices'].split(",")
+                for d in devices:
+                    response = sendPushBullet(title,message,d)
+                    if response:
+                        Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
+            else:
+                response = sendPushBullet(title, message)
+                if response:
+                    Log.Debug("Pushbullet notification sent for: " + req_id)
         except Exception as e:
             Log.Debug("Pushbullet failed: " + e.message)
     if Prefs['pushover_user']:
@@ -1217,11 +1224,13 @@ def Notify(title, body):
             Log.Debug("Pushover failed: " + e.message)
 
 
-def sendPushBullet(title, body):
+def sendPushBullet(title, body, device_iden = ""):
     api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
                   }
     data = {'type': 'note', 'title': title, 'body': body}
+    if device_iden:
+        data['device_iden'] = device_iden
     values = JSON.StringFromObject(data)
     return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
 
