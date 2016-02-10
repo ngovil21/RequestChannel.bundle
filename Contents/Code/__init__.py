@@ -110,7 +110,7 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if is_admin:
         if Prefs['sonarr_api']:
             oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
-        oc.add(DirectoryObject(key=Callback(ManageManageChannel, locked=locked), title="Manage Channel"))
+        oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
         oc.add(DirectoryObject(
             key=Callback(Register, message="Entering your name will let the admin know who you are when making requests.", locked=locked),
