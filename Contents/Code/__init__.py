@@ -936,10 +936,10 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
         try:
             HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
             HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
+            return MessageContainer(header="Sonarr", message="Successfully sent Series to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
-    else:
-        if episodes == 'all':
+    elif episodes == 'all':
             season_list = seasons.split()
             for s in show['seasons']:
                 if str(s['seasonNumber']) in season_list:
@@ -950,21 +950,22 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'name':"SeasonSearch", 'seriesId': int(series_id), 'seasonNumber': int(s)})
                     HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
+                    return MessageContainer(header="Sonarr", message="Successfully sent season to Sonarr")
             except Exception as e:
                 Log.Debug("Sonarr Monitor failed: " + e.message)
-        else:
-            episode_list = episodes.split()
-            try:
-                for e in episode_list:
-                    episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
-                    episode['monitored'] = True
-                    data = JSON.StringFromObject(episode)
-                    HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
-                data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
-                HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-            except Exception as e:
-                Log.Debug("Sonarr Monitor failed: " + e.message)
-            return SonarrManageSeason(series_id=series_id, season=seasons, locked=locked)
+    else:
+        episode_list = episodes.split()
+        try:
+            for e in episode_list:
+                episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
+                episode['monitored'] = True
+                data = JSON.StringFromObject(episode)
+                HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
+            data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
+            HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
+            return MessageContainer(header="Sonarr", message="Successfully sent episode to Sonarr")
+        except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + e.message)
     if callback:
         oc = ObjectContainer(title1="Sonarr Submit", title2="Success", message="Sucessfully sent to Sonarr")
         if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
