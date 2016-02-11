@@ -1177,7 +1177,7 @@ def DeleteUser(token, locked='locked', confirmed='False'):
         oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
     elif confirmed == 'True':
         Dict['register'].pop(token, None)
-        return ManageUser(locked=locked, message="User registration has been deleted.")
+        return ManageUsers(locked=locked, message="User registration has been deleted.")
     return oc
 
 
