@@ -6,6 +6,8 @@ PREFIX = '/video/plexrequestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
+VERSION = "0.6.1"
+
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
 TMDB_API_URL = "http://api.themoviedb.org/3/"
