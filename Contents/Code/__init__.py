@@ -886,6 +886,8 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None, mess
         oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'], header=TITLE if message else None, message=message)
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
+    else:
+        oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Return to Shows"))
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback),
                            title="Monitor All Seasons", thumb=None))
     # Log.Debug(show['seasons'])
@@ -915,6 +917,7 @@ def ManageSonarrSeason(series_id, season, locked='unlocked', callback=None):
         oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back"))
+    oc.add(DirectoryObject(key=Callback(ManageSonarrShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
     oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
                            title="Get All Episodes", thumb=None))
     # data = JSON.StringFromObject({'seriesId': series_id})
