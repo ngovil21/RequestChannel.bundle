@@ -22,13 +22,15 @@ OMDB_API_URL = "http://www.omdbapi.com/"
 TVDB_API_KEY = "B93EF22D769A70CB"
 TVDB_API_URL = "http://thetvdb.com/api/"
 TVDB_BANNER_URL = "http://thetvdb.com/banners/"
-#######################################################
+########################################################
 
-### Notification Constants ############################
+### Notification Constants #############################
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
+
+########################################################
 
 ########################################################
 #   Start Code
