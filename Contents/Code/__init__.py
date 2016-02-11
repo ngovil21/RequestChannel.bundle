@@ -902,7 +902,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None, mess
 
 
 @route(PREFIX + '/managesonarrseason')
-def ManageSonarrSeason(series_id, season, locked='unlocked', callback=None):
+def ManageSonarrSeason(series_id, season, locked='unlocked', message=None, callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
