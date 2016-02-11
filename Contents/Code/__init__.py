@@ -346,7 +346,7 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
         Dict.Save()
         if Prefs['couchpotato_autorequest']:
             SendToCouchpotato(movie_id)
-        Notifications.notifyRequest(req_id=movie_id, req_type='movie')
+        notifyRequest(req_id=movie_id, req_type='movie')
         return MainMenu(locked=locked, message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
 
 
@@ -522,7 +522,7 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
             SendToSonarr(tvdbid=series_id)
         if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             SendToSickbeard(series_id)
-        Notifications.notifyRequest(req_id=series_id, req_type='tv')
+        notifyRequest(req_id=series_id, req_type='tv')
         return MainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
 
 
