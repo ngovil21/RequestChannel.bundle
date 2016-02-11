@@ -645,7 +645,7 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
             oc.add(DirectoryObject(
-                key=Callback(SendToSonarr, tvdbid=req_id, locked=locked, callback=Callback(ViewRequest, req_id=req_id, type='tv', locked=locked)),
+                key=Callback(SendToSonarr, tvdbid=req_id, locked=locked, callback=Callback(ViewRequest, req_id=req_id, req_type='tv', locked=locked)),
                 title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             oc.add(DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'],
