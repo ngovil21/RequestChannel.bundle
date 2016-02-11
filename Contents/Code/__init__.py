@@ -304,7 +304,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
                 if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                     Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
                     summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
-                    video.attrib['summary'] if video.attrib['summary'] else "")
+                        video.attrib['summary'] if video.attrib['summary'] else "")
                     oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
                                         rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary, thumb=video.attrib['thumb']))
                     found_match = True
@@ -642,11 +642,12 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
                                 thumb=R('couchpotato.png')))
     if key['type'] == 'tv':
         if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSonarr, tvdbid=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
+            oc.add(DirectoryObject(
+                key=Callback(SendToSonarr, tvdbid=req_id, locked=locked, callback=Callback(ViewRequest, req_id=tvdbid, type='tv', locked=locked)),
+                title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            oc.add(
-                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'],
-                                thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+            oc.add(DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'],
+                                   thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -751,7 +752,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
 
 
 @route(PREFIX + '/sendtosonarr')
-def SendToSonarr(tvdbid, locked='unlocked'):
+def SendToSonarr(tvdbid, locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -765,7 +766,7 @@ def SendToSonarr(tvdbid, locked='unlocked'):
     series_id = ShowExists(tvdbid)
     if series_id:
         Dict['tv'][tvdbid]['automated'] = True
-        return ManageSonarrShow(series_id=series_id, locked=locked, callback=Callback(ViewRequest, req_id=tvdbid, type='tv', locked=locked))
+        return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback)
     lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=tvdbid:" + tvdbid, headers=api_header)
     found_show = None
     for show in lookup_json:
@@ -1174,7 +1175,7 @@ def DeleteUser(token, locked='locked', confirmed='False'):
         oc.add(DirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
     elif confirmed == 'True':
-        Dict['register'].pop(token,None)
+        Dict['register'].pop(token, None)
         return ManageUser(locked=locked, message="User registration has been deleted.")
     return oc
 
