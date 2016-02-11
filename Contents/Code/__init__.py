@@ -1127,9 +1127,9 @@ def ManageUser(token, locked='locked', message=None):
     else:
         oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='True', locked=locked), title="Block User"))
     if token in Dict['sonarr_users']:
-        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='False', locked=locked), title="Allow Sonarr Management"))
+        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='False', locked=locked), title="Remove Sonarr Management"))
     else:
-        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='True', locked=locked), title="Remove Sonarr Management"))
+        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='True', locked=locked), title="Allow Sonarr Management"))
 
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
 
