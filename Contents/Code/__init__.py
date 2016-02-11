@@ -1122,15 +1122,14 @@ def ManageUser(token, locked='locked', message=None):
         oc = ObjectContainer(title1="Manage User", title2=user, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked),
                            title=user + " has made " + str(Dict['register'][token]['requests']) + " requests."))
-    if token in Dict['blocked']:
-        oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='False', locked=locked), title="Unblock User"))
-    else:
-        oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='True', locked=locked), title="Block User"))
     if token in Dict['sonarr_users']:
         oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='False', locked=locked), title="Remove Sonarr Management"))
     else:
         oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='True', locked=locked), title="Allow Sonarr Management"))
-
+    if token in Dict['blocked']:
+        oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='False', locked=locked), title="Unblock User"))
+    else:
+        oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='True', locked=locked), title="Block User"))
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
 
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
