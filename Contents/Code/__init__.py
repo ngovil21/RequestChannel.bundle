@@ -56,6 +56,8 @@ def Start():
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
     if 'blocked' not in Dict:
         Dict['blocked'] = []
+    if 'sonarr_users' not in Dict:
+        Dict['sonarr_users'] = []
     Dict.Save()
 
 
@@ -107,9 +109,9 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
         else:
             oc.add(DirectoryObject(key=Callback(ViewRequestsPassword, locked='locked'),
                                    title="View Requests"))  # Set View Requests to locked and ask for password
+    if Prefs['sonarr_api'] and (is_admin or token in Dict['sonarr_users']):
+        oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
     if is_admin:
-        if Prefs['sonarr_api']:
-            oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
         oc.add(DirectoryObject(
@@ -163,6 +165,7 @@ def checkAdmin():
     except:
         pass
     return False
+
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
@@ -300,7 +303,8 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
             for video in videos:
                 if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                     Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
-                    summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (video.attrib['summary'] if video.attrib['summary'] else "")
+                    summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
+                    video.attrib['summary'] if video.attrib['summary'] else "")
                     oc.add(TVShowObject(key=Callback(MainMenu, locked=locked, message="Movie already in library.", title1="In Library", title2=title),
                                         rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary, thumb=video.attrib['thumb']))
                     found_match = True
@@ -323,6 +327,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
 
     return oc
 
+
 @route(PREFIX + '/addmovierequest')
 def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     if movie_id in Dict['movie']:
@@ -344,7 +349,8 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
         Notifications.notifyRequest(req_id=movie_id, req_type='movie')
         return MainMenu(locked=locked, message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
 
-#TVShow Functions
+
+# TVShow Functions
 
 
 @route(PREFIX + '/addtvshow')
@@ -519,7 +525,8 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
         Notifications.notifyRequest(req_id=series_id, req_type='tv')
         return MainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
 
-#Request Functions
+
+# Request Functions
 
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked='unlocked', message=None):
@@ -638,7 +645,8 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
             oc.add(DirectoryObject(key=Callback(SendToSonarr, tvdbid=req_id, locked=locked), title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             oc.add(
-                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'], thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+                DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'],
+                                thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -664,7 +672,8 @@ def DeleteRequest(req_id, req_type, locked='unlocked'):
         message = "Request could not be deleted"
     return ViewRequests(locked=locked, message=message)
 
-#CouchPotato Functions
+
+# CouchPotato Functions
 
 
 @route(PREFIX + '/sendtocouchpotato')
@@ -739,9 +748,6 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
 
 
 # Sonarr Methods
-import Channel
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
-import Requests
 
 
 @route(PREFIX + '/sendtosonarr')
@@ -880,13 +886,15 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None, mess
         oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'], header=TITLE if message else None, message=message)
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
-    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback), title="Monitor All Seasons", thumb=None))
+    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback),
+                           title="Monitor All Seasons", thumb=None))
     # Log.Debug(show['seasons'])
     for season in show['seasons']:
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
         oc.add(DirectoryObject(key=Callback(ManageSonarrSeason, series_id=series_id, season=season_number, locked=locked, callback=callback),
-                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"), summary=show['overview'], thumb=None))
+                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"), summary=show['overview'],
+                               thumb=None))
     return oc
 
 
@@ -916,9 +924,10 @@ def ManageSonarrSeason(series_id, season, locked='unlocked', callback=None):
         if not episode['seasonNumber'] == int(season):
             continue
         marked = "* " if episode['monitored'] else ""
-        oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id']), callback=callback),
-                               title=marked + str(episode['episodeNumber']) + ". " + episode['title'],
-                               summary=(episode['overview'] if 'overview' in episode else None), thumb=None))
+        oc.add(
+            DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id']), callback=callback),
+                            title=marked + str(episode['episodeNumber']) + ". " + episode['title'],
+                            summary=(episode['overview'] if 'overview' in episode else None), thumb=None))
     return oc
 
 
@@ -946,25 +955,25 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
         try:
             HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
             HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
-            return ManageSonarrShow(series_id=series_id, title=show['title'],locked=locked, callback=callback, message="Series sent to Sonarr")
+            return ManageSonarrShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
             return MessageContainer("Error sending series to Sonarr")
     elif episodes == 'all':
-            season_list = seasons.split()
-            for s in show['seasons']:
-                if str(s['seasonNumber']) in season_list:
-                    s['monitored'] = True
-            data = JSON.StringFromObject(show)
-            try:
-                HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header, method='PUT')  # Post seasons to monitor
-                for s in season_list:  # Search for each chosen season
-                    data2 = JSON.StringFromObject({'name':'SeasonSearch', 'seriesId': int(series_id), 'seasonNumber': int(s)})
-                    HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-                return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to Sonarr")
-            except Exception as e:
-                Log.Debug("Sonarr Monitor failed: " + e.message)
-                return MessageContainer("Error sending season to Sonarr")
+        season_list = seasons.split()
+        for s in show['seasons']:
+            if str(s['seasonNumber']) in season_list:
+                s['monitored'] = True
+        data = JSON.StringFromObject(show)
+        try:
+            HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header, method='PUT')  # Post seasons to monitor
+            for s in season_list:  # Search for each chosen season
+                data2 = JSON.StringFromObject({'name': 'SeasonSearch', 'seriesId': int(series_id), 'seasonNumber': int(s)})
+                HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
+            return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to Sonarr")
+        except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + e.message)
+            return MessageContainer("Error sending season to Sonarr")
     else:
         episode_list = episodes.split()
         try:
@@ -979,7 +988,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + e.message)
             return MessageContainer("Error sending episode to Sonarr")
-    # return MainMenu(locked=locked)
+            # return MainMenu(locked=locked)
 
 
 def ShowExists(tvdbid):
@@ -999,8 +1008,7 @@ def ShowExists(tvdbid):
     return False
 
 
-
-#Sickbeard Functions
+# Sickbeard Functions
 
 
 @route(PREFIX + "/sendtosickbeard")
@@ -1057,7 +1065,8 @@ def SendToSickbeard(series_id, locked='unlocked'):
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
-#ManageChannel Functions
+
+# ManageChannel Functions
 
 @route(PREFIX + "/managechannel")
 def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
@@ -1111,7 +1120,13 @@ def ManageUser(token, locked='locked', message=None):
         oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='False', locked=locked), title="Unblock User"))
     else:
         oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='True', locked=locked), title="Block User"))
+    if token in Dict['sonarr_users']:
+        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='False', locked=locked), title="Allow Sonarr Management"))
+    else:
+        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='True', locked=locked), title="Remove Sonarr Management"))
+
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
+
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
 
     return oc
@@ -1132,6 +1147,21 @@ def BlockUser(token, set, locked='locked'):
     return ManageUser(token=token, locked=locked)
 
 
+@route(PREFIX + "/sonarruser")
+def SonarrUser(token, set, locked='locked'):
+    if set == 'True':
+        if token in Dict['sonarr_users']:
+            return ManageUser(token=token, locked=locked, message="User already in Sonarr list")
+        else:
+            Dict['sonarr_users'].append(token)
+            return ManageUser(token=token, locked=locked, message="User is now allowed to manage Sonarr")
+    elif set == 'False':
+        if token in Dict['blocked']:
+            Dict['sonarr_users'].remove(token)
+            return ManageUser(token=token, locked=locked, message="User can no longer manage Sonarr")
+    return ManageUser(token=token, locked=locked)
+
+
 @route(PREFIX + "/deleteuser")
 def DeleteUser(token, locked='locked', confirmed='False'):
     if not checkAdmin():
@@ -1141,7 +1171,7 @@ def DeleteUser(token, locked='locked', confirmed='False'):
         oc.add(DirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
     elif confirmed == 'True':
-        del Dict['register'][token]
+        Dict['register'].pop(token,None)
         return ManageUser(locked=locked, message="User registration has been deleted.")
     return oc
 
@@ -1166,10 +1196,12 @@ def ResetDict(locked='locked', confirm='False'):
         Dict['register'] = {}
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
         Dict['blocked'] = []
+        Dict['sonarr_users'] = []
 
     return ManageChannel(message="Dictionary has been reset!", locked=locked)
 
-#Notifications Functions
+
+# Notifications Functions
 
 # Notify user of requests
 def notifyRequest(req_id, req_type, title="", message=""):

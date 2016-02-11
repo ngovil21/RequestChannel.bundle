@@ -82,12 +82,6 @@
     "default": false
   },
   {
-    "id": "sonarr_manual",
-    "label": "Manually choose seasons/episodes?",
-    "type": "bool",
-    "default": false
-  },
-  {
     "id": "sonarr_profile",
     "label": "Sonarr Profile",
     "type": "text",
