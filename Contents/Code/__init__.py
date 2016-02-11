@@ -862,7 +862,7 @@ def ManageSonarr(locked='unlocked'):
                 poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):]
         oc.add(TVShowObject(key=Callback(ManageSonarrShow, series_id=show['id'], title=show['title'], locked=locked), rating_key=show['tvdbId'],
                             title=show['title'], thumb=poster, summary=show['overview']))
-
+    oc.objects.sort(key=lambda obj: obj.title)
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
