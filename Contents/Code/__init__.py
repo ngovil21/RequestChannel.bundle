@@ -1089,7 +1089,7 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
         oc = ObjectContainer(header=TITLE, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Users"))
     oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
-    oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="CHANGELOG"))
+    oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Changelog"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
@@ -1219,7 +1219,7 @@ def Changelog(locked='locked'):
     changes = clog.content
     changes = changes.splitlines()
     oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Current Version: " + str(VERSION), thumb=R('plexrequestchannel.png')))
-    for change in changes:
+    for change in changes[:10]:
         csplit = change.split("-")
         title = csplit[0].strip() + " - v" + csplit[1].strip()
         oc.add(DirectoryObject(key=Callback(ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip(),
