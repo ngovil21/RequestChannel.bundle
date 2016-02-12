@@ -1398,8 +1398,8 @@ def Notify(title, body, devices=None):
             if devices:
                 for d in devices.split(','):
                     if sendPushBullet(title, body, d):
-                        Log.Debug("Pushbullet notification sent")
-            elif sendPushBullet(title, body, device_iden):
+                        Log.Debug("Pushbullet notification sent to " + d)
+            elif sendPushBullet(title, body):
                 Log.Debug("Pushbullet notification sent")
         except Exception as e:
             Log.Debug("PushBullet failed: " + e.message)
