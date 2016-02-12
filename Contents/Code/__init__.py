@@ -1220,8 +1220,8 @@ def Changelog(locked='locked'):
     changes = changes.splitlines()
     for change in changes:
         csplit = change.split("-")
-        title = csplit(0).strip() + "- v" + csplit(1).strip()
-        oc.add(DirectoryObject(key=Callback(MessageContainer, header=title, message=change), title=title, summary=csplit(2).strip()))
+        title = csplit[0].strip() + "- v" + csplit[1].strip()
+        oc.add(DirectoryObject(key=Callback(MessageContainer, header=title, message=change), title=title, summary=csplit[2].strip()))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
     return oc
 
