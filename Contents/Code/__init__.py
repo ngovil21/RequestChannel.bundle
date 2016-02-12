@@ -1221,9 +1221,14 @@ def Changelog(locked='locked'):
     for change in changes:
         csplit = change.split("-")
         title = csplit[0].strip() + "- v" + csplit[1].strip()
-        oc.add(DirectoryObject(key=Callback(MessageContainer, header=title, message=change), title=title, summary=csplit[2].strip()))
+        oc.add(DirectoryObject(key=Callback(ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip()))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
     return oc
+
+
+@route(PREFIX + "/showmessage")
+def ShowMessage(header, message):
+    return MessageContainer(header=header, message=message)
 
 
 # Notifications Functions
