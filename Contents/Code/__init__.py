@@ -1234,7 +1234,7 @@ def ShowMessage(header, message):
     return MessageContainer(header=header, message=message)
 
 
-@route(PREFIX + "/reportproblem")
+@route(PREFIX + "/reportaproblem")
 def ReportProblem(locked='locked'):
     oc = ObjectContainer(title1=TITLE, title2="Report Problem")
     oc.add(DirectoryObject(key=Callback(ReportProblemMedia, locked=locked), title="Report Problem with Media"))
