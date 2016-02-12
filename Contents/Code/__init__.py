@@ -120,6 +120,7 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if Prefs['sonarr_api'] and (is_admin or token in Dict['sonarr_users']):
         oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
+    oc.add(DirectoryObject(key=Callback(ReportProblem, locked=locked), title="Report a Problem"))
     if is_admin:
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
     elif not Dict['register'][token]['nickname']:
@@ -1270,8 +1271,9 @@ def ReportProblemMedia(locked='locked'):
     oc = ObjectContainer()
     return oc
 
+
 @route(PREFIX + "/confirmreportproblem")
-def ConfirmReportProblem(query="", locked=locked):
+def ConfirmReportProblem(query="", locked='locked'):
     oc = ObjecContainer(title1="Confirm", title2=query)
     oc.add(DirectoryObject(key=NotifyProblem, problem=query), title="Yes", thumb=R('check.png'))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
