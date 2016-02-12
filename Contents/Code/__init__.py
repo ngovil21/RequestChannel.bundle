@@ -1248,6 +1248,7 @@ def ReportProblem(locked='locked'):
     else:  # All other clients
         oc.add(
             InputDirectoryObject(key=Callback(ConfirmReportProblem, locked=locked), title="Search for Movie", prompt="Enter the name of the movie:"))
+    return oc
 
 
 @route(PREFIX + "/reportgeneralproblem")
@@ -1277,6 +1278,7 @@ def ConfirmReportProblem(query="", locked='locked'):
     oc = ObjecContainer(title1="Confirm", title2=query)
     oc.add(DirectoryObject(key=NotifyProblem, problem=query), title="Yes", thumb=R('check.png'))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
+    return oc
 
 
 @route(PREFIX + "/notifyproblem")
