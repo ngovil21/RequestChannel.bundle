@@ -1234,7 +1234,7 @@ def ShowMessage(header, message):
     return MessageContainer(header=header, message=message)
 
 
-@route(PREFIX + "/reportaproblem")
+@route(PREFIX + "/reportproblem")
 def ReportProblem(locked='locked'):
     oc = ObjectContainer(title1=TITLE, title2="Report Problem")
     oc.add(DirectoryObject(key=Callback(ReportProblemMedia, locked=locked), title="Report Problem with Media"))
@@ -1244,23 +1244,23 @@ def ReportProblem(locked='locked'):
             DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked, title="Report General Problem",
                                          message="What is the problem?"), title="Report General Problem"))
     elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-        oc.add(DirectoryObject(key=Callback(ReportGeneralProblem, title="Request a Movie", locked=locked), title="Request a Movie"))
+        oc.add(DirectoryObject(key=Callback(ReportGeneralProblem, locked=locked), title="Report a General Problem"))
     else:  # All other clients
         oc.add(
-            InputDirectoryObject(key=Callback(ConfirmReportProblem, locked=locked), title="Search for Movie", prompt="Enter the name of the movie:"))
+            InputDirectoryObject(key=Callback(ConfirmReportProblem, locked=locked), title="Report a General Problem", prompt="What is the Problem?"))
     return oc
 
 
 @route(PREFIX + "/reportgeneralproblem")
 def ReportGeneralProblem(locked='locked'):
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title2=title)
     else:
         oc = ObjectContainer(header=TITLE, message="Please enter your problem in the search box and press enter.")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked), title="Request a TV Show"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked), title="Report a General Problem"))
     else:
         oc.add(
             InputDirectoryObject(key=Callback(ConfirmReportProblem, locked=locked), title="Report a General Problem", prompt="What is the problem?"))
