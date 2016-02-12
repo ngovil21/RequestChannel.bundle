@@ -1218,12 +1218,12 @@ def Changelog(locked='locked'):
     clog = HTTP.Request(CHANGELOG_URL)
     changes = clog.content
     changes = changes.splitlines()
-    oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Current Version: " + str(VERSION)))
+    oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Current Version: " + str(VERSION), thumb=R('plexrequestchannel.png')))
     for change in changes:
         csplit = change.split("-")
         title = csplit[0].strip() + " - v" + csplit[1].strip()
-        oc.add(DirectoryObject(key=Callback(ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip()),
-               thumb=R('plexrequestchannel.png'))
+        oc.add(DirectoryObject(key=Callback(ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip(),
+               thumb=R('plexrequestchannel.png')))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel", thumb=R('return.png')))
     return oc
 
