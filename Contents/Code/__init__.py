@@ -1275,7 +1275,7 @@ def ReportProblemMedia(locked='locked'):
 
 @route(PREFIX + "/confirmreportproblem")
 def ConfirmReportProblem(query="", locked='locked'):
-    oc = ObjecContainer(title1="Confirm", title2=query)
+    oc = ObjectContainer(title1="Confirm", title2=query)
     oc.add(DirectoryObject(key=NotifyProblem, problem=query), title="Yes", thumb=R('check.png'))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
     return oc
