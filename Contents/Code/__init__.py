@@ -7,6 +7,7 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 VERSION = "0.6.1"
+CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -1088,6 +1089,7 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
         oc = ObjectContainer(header=TITLE, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Users"))
     oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
+    oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="CHANGELOG"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
@@ -1208,6 +1210,20 @@ def ResetDict(locked='locked', confirm='False'):
         Dict['sonarr_users'] = []
 
     return ManageChannel(message="Dictionary has been reset!", locked=locked)
+
+
+@route(PREFIX + "/changelog")
+def Changelog(locked='locked'):
+    oc = ObjectContainter(title1=TITLE, title2="Changelog")
+    clog = HTTP.Request(CHANGELOG_URL)
+    changes = clog.content
+    changes = changes.splitlines()
+    for change in changes:
+        csplit = change.split("-")
+        title = csplit(0).strip() + "- v" + csplit(1).strip()
+        oc.add(DirectoryObject(key=Callback(MessageContainer, header=title, message=change), title=title, summary=csplit(2).strip()))
+    oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
+    return oc
 
 
 # Notifications Functions
