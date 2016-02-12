@@ -1043,7 +1043,7 @@ def SendToSickbeard(series_id, locked='unlocked'):
         data['initial'] = Prefs['sickbeard_initial']
     if Prefs['sickbeard_archive']:
         data['archive'] = Prefs['sickbeard_archive']
-    if Prefs['sickbeard_langauge'] or use_sickrage:
+    if Prefs['sickbeard_language'] or use_sickrage:
         data['lang'] = Prefs['sickbeard_language'] if Prefs['sickbeard_language'] else "en"  # SickRage requires lang set
 
     if use_sickrage:
@@ -1383,6 +1383,7 @@ NotifyPlex 	            NZBGet
 HTPC Manager 	        Windows Server (Windows-2012Server-6.2.9200). Not sure if correct.
 Plex for Xbox One 	    Xbox One
 Plex for Xbox 360       Xbox 360
+Plex for Samsung        Samsung
 
 Client.Platform 	    Description
 ---------------         -------------------------------------------------------------------
@@ -1402,4 +1403,5 @@ Chromecast          	Chromecast
 NZBGet 	                NZBGet
 Xbox One            	Xbox One
 Xbox 360                Xbox 360
+Samsung                 Samsung
 """
