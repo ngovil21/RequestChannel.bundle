@@ -1214,7 +1214,7 @@ def ResetDict(locked='locked', confirm='False'):
 
 @route(PREFIX + "/changelog")
 def Changelog(locked='locked'):
-    oc = ObjectContainter(title1=TITLE, title2="Changelog")
+    oc = ObjectContainer(title1=TITLE, title2="Changelog")
     clog = HTTP.Request(CHANGELOG_URL)
     changes = clog.content
     changes = changes.splitlines()
