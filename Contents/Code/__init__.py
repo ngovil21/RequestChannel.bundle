@@ -32,7 +32,7 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 ########################################################
 
-TV_SHOW_OBJECT_FIX_CLIENTS = ["Android"]
+TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Samsung"]
 
 
 ########################################################
