@@ -1265,6 +1265,11 @@ def ReportGeneralProblem(locked='locked'):
     return oc
 
 
+@route(PREFIX + "/reportproblemmedia")
+def ReportProblemMedia(locked='locked'):
+    oc = ObjectContainer()
+    return oc
+
 @route(PREFIX + "/confirmreportproblem")
 def ConfirmReportProblem(query="", locked=locked):
     oc = ObjecContainer(title1="Confirm", title2=query)
