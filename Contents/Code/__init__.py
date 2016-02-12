@@ -30,14 +30,14 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
-
-
 ########################################################
+
+TV_SHOW_OBJECT_FIX_CLIENTS = ["Android"]
+
 
 ########################################################
 #   Start Code
 ########################################################
-
 def Start():
     ObjectContainer.title1 = TITLE
     ObjectContainer.art = R(ART)
@@ -63,6 +63,10 @@ def Start():
     if 'sonarr_users' not in Dict:
         Dict['sonarr_users'] = []
     Dict.Save()
+
+
+def ValidatePrefs():
+    return
 
 
 ###################################################################################################
@@ -320,13 +324,11 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
             oc.title1 = "Movie Already Exists"
         else:
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
-    if not found_match and Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    if not found_match and Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
         key=Callback(AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
-    # if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
-    #     oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="No", thumb=R('x-mark.png')))
 
     return oc
@@ -497,7 +499,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
             oc.title1 = "Show Already Exists"
         else:
             oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
-    if not found_match and Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    if not found_match and Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(
         key=Callback(AddTVRequest, series_id=series_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
@@ -612,7 +614,7 @@ def ViewRequestsPassword(locked='locked'):
 @route(PREFIX + '/confirmclearrequests')
 def ConfirmDeleteRequests(locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
-    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(key=Callback(ClearRequests, locked=locked), title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="No", thumb=R('x-mark.png')))
@@ -633,7 +635,7 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
     title_year = key['title'] + " (" + key['year'] + ")"
     oc = ObjectContainer(title2=title_year)
-    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year, locked=locked),
@@ -659,7 +661,7 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
 @route(PREFIX + '/confirmdeleterequest')
 def ConfirmDeleteRequest(req_id, req_type, title_year="", locked='unlocked'):
     oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
-    if Client.Platform == ClientPlatform.Android:  # If an android, add an empty first item because it gets truncated for some reason
+    if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     oc.add(DirectoryObject(key=Callback(DeleteRequest, req_id=req_id, req_type=req_type, locked=locked), title="Yes", thumb=R('check.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequest, req_id=req_id, req_type=req_type, locked=locked), title="No", thumb=R('x-mark.png')))
@@ -1361,3 +1363,43 @@ def sendEmail(subject, body, email_type='html'):
     senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
     server.quit()
     return senders
+
+
+"""
+List of Client.Product and Client.Platform
+
+Client.Product 	        Description
+--------------          ------------------------------------------------------------------
+Plex for Android 	    Android phone
+Plex for iOS 	        Apple phone
+Plex Home Theater 	    This is for Plex Home Theater
+Plex Media Player 	    This is for new Plex Media Player
+Plex Web 	            Plex Web client, from web browser
+Plex for Firefox TV 	Plex Firefox TV, (source), this one is a guess
+Plex for Roku 	        Roku
+OpenPHT 	            OpenPHT
+Plex Chromecast 	    Chromecast
+NotifyPlex 	            NZBGet
+HTPC Manager 	        Windows Server (Windows-2012Server-6.2.9200). Not sure if correct.
+Plex for Xbox One 	    Xbox One
+Plex for Xbox 360       Xbox 360
+
+Client.Platform 	    Description
+---------------         -------------------------------------------------------------------
+Android 	            Android phone
+iOS 	                Apple phone
+Safari 	                This is a guess from looking at a Service URL code.
+Chrome              	Plex Web client on Chrome internet browser
+Plex Home Theater 	    This is for Plex Home Theater
+Konvergo 	            Plex Media Player, (running on a Raspberry PI 2 B)
+tvOS 	                New AppleTV
+MacOSX 	                MacOSX
+Linux 	                Linux
+Windows 	            Windows
+LGTV 	                LGTV
+Roku 	                Roku
+Chromecast          	Chromecast
+NZBGet 	                NZBGet
+Xbox One            	Xbox One
+Xbox 360                Xbox 360
+"""
