@@ -6,7 +6,7 @@ PREFIX = '/video/plexrequestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.6.1"
+VERSION = "0.6.2"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -1218,11 +1218,13 @@ def Changelog(locked='locked'):
     clog = HTTP.Request(CHANGELOG_URL)
     changes = clog.content
     changes = changes.splitlines()
+    oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Current Version: " + str(VERSION)))
     for change in changes:
         csplit = change.split("-")
-        title = csplit[0].strip() + "- v" + csplit[1].strip()
-        oc.add(DirectoryObject(key=Callback(ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip()))
-    oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
+        title = csplit[0].strip() + " - v" + csplit[1].strip()
+        oc.add(DirectoryObject(key=Callback(ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip()),
+               thumb=R('plexrequestchannel.png'))
+    oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel", thumb=R('return.png')))
     return oc
 
 
