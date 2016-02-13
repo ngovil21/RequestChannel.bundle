@@ -1113,7 +1113,7 @@ def ManageSickbeard(locked='unlocked'):
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
                 poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
-                oc.add(TVShowObject(key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked, callback),
+                oc.add(TVShowObject(key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked, callback=Callback(ManageSickbeard,locked=locked)),
                                     rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
     except Exception as e:
         Log.Debug(e.message)
