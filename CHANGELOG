@@ -1,2 +1,3 @@
+2/12/16 - 0.6.3 - Added rudimentary ability for users to notify admin user of problems. The issue will be sent to admin through notifications only. More features added to this in the future.
 2/12/16 - 0.6.2 - Added ability to view changelog in the Plex Channel. Find under 'Manage Channel'.
 2/11/16 - 0.6.1 - Changelog added. Version information will be added here. Added a ability to manage sonarr from the channel.
