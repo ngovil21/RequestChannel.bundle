@@ -1154,7 +1154,7 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
                            title="Monitor All Seasons", thumb=None))
     # Log.Debug(show['seasons'])
     for season in resp['data']:
-        oc.add(DirectoryObject(key=Callback(ManageSickbeardSeason, series_id=series_id, season=season_number, locked=locked, callback=callback),
+        oc.add(DirectoryObject(key=Callback(ManageSickbeardSeason, series_id=series_id, season=season, locked=locked, callback=callback),
                                title="Season " + str(season) if season > 0 else "Specials",
                                thumb=None))
     return oc
