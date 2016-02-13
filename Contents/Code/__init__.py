@@ -640,7 +640,7 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
     if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     if Client.Product == "Plex Web":                    #If Plex Web then add an item with the poster
-        oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=req_type, locked=locked), rating_key=req_id, thumb=key['poster'], summary=key['summary'], title=key['title']))
+        oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=req_type, locked=locked), rating_key=req_id, thumb=key['poster'], summary=key['summary'], title=title_year))
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year, locked=locked),
                                title="Delete Request",
