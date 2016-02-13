@@ -1071,7 +1071,8 @@ def SendToSickbeard(series_id, locked='unlocked'):
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
         Log.Debug(JSON.StringFromObject(resp))
-        if 'data' in resp and resp['data']['result'] == "success":
+        Log.Debug(resp['result'])
+        if 'result' in resp and resp['result'] == "success":
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
             else:
