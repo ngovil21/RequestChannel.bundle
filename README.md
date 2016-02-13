@@ -24,16 +24,16 @@ Information can be found in the following link.
 
 https://support.plex.tv/hc/en-us/articles/204232573-Restricting-the-Shares
 
-If you want to support me (does not equal development):
-[<img src=http://imgur.com/WSVZSTW alt="Buy Me a Coffee">] (https://www.paypal.me/ngovil21/1) or [<img src=http://imgur.com/gnvlm6n alt="Buy Me a Beer">] (https://www.paypal.me/ngovil21/3) 
+If you want to support me (does not equal development): <br>
+<a href="https://www.paypal.me/ngovil21/1" target=blank><img src=http://imgur.com/WSVZSTW.png alt="Buy Me a Coffee" height=75 width=150 align='center'></a> &nbsp;&nbsp; or &nbsp;&nbsp; <a href="https://www.paypal.me/ngovil21/3" target=blank><img src=http://imgur.com/gnvlm6n.jpg alt="Buy Me a Beer"></a>
 
 ##Screenshots
-![Main Menu](http://i.imgur.com/SC0Q9dp.jpg "Main Menu")
-![Search For Movie](http://i.imgur.com/JMnDAd2.jpg "Search for Movie")
-![Movie Search Results](http://i.imgur.com/JCLtpOI.jpg "Movie Search Results with Summaries")
-![Confirm Movie](http://i.imgur.com/O5xmAC9.jpg "Confirm Movie Request")
-![Search for TV Show](http://i.imgur.com/4lhyle0.jpg "Search for TV Show")
-![TV Search Results](http://i.imgur.com/uLXXWpQ.jpg "TV Search Results")
-![View Requests](http://i.imgur.com/1qWNBIk.jpg "View Requests")
-![View Movie Request](http://i.imgur.com/tIEnKiH.jpg "View Movie Request")
+![Main Menu](http://i.imgur.com/SC0Q9dp.jpg "Main Menu") <br>
+![Search For Movie](http://i.imgur.com/JMnDAd2.jpg "Search for Movie") <br>
+![Movie Search Results](http://i.imgur.com/JCLtpOI.jpg "Movie Search Results with Summaries") <br>
+![Confirm Movie](http://i.imgur.com/O5xmAC9.jpg "Confirm Movie Request") <br>
+![Search for TV Show](http://i.imgur.com/4lhyle0.jpg "Search for TV Show") <br>
+![TV Search Results](http://i.imgur.com/uLXXWpQ.jpg "TV Search Results") <br>
+![View Requests](http://i.imgur.com/1qWNBIk.jpg "View Requests") <br>
+![View Movie Request](http://i.imgur.com/tIEnKiH.jpg "View Movie Request") <br>
 ![View TV Request](http://i.imgur.com/1TGcekp.jpg "View TV Request")
