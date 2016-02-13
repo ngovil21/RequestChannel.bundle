@@ -1181,7 +1181,15 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
-    # Log.Debug(JSON.StringFromObject(episodes))
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
+    else:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+    if callback:
+        oc.add(DirectoryObject(key=callback, title="Go Back"))
+    oc.add(DirectoryObject(key=Callback(ManageSickbeardShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
+    oc.add(DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
+                           title="Get All Episodes", thumb=None))
     for e in resp['data']:
         episode = resp['data'][e]
         marked = "* " if episode.get('status') == "Wanted" or episode.get('status') == "Downloaded" else ""
