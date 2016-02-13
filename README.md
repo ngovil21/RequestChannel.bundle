@@ -26,6 +26,7 @@ https://support.plex.tv/hc/en-us/articles/204232573-Restricting-the-Shares
 
 If you want to support me (does not equal development): <br>
 <a href="https://www.paypal.me/ngovil21/1" target=blank><img src=http://imgur.com/WSVZSTW.png alt="Buy Me a Coffee" height=75 width=150 align='center'></a> &nbsp;&nbsp; or &nbsp;&nbsp; <a href="https://www.paypal.me/ngovil21/3" target=blank><img src=http://imgur.com/gnvlm6n.jpg alt="Buy Me a Beer" height=75 width=150 align='center'></a>
+
 ##Screenshots
 ![Main Menu](http://i.imgur.com/SC0Q9dp.jpg "Main Menu") <br>
 ![Search For Movie](http://i.imgur.com/JMnDAd2.jpg "Search for Movie") <br>

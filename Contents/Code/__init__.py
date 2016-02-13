@@ -919,7 +919,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None, mess
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
         oc.add(DirectoryObject(key=Callback(ManageSonarrSeason, series_id=series_id, season=season_number, locked=locked, callback=callback),
-                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"), summary=show['overview'],
+                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"),
                                thumb=None))
     return oc
 
@@ -953,8 +953,8 @@ def ManageSonarrSeason(series_id, season, locked='unlocked', message=None, callb
         marked = "* " if episode['monitored'] else ""
         oc.add(
             DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id']), callback=callback),
-                            title=marked + str(episode['episodeNumber']) + ". " + episode['title'],
-                            summary=(episode['overview'] if 'overview' in episode else None), thumb=None))
+                            title=marked + str(episode.get('episodeNumber',"##")) + ". " + episode.get('title',""),
+                            summary=(episode.get('overview',None)), thumb=None))
     return oc
 
 
