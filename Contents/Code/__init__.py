@@ -1184,7 +1184,7 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
     # Log.Debug(JSON.StringFromObject(episodes))
     for e in resp['data']:
         episode = resp['data'][e]
-        marked = "* " if episode.get(status) == "Wanted" or episode.get('status') == "Downloaded" else ""
+        marked = "* " if episode.get('status') == "Wanted" or episode.get('status') == "Downloaded" else ""
         oc.add(
             DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons=season, episodes=e, callback=callback),
                             title=marked + e + ". " + episode.get('name', ""), summary=(episode.get('status', None)), thumb=None))
