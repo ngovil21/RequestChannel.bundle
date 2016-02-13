@@ -1493,4 +1493,7 @@ NZBGet 	                NZBGet
 Xbox One            	Xbox One
 Xbox 360                Xbox 360
 Samsung                 Samsung
+
+
+Screenshots: http://imgur.com/a/cxKU9/all
 """
