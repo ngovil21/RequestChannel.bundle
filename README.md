@@ -23,3 +23,15 @@ You will also need to make sure that Channels are shared with your Plex users. *
 Information can be found in the following link.
 
 https://support.plex.tv/hc/en-us/articles/204232573-Restricting-the-Shares
+
+
+##Screenshots
+![Main Menu](http://i.imgur.com/SC0Q9dp.jpg "Main Menu")
+![Search For Movie](http://i.imgur.com/JMnDAd2.jpg "Search for Movie")
+![Movie Search Results](http://i.imgur.com/JCLtpOI.jpg "Movie Search Results with Summaries")
+![Confirm Movie](http://i.imgur.com/O5xmAC9.jpg "Confirm Movie Request")
+![Search for TV Show](http://i.imgur.com/4lhyle0.jpg "Search for TV Show")
+![TV Search Results](http://i.imgur.com/uLXXWpQ.jpg "TV Search Results")
+![View Requests](http://i.imgur.com/1qWNBIk.jpg "View Requests")
+![View Movie Request](http://i.imgur.com/tIEnKiH.jpg "View Movie Request")
+![View TV Request](http://i.imgur.com/1TGcekp.jpg "View TV Request")
