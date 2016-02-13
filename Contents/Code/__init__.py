@@ -1113,8 +1113,10 @@ def ManageSickbeard(locked='unlocked'):
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
                 poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
-                oc.add(TVShowObject(key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked, callback=Callback(ManageSickbeard,locked=locked)),
-                                    rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
+                oc.add(TVShowObject(
+                    key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked,
+                                 callback=Callback(ManageSickbeard, locked=locked)),
+                    rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Shows")
@@ -1141,7 +1143,7 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
             return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title)
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving "+ Prefs['sickbeard_fork'] + " Show: " + title)
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title)
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title)
     else:
@@ -1155,42 +1157,37 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
     # Log.Debug(show['seasons'])
     for season in resp['data']:
         oc.add(DirectoryObject(key=Callback(ManageSickbeardSeason, series_id=series_id, season=season, locked=locked, callback=callback),
-                               title="Season " + str(season) if season > 0 else "Specials",
-                               thumb=None))
+                               title="Season " + str(season) if season > 0 else "Specials", thumb=None))
     return oc
 
 
 @route(PREFIX + '/managesickbeardseason')
 def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, callback=None):
-    if not Prefs['sonarr_url'].startswith("http"):
-        sonarr_url = "http://" + Prefs['sonarr_url']
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
     else:
-        sonarr_url = Prefs['sonarr_url']
-    if sonarr_url.endswith("/"):
-        sonarr_url = sonarr_url[:-1]
-    api_header = {
-        'X-Api-Key': Prefs['sonarr_api']
-    }
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
-    else:
-        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
-    if callback:
-        oc.add(DirectoryObject(key=callback, title="Go Back"))
-    oc.add(DirectoryObject(key=Callback(ManageSonarrShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
-    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
-                           title="Get All Episodes", thumb=None))
-    # data = JSON.StringFromObject({'seriesId': series_id})
-    episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='show.seasons', tvdbid=series_id, season=season)
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        if 'result' in resp and resp['result'] == "success":
+            pass
+        else:
+            Log.Debug(JSON.StringFromObject(resp))
+            return MessageContainer(header=TITLE,
+                                    message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
     # Log.Debug(JSON.StringFromObject(episodes))
-    for episode in episodes:
-        if not episode['seasonNumber'] == int(season):
-            continue
-        marked = "* " if episode['monitored'] else ""
+    for e in resp['data']:
+        episode = resp['data'][e]
+        marked = "* " if episode.get(status) == "Wanted" or episode.get('status') == "Downloaded" else ""
         oc.add(
-            DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id']), callback=callback),
-                            title=marked + str(episode.get('episodeNumber', "##")) + ". " + episode.get('title', ""),
-                            summary=(episode.get('overview', None)), thumb=None))
+            DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons=season, episodes=e, callback=callback),
+                            title=marked + e + ". " + episode.get('name', ""), summary=(episode.get('status', None)), thumb=None))
     return oc
 
 
