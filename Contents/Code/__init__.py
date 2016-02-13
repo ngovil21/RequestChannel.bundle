@@ -1143,9 +1143,9 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving "+ Prefs['sickbeard_fork'] + " Show: " + title)
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=show['title'])
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title)
     else:
-        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=show['title'], header=TITLE if message else None, message=message)
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title, header=TITLE if message else None, message=message)
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
     else:
