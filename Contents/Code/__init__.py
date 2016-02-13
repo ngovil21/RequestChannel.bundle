@@ -1,5 +1,8 @@
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 
+import re
+
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -635,7 +638,7 @@ def ClearRequests(locked='unlocked'):
 @route(PREFIX + '/viewrequest')
 def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
-    title_year = key['title'] + " (" + key['year'] + ")"
+    title_year = key['title'] + " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)") else key['title']           #If there is already a year in the title, just use title
     oc = ObjectContainer(title2=title_year)
     if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
