@@ -1113,7 +1113,7 @@ def ManageSickbeard(locked='unlocked'):
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
                 poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
-                oc.add(TVShowObject(key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked),
+                oc.add(TVShowObject(key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked, callback),
                                     rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
     except Exception as e:
         Log.Debug(e.message)
@@ -1125,6 +1125,77 @@ def ManageSickbeard(locked='unlocked'):
 
 @route(PREFIX + '/managesickbeardshow')
 def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, message=None):
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='show.seasonlist')
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        if 'result' in resp and resp['result'] == "success":
+            pass
+        else:
+            Log.Debug(JSON.StringFromObject(resp))
+            return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title)
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving "+ Prefs['sickbeard_fork'] + " Show: " + title)
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=show['title'])
+    else:
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=show['title'], header=TITLE if message else None, message=message)
+    if callback:
+        oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
+    else:
+        oc.add(DirectoryObject(key=Callback(ManageSickbeard, locked=locked), title="Return to Shows"))
+    oc.add(DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback),
+                           title="Monitor All Seasons", thumb=None))
+    # Log.Debug(show['seasons'])
+    for season in resp['data']:
+        oc.add(DirectoryObject(key=Callback(ManageSickbeardSeason, series_id=series_id, season=season_number, locked=locked, callback=callback),
+                               title="Season " + str(season) if season > 0 else "Specials",
+                               thumb=None))
+    return oc
+
+
+@route(PREFIX + '/managesickbeardseason')
+def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, callback=None):
+    if not Prefs['sonarr_url'].startswith("http"):
+        sonarr_url = "http://" + Prefs['sonarr_url']
+    else:
+        sonarr_url = Prefs['sonarr_url']
+    if sonarr_url.endswith("/"):
+        sonarr_url = sonarr_url[:-1]
+    api_header = {
+        'X-Api-Key': Prefs['sonarr_api']
+    }
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
+    else:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+    if callback:
+        oc.add(DirectoryObject(key=callback, title="Go Back"))
+    oc.add(DirectoryObject(key=Callback(ManageSonarrShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
+    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
+                           title="Get All Episodes", thumb=None))
+    # data = JSON.StringFromObject({'seriesId': series_id})
+    episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
+    # Log.Debug(JSON.StringFromObject(episodes))
+    for episode in episodes:
+        if not episode['seasonNumber'] == int(season):
+            continue
+        marked = "* " if episode['monitored'] else ""
+        oc.add(
+            DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id']), callback=callback),
+                            title=marked + str(episode.get('episodeNumber', "##")) + ". " + episode.get('title', ""),
+                            summary=(episode.get('overview', None)), thumb=None))
+    return oc
+
+
+@route(PREFIX + '/sickbeardmonitorshow')
+def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', callback=None):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -1135,29 +1206,52 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
         'X-Api-Key': Prefs['sonarr_api']
     }
     try:
-        show = JSON.ObjectFromURL(sonarr_url + "/api/Series/" + str(series_id), headers=api_header)
+        show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
+        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + str(series_id))
+    if seasons == 'all':
+        for s in show['seasons']:
+            s['monitored'] = True
+        data = JSON.StringFromObject(show)
+        data2 = JSON.StringFromObject({'name': 'SeriesSearch', 'seriesId': int(series_id)})
+        try:
+            HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
+            HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
+            return ManageSonarrShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to Sonarr")
+        except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
+            return MessageContainer("Error sending series to Sonarr")
+    elif episodes == 'all':
+        season_list = seasons.split()
+        for s in show['seasons']:
+            if str(s['seasonNumber']) in season_list:
+                s['monitored'] = True
+        data = JSON.StringFromObject(show)
+        try:
+            HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header, method='PUT')  # Post seasons to monitor
+            for s in season_list:  # Search for each chosen season
+                data2 = JSON.StringFromObject({'name': 'SeasonSearch', 'seriesId': int(series_id), 'seasonNumber': int(s)})
+                HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
+            return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to Sonarr")
+        except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + e.message)
+            return MessageContainer("Error sending season to Sonarr")
     else:
-        oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'], header=TITLE if message else None, message=message)
-    if callback:
-        oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
-    else:
-        oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Return to Shows"))
-    oc.add(DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback),
-                           title="Monitor All Seasons", thumb=None))
-    # Log.Debug(show['seasons'])
-    for season in show['seasons']:
-        season_number = int(season['seasonNumber'])
-        mark = "* " if season['monitored'] else ""
-        oc.add(DirectoryObject(key=Callback(ManageSonarrSeason, series_id=series_id, season=season_number, locked=locked, callback=callback),
-                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"),
-                               thumb=None))
-    return oc
-
+        episode_list = episodes.split()
+        try:
+            for e in episode_list:
+                episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
+                episode['monitored'] = True
+                data = JSON.StringFromObject(episode)
+                HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
+            data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
+            HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
+            return ManageSonarrSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode sent to Sonarr")
+        except Exception as e:
+            Log.Debug("Sonarr Monitor failed: " + e.message)
+            return MessageContainer("Error sending episode to Sonarr")
+            # return MainMenu(locked=locked)
 
 
 # ManageChannel Functions
