@@ -24,6 +24,8 @@ Information can be found in the following link.
 
 https://support.plex.tv/hc/en-us/articles/204232573-Restricting-the-Shares
 
+If you want to support me (does not equal development):
+[<img src=http://imgur.com/WSVZSTW alt="Buy Me a Coffee">] (https://www.paypal.me/ngovil21/1) or [<img src=http://imgur.com/gnvlm6n alt="Buy Me a Beer">] (https://www.paypal.me/ngovil21/3) 
 
 ##Screenshots
 ![Main Menu](http://i.imgur.com/SC0Q9dp.jpg "Main Menu")
