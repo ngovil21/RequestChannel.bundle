@@ -1131,7 +1131,7 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
         sickbeard_url = Prefs['sickbeard_url']
     if not sickbeard_url.endswith("/"):
         sickbeard_url += "/"
-    data = dict(cmd='show.seasonlist')
+    data = dict(cmd='show.seasonlist', tvdbid=series_id)
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
         if 'result' in resp and resp['result'] == "success":
