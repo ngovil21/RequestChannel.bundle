@@ -1081,7 +1081,7 @@ def SendToSickbeard(series_id, locked='unlocked'):
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
             else:
-                oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
+                oc = ObjectContainer(header=TITLE, message=resp['message'])
     except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
