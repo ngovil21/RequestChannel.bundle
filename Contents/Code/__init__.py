@@ -2,7 +2,6 @@ from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIEN
 
 import re
 
-
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -529,11 +528,12 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
         Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year, 'poster': poster,
                                  'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
+        notifyRequest(req_id=series_id, req_type='tv')
         if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            SendToSonarr(tvdbid=series_id)
+            return SendToSonarr(tvdbid=series_id, locked=locked,
+                                callback=Callback(MainMenu, locked=locked, message="TV Show has been requested", title1=title, title2="Requested"))
         if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
             SendToSickbeard(series_id)
-        notifyRequest(req_id=series_id, req_type='tv')
         return MainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
 
 
@@ -638,12 +638,14 @@ def ClearRequests(locked='unlocked'):
 @route(PREFIX + '/viewrequest')
 def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
-    title_year = key['title'] + " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) else key['title']           #If there is already a year in the title, just use title
+    title_year = key['title'] + " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) else key[
+        'title']  # If there is already a year in the title, just use title
     oc = ObjectContainer(title2=title_year)
     if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
-    if Client.Product == "Plex Web":                    #If Plex Web then add an item with the poster
-        oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=req_type, locked=locked), rating_key=req_id, thumb=key['poster'], summary=key['summary'], title=title_year))
+    if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
+        oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=req_type, locked=locked), rating_key=req_id, thumb=key['poster'],
+                            summary=key['summary'], title=title_year))
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year, locked=locked),
                                title="Delete Request",
@@ -758,6 +760,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
@@ -776,7 +779,7 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
     }
-    series_id = ShowExists(tvdbid)
+    series_id = SonarrShowExists(tvdbid)
     if series_id:
         Dict['tv'][tvdbid]['automated'] = True
         return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback)
@@ -810,8 +813,9 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
                    'ignoreEpisodesWithoutFiles': False,
                    'searchForMissingEpisodes': True
                    }
-
-    if Prefs['sonarr_monitor'] == 'all':
+    if Prefs['sonarr_monitor'] == 'manual':
+        options['monitored'] = False
+    elif Prefs['sonarr_monitor'] == 'all':
         for season in options['seasons']:
             season['monitored'] = True
     elif Prefs['sonarr_monitor'] == 'future':
@@ -841,11 +845,17 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
             oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
         else:
             oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
+    series_id = SonarrShowExists(tvdbid)
+    if Prefs['sonarr_monitor'] == "manual" and series_id:
+        return ManageSonarrShow(series_id, title=title, locked=locked, callback=callback)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    if callback:
+        oc.add(DirectoryOjbect(key=callback, title="Return"))
+    else:
+        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
@@ -1008,7 +1018,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             # return MainMenu(locked=locked)
 
 
-def ShowExists(tvdbid):
+def SonarrShowExists(tvdbid):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -1265,7 +1275,8 @@ def ReportGeneralProblem(locked='locked'):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked), title="Report a General Problem"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked),
+                               title="Report a General Problem"))
     else:
         oc.add(
             InputDirectoryObject(key=Callback(ConfirmReportProblem, locked=locked), title="Report a General Problem", prompt="What is the problem?"))

@@ -97,7 +97,7 @@
     "id": "sonarr_monitor",
     "label": "Monitor Seasons",
     "type": "enum",
-    "values": ["all", "future", "latest", "first", "missing", "existing", "none"],
+    "values": ["manual","all", "future", "latest", "first", "missing", "existing", "none"],
     "default": "none"
   },
   {
