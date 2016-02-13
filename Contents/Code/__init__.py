@@ -1190,7 +1190,7 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
     oc.add(DirectoryObject(key=Callback(ManageSickbeardShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
     oc.add(DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
                            title="Get All Episodes", thumb=None))
-    for e in resp['data']:
+    for e in sorted(resp['data']):
         episode = resp['data'][e]
         marked = "* " if episode.get('status') == "Wanted" or episode.get('status') == "Downloaded" else ""
         oc.add(
