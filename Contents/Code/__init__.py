@@ -1169,6 +1169,7 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
     for season in resp['data']:
         oc.add(DirectoryObject(key=Callback(ManageSickbeardSeason, series_id=series_id, season=season, locked=locked, callback=callback),
                                title="Season " + str(season) if season > 0 else "Specials", thumb=None))
+    oc.add(DirectoryObject(key=Callback(ManageSickbeardShow, series_id=series_id, title=title, locked=locked, callback=callback), title="Refresh"))
     return oc
 
 
