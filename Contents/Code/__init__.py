@@ -989,7 +989,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             return ManageSonarrShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
-            return MessageContainer("Error sending series to Sonarr")
+            return MessageContainer(header=Title, message="Error sending series to Sonarr")
     elif episodes == 'all':
         season_list = seasons.split()
         for s in show['seasons']:
@@ -1004,7 +1004,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + e.message)
-            return MessageContainer("Error sending season to Sonarr")
+            return MessageContainer(header=Title, message="Error sending season to Sonarr")
     else:
         episode_list = episodes.split()
         try:
@@ -1018,7 +1018,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             return ManageSonarrSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode sent to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + e.message)
-            return MessageContainer("Error sending episode to Sonarr")
+            return MessageContainer(header=Title, message="Error sending episode to Sonarr")
             # return MainMenu(locked=locked)
 
 
@@ -1225,7 +1225,7 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             return ManageSickbeardShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + Log.Debug(Response.Status) + " - " + e.message)
-            return MessageContainer("Error sending series to " + Prefs['sickbeard_fork'])
+            return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
     elif episodes == 'all':
         season_list = seasons.split()
         try:
@@ -1235,17 +1235,17 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
-            return MessageContainer("Error sending season to " + Prefs['sickbeard_fork'])
+            return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
     else:
         episode_list = episodes.split()
         try:
             for e in episode_list:
-                data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, episode=e, status="wanted")
+                data = dict(cmd='episode.setstatus', tvdbid=series_id, season=seasons, episode=e, status="wanted")
                 JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
             return ManageSickbeardSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode(s) sent to Sonarr")
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
-            return MessageContainer("Error sending episode to " + Prefs['sickbeard_fork'])
+            return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
             # return MainMenu(locked=locked)
 
 
