@@ -121,7 +121,7 @@
   },
   {
     "id": "sickbeard_autorequest",
-    "label": "Automatically add request to SickRage?",
+    "label": "Automatically add request to Sickbeard?",
     "type": "bool",
     "default": false
   },
