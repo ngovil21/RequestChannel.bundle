@@ -1055,7 +1055,7 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
 
     if SickbeardShowExists(tvdbid):
         Dict['tv'][tvdbid]['automated'] = True
-        return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback)
+        return ManageSickbeardShow(series_id=tvdbid, locked=locked, callback=callback)
 
     data = dict(cmd='show.addnew', tvdbid=tvdbid)
     use_sickrage = (Prefs['sickbeard_fork'] == 'SickRage')
