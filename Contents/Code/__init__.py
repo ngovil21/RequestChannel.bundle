@@ -1092,6 +1092,7 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
+    Thread.Sleep(1)
     if Prefs['sickbeard_status'] == "manual" and SickbeardShowExists(tvdbid):
         return ManageSonarrShow(tvdbid, title=title, locked=locked, callback=callback)
     if checkAdmin():
@@ -1269,11 +1270,11 @@ def SickbeardShowExists(tvdbid):
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
                 if show_id == str(tvdbid):
-                    Log.Debug("TVDB id" + str(tvdbid) + "exists")
+                    Log.Debug("TVDB id " + str(tvdbid) + " exists")
                     return True
     except Exception as e:
         Log.Debug(e.message)
-    Log.Debug("TVDB id" + str(tvdbid) + "does not exist")
+    Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
     return False
 
 
