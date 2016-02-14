@@ -1267,11 +1267,11 @@ def SickbeardShowExists(tvdbid):
     data = dict(cmd='shows')
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        Log.Debug(JSON.StringFromObject(resp))
         if 'result' in resp and resp['result'] == "success":
-            for show_id in resp['data']:
-                if show_id == str(tvdbid):
-                    Log.Debug("TVDB id " + str(tvdbid) + " exists")
-                    return True
+            if str(tvdbid) in resp['data']:
+                Log.Debug("TVDB id " + str(tvdbid) + " exists")
+                return True
     except Exception as e:
         Log.Debug(e.message)
     Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
