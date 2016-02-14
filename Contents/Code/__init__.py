@@ -990,7 +990,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
             return ManageSonarrShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to Sonarr")
         except Exception as e:
-            Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
+            Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
             return MessageContainer(header=Title, message="Error sending series to Sonarr")
     elif episodes == 'all':
         season_list = seasons.split()
@@ -1227,7 +1227,7 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
                 Log.Debug(JSON.StringFromObject(resp))
                 return MessageContainer(header=TITLE,
                                         message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
-            return ManageSickbeardShow(series_id=series_id, title=show['title'], locked=locked, callback=callback,
+            return ManageSickbeardShow(series_id=series_id, title="", locked=locked, callback=callback,
                                        message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
