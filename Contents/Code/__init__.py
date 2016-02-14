@@ -1092,8 +1092,8 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
-    Thread.Sleep(2)
-    if Prefs['sickbeard_status'] == "manual" and SickbeardShowExists(tvdbid):
+    # Thread.Sleep(2)
+    if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
         return ManageSickbeardShow(tvdbid, title=title, locked=locked, callback=callback)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title, locked=locked),
