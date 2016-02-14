@@ -1230,7 +1230,7 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             return ManageSickbeardShow(series_id=series_id, title=show['title'], locked=locked, callback=callback,
                                        message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
-            Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + Log.Debug(Response.Status) + " - " + e.message)
+            Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
             return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
     elif episodes == 'all':
         season_list = seasons.split()
