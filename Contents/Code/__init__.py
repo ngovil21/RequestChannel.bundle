@@ -1099,6 +1099,7 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
             if SickbeardShowExists(tvdbid):
                 return ManageSickbeardShow(tvdbid, title=title, locked=locked, callback=callback)
             Thread.Sleep(1)
+            Log.Debug("Slept for " + str(count) + " seconds")
             count += 1
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title, locked=locked),
