@@ -234,7 +234,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
                 else:
                     art = None
-                title_year = key['title'] + " (" + year + ")"
+                title_year = key['title']
+                title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
                 oc.add(TVShowObject(
                     key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
                                  summary=key['overview'], locked=locked), rating_key=key['id'], title=title_year, thumb=thumb,
@@ -265,7 +266,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     continue
                 if 'type' in key and not (key['type'] == "movie"):  # only show movie results
                     continue
-                title_year = key['Title'] + " (" + key['Year'] + ")"
+                title_year = key['title']
+                title_year += (" (" + movie['year'] + ")" if key.get('year', None) else "")
                 if key['Poster']:
                     thumb = key['Poster']
                 else:
@@ -304,7 +306,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
 
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
-    title_year = title + " " + "(" + year + ")"
+    title_year = key['title']
+    title_year += (" (" + year + ")" if year else "")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
@@ -353,7 +356,8 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
         if token in Dict['register'] and Dict['register'][token]['nickname']:
             user = Dict['register'][token]['nickname']
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
-        title_year = title + " (" + year + ")"
+        title_year = key['title']
+        title_year += (" (" + year + ")" if year else "")
         Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year, 'title_year': title_year,
                                    'poster': poster,
                                    'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
@@ -570,7 +574,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
     else:
         for movie_id in Dict['movie']:
             d = Dict['movie'][movie_id]
-            title_year = d['title'] + " (" + d['year'] + ")"
+            title_year = key['title']
+            title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
             if d['automated']:
                 title_year = "+ " + title_year
             if d['poster']:
@@ -588,7 +593,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
                                 summary=summary, art=d['backdrop']))
         for series_id in Dict['tv']:
             d = Dict['tv'][series_id]
-            title_year = d['title'] + " (" + d['year'] + ")"
+            title_year = d['title']
+            title_year += (" (" + d['year'] + ")" if d['year'] else "")
             if d['automated']:
                 title_year = "+ " + title_year
             if d['poster']:
@@ -643,8 +649,8 @@ def ClearRequests(locked='unlocked'):
 @route(PREFIX + '/viewrequest')
 def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
-    title_year = key['title'] + " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) else key[
-        'title']  # If there is already a year in the title, just use title
+    title_year = key['title']
+    title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key['title']  # If there is already a year in the title, just use title
     oc = ObjectContainer(title2=title_year)
     if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
@@ -761,7 +767,8 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
         else:
             oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
     key = Dict['movie'][movie_id]
-    title_year = key['title'] + " (" + key['year'] + ")"
+    title_year = key['title']
+    title_year += (" (" + key['year'] + ")" if key.get('year',None) else "")
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
                                title="Delete Request"))
@@ -1514,7 +1521,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
-                title_year = movie['title'] + " (" + movie['year'] + ")"
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year',None) else "")
                 title = "Plex Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
@@ -1543,7 +1551,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
-                title_year = movie['title'] + " (" + movie['year'] + ")"
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 title = "Plex Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
