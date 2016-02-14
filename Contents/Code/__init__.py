@@ -537,7 +537,8 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
             return SendToSonarr(tvdbid=series_id, locked=locked,
                                 callback=Callback(MainMenu, locked=locked, message="TV Show has been requested", title1=title, title2="Requested"))
         if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            SendToSickbeard(tvdbid=series_id)
+            return SendToSickbeard(tvdbid=series_id,
+                                   callback=Callback(MainMenu, locked=locked, message="TV Show has been requested", title1=title, title2="Requested"))
         return MainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
 
 
@@ -665,8 +666,9 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
                 key=Callback(SendToSonarr, tvdbid=req_id, locked=locked, callback=Callback(ViewRequest, req_id=req_id, req_type='tv', locked=locked)),
                 title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSickbeard, tvdbid=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'],
-                                   thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+            oc.add(DirectoryObject(key=Callback(SendToSickbeard, tvdbid=req_id, locked=locked,
+                                                callback=Callback(ViewRequest, req_id=req_id, req_type='tv', locked=locked)),
+                                   title="Send to " + Prefs['sickbeard_fork'], thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -1040,8 +1042,6 @@ def SonarrShowExists(tvdbid):
 
 
 # Sickbeard Functions
-
-
 @route(PREFIX + "/sendtosickbeard")
 def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     # return ViewRequests(locked=locked, message="Sorry, Sickbeard is not available yet.")
@@ -1052,14 +1052,18 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     if not sickbeard_url.endswith("/"):
         sickbeard_url += "/"
     title = Dict['tv'][tvdbid]['title']
-    data = dict(cmd='show.addnew', tvdbid=tvdbid)
 
+    if SickbeardShowExists(tvdbid):
+        Dict['tv'][tvdbid]['automated'] = True
+        return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback)
+
+    data = dict(cmd='show.addnew', tvdbid=tvdbid)
     use_sickrage = (Prefs['sickbeard_fork'] == 'SickRage')
 
     if Prefs['sickbeard_location']:
         data['location'] = Prefs['sickbeard_location']
     if Prefs['sickbeard_status']:
-        data['status'] = Prefs['sickbeard_status']
+        data['status'] = "ignored" if Prefs['sickbeard_status'] == "manual" else Prefs['sickbeard_status']
     if Prefs['sickbeard_initial']:
         data['initial'] = Prefs['sickbeard_initial']
     if Prefs['sickbeard_archive']:
@@ -1090,6 +1094,8 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
+    if Prefs['sickbeard_status'] == "manual" and SickbeardShowExists(tvdbid):
+        return ManageSonarrShow(tvdbid, title=title, locked=locked, callback=callback)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
@@ -1222,7 +1228,8 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
                 Log.Debug(JSON.StringFromObject(resp))
                 return MessageContainer(header=TITLE,
                                         message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
-            return ManageSickbeardShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to " + Prefs['sickbeard_fork'])
+            return ManageSickbeardShow(series_id=series_id, title=show['title'], locked=locked, callback=callback,
+                                       message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + Log.Debug(Response.Status) + " - " + e.message)
             return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
@@ -1232,7 +1239,8 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             for s in season_list:
                 data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
                 JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
-            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
+            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback,
+                                       message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
             return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
@@ -1242,11 +1250,31 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             for e in episode_list:
                 data = dict(cmd='episode.setstatus', tvdbid=series_id, season=seasons, episode=e, status="wanted")
                 JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
-            return ManageSickbeardSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode(s) sent to Sonarr")
+            return ManageSickbeardSeason(series_id=series_id, season=seasons, locked=locked, callback=callback,
+                                         message="Episode(s) sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
             return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
             # return MainMenu(locked=locked)
+
+
+def SickbeardShowExists(tvdbid):
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='shows')
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        if 'result' in resp and resp['result'] == "success":
+            for show_id in resp['data']:
+                if show_id == tvdbid:
+                    return True
+    except:
+        pass
+    return False
 
 
 # ManageChannel Functions

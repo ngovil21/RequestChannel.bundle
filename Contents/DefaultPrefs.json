@@ -141,7 +141,7 @@
     "id": "sickbeard_status",
     "label": "Sickbeard Initial Status of episodes",
     "type": "enum",
-    "values": ["wanted","skipped","archived","ignored"],
+    "values": ["manual","wanted","skipped","archived","ignored"],
     "default": "wanted"
   },
   {
