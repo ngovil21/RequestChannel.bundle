@@ -1201,61 +1201,51 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
 
 @route(PREFIX + '/sickbeardmonitorshow')
 def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', callback=None):
-    if not Prefs['sonarr_url'].startswith("http"):
-        sonarr_url = "http://" + Prefs['sonarr_url']
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
     else:
-        sonarr_url = Prefs['sonarr_url']
-    if sonarr_url.endswith("/"):
-        sonarr_url = sonarr_url[:-1]
-    api_header = {
-        'X-Api-Key': Prefs['sonarr_api']
-    }
-    try:
-        show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
-    except Exception as e:
-        Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + str(series_id))
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
     if seasons == 'all':
-        for s in show['seasons']:
-            s['monitored'] = True
-        data = JSON.StringFromObject(show)
-        data2 = JSON.StringFromObject({'name': 'SeriesSearch', 'seriesId': int(series_id)})
+        data = dict(cmd='show.seasons', tvdbid=series_id)
         try:
-            HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
-            HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
-            return ManageSonarrShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to Sonarr")
+            resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)  # Search for all episodes in series
+            if 'result' in resp and resp['result'] == "success":
+                for s in resp['data']:
+                    try:
+                        data2 = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
+                        JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data2)
+                    except:
+                        Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
+            else:
+                Log.Debug(JSON.StringFromObject(resp))
+                return MessageContainer(header=TITLE,
+                                        message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
+            return ManageSickbeardShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
-            Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
-            return MessageContainer("Error sending series to Sonarr")
+            Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + Log.Debug(Response.Status) + " - " + e.message)
+            return MessageContainer("Error sending series to " + Prefs['sickbeard_fork'])
     elif episodes == 'all':
         season_list = seasons.split()
-        for s in show['seasons']:
-            if str(s['seasonNumber']) in season_list:
-                s['monitored'] = True
-        data = JSON.StringFromObject(show)
         try:
-            HTTP.Request(sonarr_url + "/api/series", data=data, headers=api_header, method='PUT')  # Post seasons to monitor
-            for s in season_list:  # Search for each chosen season
-                data2 = JSON.StringFromObject({'name': 'SeasonSearch', 'seriesId': int(series_id), 'seasonNumber': int(s)})
-                HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-            return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to Sonarr")
+            for s in season_list:
+                data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
+                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
-            Log.Debug("Sonarr Monitor failed: " + e.message)
-            return MessageContainer("Error sending season to Sonarr")
+            Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
+            return MessageContainer("Error sending season to " + Prefs['sickbeard_fork'])
     else:
         episode_list = episodes.split()
         try:
             for e in episode_list:
-                episode = JSON.ObjectFromURL(sonarr_url + "/api/Episode/" + str(e), headers=api_header)
-                episode['monitored'] = True
-                data = JSON.StringFromObject(episode)
-                HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
-            data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
-            HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-            return ManageSonarrSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode sent to Sonarr")
+                data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, episode=e, status="wanted")
+                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+            return ManageSickbeardSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode(s) sent to Sonarr")
         except Exception as e:
-            Log.Debug("Sonarr Monitor failed: " + e.message)
-            return MessageContainer("Error sending episode to Sonarr")
+            Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
+            return MessageContainer("Error sending episode to " + Prefs['sickbeard_fork'])
             # return MainMenu(locked=locked)
 
 
