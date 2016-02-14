@@ -1078,8 +1078,6 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
 
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
-        Log.Debug(JSON.StringFromObject(resp))
-        Log.Debug(resp['result'])
         if 'result' in resp and resp['result'] == "success":
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
@@ -1270,10 +1268,12 @@ def SickbeardShowExists(tvdbid):
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
-                if show_id == tvdbid:
+                if show_id == str(tvdbid):
+                    Log.Debug("TVDB id" + str(tvdbid) + "exists")
                     return True
-    except:
-        pass
+    except Exception as e:
+        Log.Debug(e.message)
+    Log.Debug("TVDB id" + str(tvdbid) + "does not exist")
     return False
 
 
