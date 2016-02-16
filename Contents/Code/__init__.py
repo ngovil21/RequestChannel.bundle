@@ -238,7 +238,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 title_year = key['title']
                 title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
                 oc.add(TVShowObject(
-                    key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
+                    key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'], year=year, poster=thumb, backdrop=art,
                                  summary=key['overview'], locked=locked), rating_key=key['id'], title=title_year, thumb=thumb,
                     summary=key['overview'], art=art))
         else:
@@ -272,7 +272,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 else:
                     thumb = R('no-poster.jpg')
                 oc.add(TVShowObject(
-                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'],
+                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='IMDB', title=key['Title'], year=key['Year'],
                                  poster=key['Poster'],
                                  locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
@@ -461,7 +461,7 @@ def SearchTV(query, locked='unlocked'):
             thumb = R('no-poster.jpg')
         oc.add(
             TVShowObject(
-                key=Callback(ConfirmTVRequest, series_id=series_id, source='tvdb', title=title, year=year, poster=poster, summary=summary,
+                key=Callback(ConfirmTVRequest, series_id=series_id, source='TVDB', title=title, year=year, poster=poster, summary=summary,
                              locked=locked),
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -1540,20 +1540,18 @@ def NotifyProblem(problem, locked='locked', rating_key="", path=""):
 def notifyRequest(req_id, req_type, title="", message=""):
     if Prefs['pushbullet_api']:
         try:
-            user = "A user"
-            token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
-                user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year',None) else "")
+                user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',"IMDB") + " id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',"TVDB") + " id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             if Prefs['pushbullet_devices']:
@@ -1570,20 +1568,18 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Pushbullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
-            user = "A user"
-            token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
-                user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',"IMDB") + " id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushover(title, message)
@@ -1593,15 +1589,12 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['email_to']:
         try:
-            user = "A user"
-            token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
-                user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
                 title = movie['title'] + " (" + movie['year'] + ")"
                 poster = movie['poster']
-                id_type = "IMDB"
+                user = movie['user'] if movie['user'] else "A user"
+                id_type = movie.get('source', "IMDB")
                 subject = "Plex Request Channel - New Movie Request"
                 summary = ""
                 if movie['summary']:
@@ -1609,7 +1602,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 title = tv['title']
-                id_type = "TVDB"
+                user = tv['user'] if tv['user'] else "A user"
+                id_type = tv.get('source', "TVDB")
                 poster = tv['poster']
                 subject = "Plex Request Channel - New TV Show Request"
                 summary = ""
