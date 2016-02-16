@@ -577,7 +577,8 @@ def ViewRequests(query="", locked='unlocked', message=None):
         oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
-        requests = Dict['movie'] + Dict['tv']
+        requests = Dict['movie'].copy()
+        requests.update(Dict['tv'])
         for req_id in sorted(requests):
             d = requests[req_id]
             title_year = key['title']
