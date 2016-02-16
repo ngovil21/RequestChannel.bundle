@@ -853,7 +853,7 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
     if callback:
-        oc.add(DirectoryOjbect(key=callback, title="Return"))
+        oc.add(DirectoryObject(key=callback, title="Return"))
     else:
         oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
         oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
