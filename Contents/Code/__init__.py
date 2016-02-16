@@ -579,7 +579,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
     else:
         requests = Dict['movie'].copy()
         requests.update(Dict['tv'])
-        for req_id in sorted(requests, key=lambda k:k['title']):
+        for req_id in sorted(requests, key=lambda k:requests[k]['title']):
             d = requests[req_id]
             title_year = d['title']
             title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
