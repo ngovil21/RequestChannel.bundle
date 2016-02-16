@@ -305,7 +305,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
 
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
-    title_year = key['title']
+    title_year = title
     title_year += (" (" + year + ")" if year else "")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
