@@ -595,7 +595,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
                 summary = ""
             if d['user']:
                 summary += " (Requested by " + d['user'] + ") "
-            oc.add(TVShowObject(key=Callback(ViewRequest, req_id=movie_id, req_type=d['type'], locked=locked), rating_key=movie_id, title=title_year,
+            oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=d['type'], locked=locked), rating_key=req_id, title=title_year,
                                 thumb=thumb, summary=summary, art=d['backdrop']))
         # for movie_id in Dict['movie']:
         #     d = Dict['movie'][movie_id]
