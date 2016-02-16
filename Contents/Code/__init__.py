@@ -581,7 +581,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
         requests.update(Dict['tv'])
         for req_id in sorted(requests):
             d = requests[req_id]
-            title_year = key['title']
+            title_year = d['title']
             title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
             if d['automated']:
                 title_year = "+ " + title_year
@@ -599,7 +599,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
                                 thumb=thumb, summary=summary, art=d['backdrop']))
         # for movie_id in Dict['movie']:
         #     d = Dict['movie'][movie_id]
-        #     title_year = key['title']
+        #     title_year = d['title']
         #     title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
         #     if d['automated']:
         #         title_year = "+ " + title_year
