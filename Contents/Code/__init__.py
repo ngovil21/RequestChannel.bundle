@@ -1186,10 +1186,10 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
         else:
             Log.Debug(JSON.StringFromObject(resp))
             return MessageContainer(header=TITLE,
-                                    message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + str(series_id) + " Season " + str(season))
+                                    message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + str(series_id) + " Season " + str(season))
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
     else:
@@ -1229,10 +1229,8 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
                         Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
             else:
                 Log.Debug(JSON.StringFromObject(resp))
-                return MessageContainer(header=TITLE,
-                                        message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
-            return ManageSickbeardShow(series_id=series_id, title="", locked=locked, callback=callback,
-                                       message="Series sent to " + Prefs['sickbeard_fork'])
+                return MessageContainer(header=TITLE, message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
+            return ManageSickbeardShow(series_id=series_id, title="", locked=locked, callback=callback, message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
             return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
@@ -1242,8 +1240,7 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             for s in season_list:
                 data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
                 JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
-            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback,
-                                       message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
+            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
             return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
@@ -1333,10 +1330,15 @@ def ManageUser(token, locked='locked', message=None):
         oc = ObjectContainer(title1="Manage User", title2=user, message=message)
     oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked),
                            title=user + " has made " + str(Dict['register'][token]['requests']) + " requests."))
-    if token in Dict['sonarr_users']:
-        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='False', locked=locked), title="Remove Sonarr Management"))
+    tv_auto = ""
+    if Prefs['sonarr_api']:
+        tv_auto = "Sonarr"
+    elif Prefs['sickbeard_api']:
+        tv_auto = "Sickbeard"
+    if tv_auto and token in Dict['sonarr_users']:
+        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='False', locked=locked), title="Remove " + tv_auto + " Management"))
     else:
-        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='True', locked=locked), title="Allow Sonarr Management"))
+        oc.add(DirectoryObject(key=Callback(SonarrUser, token=token, set='True', locked=locked), title="Allow " + tv_auto + " Management"))
     if token in Dict['blocked']:
         oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='False', locked=locked), title="Unblock User"))
     else:
@@ -1393,16 +1395,21 @@ def BlockUser(token, setter, locked='locked'):
 
 @route(PREFIX + "/sonarruser")
 def SonarrUser(token, setter, locked='locked'):
+    tv_auto = ""
+    if Prefs['sonarr_api']:
+        tv_auto = "Sonarr"
+    elif Prefs['sickbeard_api']:
+        tv_auto = "Sickbeard"
     if setter == 'True':
         if token in Dict['sonarr_users']:
-            return ManageUser(token=token, locked=locked, message="User already in Sonarr list")
+            return ManageUser(token=token, locked=locked, message="User already in " + tv_auto + " list")
         else:
             Dict['sonarr_users'].append(token)
-            return ManageUser(token=token, locked=locked, message="User is now allowed to manage Sonarr")
+            return ManageUser(token=token, locked=locked, message="User is now allowed to manage " + tv_auto)
     elif setter == 'False':
         if token in Dict['blocked']:
             Dict['sonarr_users'].remove(token)
-            return ManageUser(token=token, locked=locked, message="User can no longer manage Sonarr")
+            return ManageUser(token=token, locked=locked, message="User can no longer manage " + tv_auto)
     return ManageUser(token=token, locked=locked)
 
 
