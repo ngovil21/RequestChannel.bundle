@@ -1,12 +1,14 @@
 from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
 
+import re
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.6.3"
+VERSION = "0.6.5"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -63,6 +65,8 @@ def Start():
         Dict['blocked'] = []
     if 'sonarr_users' not in Dict:
         Dict['sonarr_users'] = []
+    if 'sickbeard_users' not in Dict:
+        Dict['sickbeard_users'] = []
     Dict.Save()
 
 
@@ -77,6 +81,10 @@ def ValidatePrefs():
 def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
+    try:
+        HTTP.Request("http://127.0.0.1:32400/library")              #Do a http request so header is set
+    except:
+        pass
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2)
     else:
@@ -85,11 +93,12 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if is_admin:
         Log.Debug("User is Admin")
     token = Request.Headers['X-Plex-Token']
-    if is_admin and token in Dict['register']:  # Do not save admin token in the register
-        del Dict['register'][token]
-    if Prefs['register'] and not is_admin and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
+    if is_admin:
+        if token in Dict['register']:  # Do not save admin token in the register
+            del Dict['register'][token]
+    elif Prefs['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
-    if not is_admin and token not in Dict['register']:
+    elif token not in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
@@ -120,6 +129,8 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if Prefs['sonarr_api'] and (is_admin or token in Dict['sonarr_users']):
         oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
+    if Prefs['sickbeard_api'] and (is_admin or token in Dict['sonarr_users']):
+        oc.add(DirectoryObject(key=Callback(ManageSickbeard, locked=locked), title="Manage " + Prefs['sickbeard_fork']))
     oc.add(DirectoryObject(key=Callback(ReportProblem, locked=locked), title="Report a Problem"))
     if is_admin:
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Manage Channel"))
@@ -161,7 +172,7 @@ def RegisterName(query="", locked='locked'):
         return Register(message="You must enter a name. Try again.", locked=locked)
     token = Request.Headers['X-Plex-Token']
     Dict['register'][token] = {'nickname': query, 'requests': 0}
-    return MainMenu(message="Your device has been registered. Thank you.", locked=locked, title1="Main Menu", title2="Registered")
+    return MainMenu(message="Your device has been registered.", locked=locked, title1="Main Menu", title2="Registered")
 
 
 def checkAdmin():
@@ -184,8 +195,6 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         oc.message = None
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        # oc.add(DirectoryObject(key="", title=""))
-        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
     else:
         oc.add(
@@ -199,13 +208,11 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
     query = String.Quote(query, usePlus=True)
     token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
-
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
                             title1="Main Menu", title2="Weekly Limit")
     if token in Dict['blocked']:
-        return MainMenu(message="Sorry you have been blocked.", locked=locked,
-                        title1="Main Menu", title2="User Blocked")
+        return MainMenu(message="Sorry you have been blocked.", locked=locked, title1="Main Menu", title2="User Blocked")
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
@@ -228,9 +235,10 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
                 else:
                     art = None
-                title_year = key['title'] + " (" + year + ")"
+                title_year = key['title']
+                title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
                 oc.add(TVShowObject(
-                    key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='tmdb', title=key['title'], year=year, poster=thumb, backdrop=art,
+                    key=Callback(ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'], year=year, poster=thumb, backdrop=art,
                                  summary=key['overview'], locked=locked), rating_key=key['id'], title=title_year, thumb=thumb,
                     summary=key['overview'], art=art))
         else:
@@ -241,8 +249,6 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             Log.Debug("No Results Found")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
-                # oc.add(DirectoryObject(key="", title=""))
-                # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
@@ -259,13 +265,14 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     continue
                 if 'type' in key and not (key['type'] == "movie"):  # only show movie results
                     continue
-                title_year = key['Title'] + " (" + key['Year'] + ")"
+                title_year = key['title']
+                title_year += (" (" + movie['year'] + ")" if key.get('year', None) else "")
                 if key['Poster']:
                     thumb = key['Poster']
                 else:
                     thumb = R('no-poster.jpg')
                 oc.add(TVShowObject(
-                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='imdb', title=key['Title'], year=key['Year'],
+                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='IMDB', title=key['Title'], year=key['Year'],
                                  poster=key['Poster'],
                                  locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
@@ -298,7 +305,8 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
 
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
-    title_year = title + " " + "(" + year + ")"
+    title_year = title
+    title_year += (" (" + year + ")" if year else "")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
@@ -344,10 +352,14 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
     else:
         user = ""
         token = Request.Headers['X-Plex-Token']
-        if token in Dict['register'] and Dict['register'][token]['nickname']:
-            user = Dict['register'][token]['nickname']
+        if token in Dict['register']:
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
-        title_year = title + " (" + year + ")"
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
+            else:
+                user = "guest_" + Hash.SHA1(token)[:10]
+        title_year = title
+        title_year += (" (" + year + ")" if year else "")
         Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year, 'title_year': title_year,
                                    'poster': poster,
                                    'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
@@ -371,7 +383,7 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     if token in Dict['blocked']:
         return MainMenu(message="Sorry you have been blocked.", locked=locked,
                         title1="Main Menu", title2="User Blocked")
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title2=title)
     else:
         oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
@@ -449,7 +461,7 @@ def SearchTV(query, locked='unlocked'):
             thumb = R('no-poster.jpg')
         oc.add(
             TVShowObject(
-                key=Callback(ConfirmTVRequest, series_id=series_id, source='tvdb', title=title, year=year, poster=poster, summary=summary,
+                key=Callback(ConfirmTVRequest, series_id=series_id, source='TVDB', title=title, year=year, poster=poster, summary=summary,
                              locked=locked),
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
@@ -471,7 +483,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     else:
         title_year = title
 
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
@@ -520,17 +532,22 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
     else:
         token = Request.Headers['X-Plex-Token']
         user = ""
-        if token in Dict['register'] and Dict['register'][token]['nickname']:
-            user = Dict['register'][token]['nickname']
+        if token in Dict['register']:
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
+            else:
+                user = "guest_" + Hash.SHA1(token)[:10]
         Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year, 'poster': poster,
                                  'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
-        if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
-            SendToSonarr(tvdbid=series_id)
-        if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            SendToSickbeard(series_id)
         notifyRequest(req_id=series_id, req_type='tv')
+        if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
+            return SendToSonarr(tvdbid=series_id, locked=locked,
+                                callback=Callback(MainMenu, locked=locked, message="TV Show has been requested", title1=title, title2="Requested"))
+        if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
+            return SendToSickbeard(tvdbid=series_id,
+                                   callback=Callback(MainMenu, locked=locked, message="TV Show has been requested", title1=title, title2="Requested"))
         return MainMenu(locked=locked, message="TV Show has been requested", title1=title, title2="Requested")
 
 
@@ -560,9 +577,12 @@ def ViewRequests(query="", locked='unlocked', message=None):
         oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
-        for movie_id in Dict['movie']:
-            d = Dict['movie'][movie_id]
-            title_year = d['title'] + " (" + d['year'] + ")"
+        requests = Dict['movie'].copy()
+        requests.update(Dict['tv'])
+        for req_id in sorted(requests, key=lambda k:requests[k]['title']):
+            d = requests[req_id]
+            title_year = d['title']
+            title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
             if d['automated']:
                 title_year = "+ " + title_year
             if d['poster']:
@@ -574,27 +594,46 @@ def ViewRequests(query="", locked='unlocked', message=None):
             else:
                 summary = ""
             if d['user']:
-                summary = "(Requested by " + d['user'] + ")\n " + summary
-            oc.add(TVShowObject(key=Callback(ViewRequest, req_id=movie_id, req_type=d['type'], locked=locked), rating_key=movie_id, title=title_year,
-                                thumb=thumb,
-                                summary=summary, art=d['backdrop']))
-        for series_id in Dict['tv']:
-            d = Dict['tv'][series_id]
-            title_year = d['title'] + " (" + d['year'] + ")"
-            if d['automated']:
-                title_year = "+ " + title_year
-            if d['poster']:
-                thumb = d['poster']
-            else:
-                thumb = R('no-poster.jpg')
-            summary = ""
-            if d['summary']:
-                summary = d['summary']
-            if d['user']:
-                summary = "(Requested by " + d['user'] + ")\n " + summary
-            oc.add(
-                TVShowObject(key=Callback(ViewRequest, req_id=series_id, req_type=d['type'], locked=locked), rating_key=series_id, title=title_year,
-                             thumb=thumb, summary=summary, art=d['backdrop']))
+                summary += " (Requested by " + d['user'] + ") "
+            oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=d['type'], locked=locked), rating_key=req_id, title=title_year,
+                                thumb=thumb, summary=summary, art=d['backdrop']))
+        # for movie_id in Dict['movie']:
+        #     d = Dict['movie'][movie_id]
+        #     title_year = d['title']
+        #     title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
+        #     if d['automated']:
+        #         title_year = "+ " + title_year
+        #     if d['poster']:
+        #         thumb = d['poster']
+        #     else:
+        #         thumb = R('no-poster.jpg')
+        #     if d['summary']:
+        #         summary = d['summary']
+        #     else:
+        #         summary = ""
+        #     if d['user']:
+        #         summary = "(Requested by " + d['user'] + ")\n " + summary
+        #     oc.add(TVShowObject(key=Callback(ViewRequest, req_id=movie_id, req_type=d['type'], locked=locked), rating_key=movie_id, title=title_year,
+        #                         thumb=thumb,
+        #                         summary=summary, art=d['backdrop']))
+        # for series_id in Dict['tv']:
+        #     d = Dict['tv'][series_id]
+        #     title_year = d['title']
+        #     title_year += (" (" + d['year'] + ")" if d['year'] else "")
+        #     if d['automated']:
+        #         title_year = "+ " + title_year
+        #     if d['poster']:
+        #         thumb = d['poster']
+        #     else:
+        #         thumb = R('no-poster.jpg')
+        #     summary = ""
+        #     if d['summary']:
+        #         summary = d['summary']
+        #     if d['user']:
+        #         summary = "(Requested by " + d['user'] + ")\n " + summary
+        #     oc.add(
+        #         TVShowObject(key=Callback(ViewRequest, req_id=series_id, req_type=d['type'], locked=locked), rating_key=series_id, title=title_year,
+        #                      thumb=thumb, summary=summary, art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1 and checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
@@ -635,10 +674,14 @@ def ClearRequests(locked='unlocked'):
 @route(PREFIX + '/viewrequest')
 def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
-    title_year = key['title'] + " (" + key['year'] + ")"
+    title_year = key['title']
+    title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key['title']  # If there is already a year in the title, just use title
     oc = ObjectContainer(title2=title_year)
     if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
+    if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
+        oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=req_type, locked=locked), rating_key=req_id, thumb=key['poster'],
+                            summary=key['summary'], title=title_year))
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year, locked=locked),
                                title="Delete Request",
@@ -654,8 +697,9 @@ def ViewRequest(req_id, req_type, locked='unlocked'):
                 key=Callback(SendToSonarr, tvdbid=req_id, locked=locked, callback=Callback(ViewRequest, req_id=req_id, req_type='tv', locked=locked)),
                 title="Send to Sonarr", thumb=R('sonarr.png')))
         if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-            oc.add(DirectoryObject(key=Callback(SendToSickbeard, series_id=req_id, locked=locked), title="Send to " + Prefs['sickbeard_fork'],
-                                   thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+            oc.add(DirectoryObject(key=Callback(SendToSickbeard, tvdbid=req_id, locked=locked,
+                                                callback=Callback(ViewRequest, req_id=req_id, req_type='tv', locked=locked)),
+                                   title="Send to " + Prefs['sickbeard_fork'], thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests", thumb=R('return.png')))
     return oc
 
@@ -748,11 +792,13 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
         else:
             oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
     key = Dict['movie'][movie_id]
-    title_year = key['title'] + " (" + key['year'] + ")"
+    title_year = key['title']
+    title_year += (" (" + key['year'] + ")" if key.get('year',None) else "")
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
@@ -771,7 +817,7 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
     }
-    series_id = ShowExists(tvdbid)
+    series_id = SonarrShowExists(tvdbid)
     if series_id:
         Dict['tv'][tvdbid]['automated'] = True
         return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback)
@@ -805,8 +851,9 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
                    'ignoreEpisodesWithoutFiles': False,
                    'searchForMissingEpisodes': True
                    }
-
-    if Prefs['sonarr_monitor'] == 'all':
+    if Prefs['sonarr_monitor'] == 'manual':
+        options['monitored'] = False
+    elif Prefs['sonarr_monitor'] == 'all':
         for season in options['seasons']:
             season['monitored'] = True
     elif Prefs['sonarr_monitor'] == 'future':
@@ -836,11 +883,17 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
             oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
         else:
             oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
+    series_id = SonarrShowExists(tvdbid)
+    if Prefs['sonarr_monitor'] == "manual" and series_id:
+        return ManageSonarrShow(series_id, title=title, locked=locked, callback=callback)
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
-    oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
-    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    if callback:
+        oc.add(DirectoryOjbect(key=callback, title="Return"))
+    else:
+        oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
+        oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
 
 
@@ -904,7 +957,7 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None, mess
         season_number = int(season['seasonNumber'])
         mark = "* " if season['monitored'] else ""
         oc.add(DirectoryObject(key=Callback(ManageSonarrSeason, series_id=series_id, season=season_number, locked=locked, callback=callback),
-                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"), summary=show['overview'],
+                               title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"),
                                thumb=None))
     return oc
 
@@ -938,8 +991,8 @@ def ManageSonarrSeason(series_id, season, locked='unlocked', message=None, callb
         marked = "* " if episode['monitored'] else ""
         oc.add(
             DirectoryObject(key=Callback(SonarrMonitorShow, series_id=series_id, seasons=str(season), episodes=str(episode['id']), callback=callback),
-                            title=marked + str(episode['episodeNumber']) + ". " + episode['title'],
-                            summary=(episode['overview'] if 'overview' in episode else None), thumb=None))
+                            title=marked + str(episode.get('episodeNumber', "##")) + ". " + episode.get('title', ""),
+                            summary=(episode.get('overview', None)), thumb=None))
     return oc
 
 
@@ -969,8 +1022,8 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
             return ManageSonarrShow(series_id=series_id, title=show['title'], locked=locked, callback=callback, message="Series sent to Sonarr")
         except Exception as e:
-            Log.Debug("Sonarr Monitor failed: " + Log.Debug(Response.Status) + " - " + e.message)
-            return MessageContainer("Error sending series to Sonarr")
+            Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
+            return MessageContainer(header=Title, message="Error sending series to Sonarr")
     elif episodes == 'all':
         season_list = seasons.split()
         for s in show['seasons']:
@@ -985,7 +1038,7 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             return ManageSonarrShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + e.message)
-            return MessageContainer("Error sending season to Sonarr")
+            return MessageContainer(header=Title, message="Error sending season to Sonarr")
     else:
         episode_list = episodes.split()
         try:
@@ -999,11 +1052,11 @@ def SonarrMonitorShow(series_id, seasons, episodes='all', locked='unlocked', cal
             return ManageSonarrSeason(series_id=series_id, season=seasons, locked=locked, callback=callback, message="Episode sent to Sonarr")
         except Exception as e:
             Log.Debug("Sonarr Monitor failed: " + e.message)
-            return MessageContainer("Error sending episode to Sonarr")
+            return MessageContainer(header=Title, message="Error sending episode to Sonarr")
             # return MainMenu(locked=locked)
 
 
-def ShowExists(tvdbid):
+def SonarrShowExists(tvdbid):
     if not Prefs['sonarr_url'].startswith("http"):
         sonarr_url = "http://" + Prefs['sonarr_url']
     else:
@@ -1021,10 +1074,8 @@ def ShowExists(tvdbid):
 
 
 # Sickbeard Functions
-
-
 @route(PREFIX + "/sendtosickbeard")
-def SendToSickbeard(series_id, locked='unlocked'):
+def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     # return ViewRequests(locked=locked, message="Sorry, Sickbeard is not available yet.")
     if not Prefs['sickbeard_url'].startswith("http"):
         sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -1032,15 +1083,19 @@ def SendToSickbeard(series_id, locked='unlocked'):
         sickbeard_url = Prefs['sickbeard_url']
     if not sickbeard_url.endswith("/"):
         sickbeard_url += "/"
-    title = Dict['tv'][series_id]['title']
-    data = dict(cmd='show.addnew', tvdbid=series_id)
+    title = Dict['tv'][tvdbid]['title']
 
+    if SickbeardShowExists(tvdbid):
+        Dict['tv'][tvdbid]['automated'] = True
+        return ManageSickbeardShow(series_id=tvdbid, locked=locked, callback=callback)
+
+    data = dict(cmd='show.addnew', tvdbid=tvdbid)
     use_sickrage = (Prefs['sickbeard_fork'] == 'SickRage')
 
     if Prefs['sickbeard_location']:
         data['location'] = Prefs['sickbeard_location']
     if Prefs['sickbeard_status']:
-        data['status'] = Prefs['sickbeard_status']
+        data['status'] = "ignored" if Prefs['sickbeard_status'] == "manual" else Prefs['sickbeard_status']
     if Prefs['sickbeard_initial']:
         data['initial'] = Prefs['sickbeard_initial']
     if Prefs['sickbeard_archive']:
@@ -1055,27 +1110,211 @@ def SendToSickbeard(series_id, locked='unlocked'):
 
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
-        # Log.Debug(JSON.StringFromObject(resp))
-        if 'success' in resp and resp['success']:
+        if 'result' in resp and resp['result'] == "success":
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
             else:
                 oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_fork'])
-            Dict['tv'][series_id]['automated'] = True
+            Dict['tv'][tvdbid]['automated'] = True
         else:
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
             else:
-                oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
+                oc = ObjectContainer(header=TITLE, message=resp['message'])
     except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
+    # Thread.Sleep(2)
+    if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
+        count = 0
+        while count < 5:
+            if SickbeardShowExists(tvdbid):
+                return ManageSickbeardShow(tvdbid, title=title, locked=locked, callback=callback)
+            Thread.Sleep(1)
+            Log.Debug("Slept for " + str(count) + " seconds")
+            count += 1
     if checkAdmin():
-        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=series_id, type='tv', title_year=title, locked=locked),
+        oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title, locked=locked),
                                title="Delete Request"))
     oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
     return oc
+
+
+@route(PREFIX + '/managesickbeard')
+def ManageSickbeard(locked='unlocked'):
+    oc = ObjectContainer(title1=TITLE, title2="Manage " + Prefs['sickbeard_fork'])
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='shows')
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        if 'result' in resp and resp['result'] == "success":
+            for show_id in resp['data']:
+                poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
+                oc.add(TVShowObject(
+                    key=Callback(ManageSickbeardShow, series_id=show_id, title=resp['data'][show_id].get('show_name', ""), locked=locked,
+                                 callback=Callback(ManageSickbeard, locked=locked)),
+                    rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Shows")
+    oc.objects.sort(key=lambda obj: obj.title.lower())
+    oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
+    return oc
+
+
+@route(PREFIX + '/managesickbeardshow')
+def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, message=None):
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='show.seasonlist', tvdbid=series_id)
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        if 'result' in resp and resp['result'] == "success":
+            pass
+        else:
+            Log.Debug(JSON.StringFromObject(resp))
+            return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title)
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title)
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title)
+    else:
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title, header=TITLE if message else None, message=message)
+    if callback:
+        oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
+    else:
+        oc.add(DirectoryObject(key=Callback(ManageSickbeard, locked=locked), title="Return to Shows"))
+    oc.add(DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons='all', locked=locked, callback=callback),
+                           title="Monitor All Seasons", thumb=None))
+    # Log.Debug(show['seasons'])
+    for season in resp['data']:
+        oc.add(DirectoryObject(key=Callback(ManageSickbeardSeason, series_id=series_id, season=season, locked=locked, callback=callback),
+                               title="Season " + str(season) if season > 0 else "Specials", thumb=None))
+    oc.add(DirectoryObject(key=Callback(ManageSickbeardShow, series_id=series_id, title=title, locked=locked, callback=callback), title="Refresh"))
+    return oc
+
+
+@route(PREFIX + '/managesickbeardseason')
+def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, callback=None):
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='show.seasons', tvdbid=series_id, season=season)
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        if 'result' in resp and resp['result'] == "success":
+            pass
+        else:
+            Log.Debug(JSON.StringFromObject(resp))
+            return MessageContainer(header=TITLE,
+                                    message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
+    except Exception as e:
+        Log.Debug(e.message)
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
+    else:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+    if callback:
+        oc.add(DirectoryObject(key=callback, title="Go Back"))
+    oc.add(DirectoryObject(key=Callback(ManageSickbeardShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
+    oc.add(DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons=str(season), locked=locked, callback=callback),
+                           title="Get All Episodes", thumb=None))
+    for e in sorted(resp['data'], key=lambda s: int(s)):
+        episode = resp['data'][e]
+        marked = "* " if episode.get('status') == "Wanted" or episode.get('status') == "Downloaded" else ""
+        oc.add(
+            DirectoryObject(key=Callback(SickbeardMonitorShow, series_id=series_id, seasons=season, episodes=e, callback=callback),
+                            title=marked + e + ". " + episode.get('name', ""), summary=(episode.get('status', None)), thumb=None))
+    return oc
+
+
+@route(PREFIX + '/sickbeardmonitorshow')
+def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', callback=None):
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    if seasons == 'all':
+        data = dict(cmd='show.seasons', tvdbid=series_id)
+        try:
+            resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)  # Search for all episodes in series
+            if 'result' in resp and resp['result'] == "success":
+                for s in resp['data']:
+                    try:
+                        data2 = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
+                        JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data2)
+                    except:
+                        Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
+            else:
+                Log.Debug(JSON.StringFromObject(resp))
+                return MessageContainer(header=TITLE,
+                                        message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
+            return ManageSickbeardShow(series_id=series_id, title="", locked=locked, callback=callback,
+                                       message="Series sent to " + Prefs['sickbeard_fork'])
+        except Exception as e:
+            Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
+            return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
+    elif episodes == 'all':
+        season_list = seasons.split()
+        try:
+            for s in season_list:
+                data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
+                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback,
+                                       message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
+        except Exception as e:
+            Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
+            return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
+    else:
+        episode_list = episodes.split()
+        try:
+            for e in episode_list:
+                data = dict(cmd='episode.setstatus', tvdbid=series_id, season=seasons, episode=e, status="wanted")
+                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+            return ManageSickbeardSeason(series_id=series_id, season=seasons, locked=locked, callback=callback,
+                                         message="Episode(s) sent to " + Prefs['sickbeard_fork'])
+        except Exception as e:
+            Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
+            return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
+            # return MainMenu(locked=locked)
+
+
+def SickbeardShowExists(tvdbid):
+    if not Prefs['sickbeard_url'].startswith("http"):
+        sickbeard_url = "http://" + Prefs['sickbeard_url']
+    else:
+        sickbeard_url = Prefs['sickbeard_url']
+    if not sickbeard_url.endswith("/"):
+        sickbeard_url += "/"
+    data = dict(cmd='shows')
+    try:
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        # Log.Debug(JSON.StringFromObject(resp))
+        if 'result' in resp and resp['result'] == "success":
+            if str(tvdbid) in resp['data']:
+                Log.Debug("TVDB id " + str(tvdbid) + " exists")
+                return True
+    except Exception as e:
+        Log.Debug(e.message)
+    Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
+    return False
 
 
 # ManageChannel Functions
@@ -1108,7 +1347,7 @@ def ManageUsers(locked='locked', message=None):
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             else:
-                user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
+                user = "guest_" + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to identify user.
             oc.add(
                 DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + str(Dict['register'][token]['requests'])))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
@@ -1122,7 +1361,7 @@ def ManageUser(token, locked='locked', message=None):
     if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
         user = Dict['register'][token]['nickname']
     else:
-        user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
+        user = "guest_" + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to identify user.
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage User", title2=message)
     else:
@@ -1144,15 +1383,43 @@ def ManageUser(token, locked='locked', message=None):
     return oc
 
 
+# @route(PREFIX + '/registeruser')
+# def RegisterUser(token, message="", locked='locked'):
+#     if Client.Product == "Plex Web":
+#         if message:
+#             message += "\n"
+#         message += " Enter your user name in the searchbox and press enter."
+#     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+#         oc = ObjectContainer(title1=TITLE, title2="Register User Name)
+#     else:
+#         oc = ObjectContainer(header=TITLE, message=message)
+#     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+#         Log.Debug("Client does not support Input. Using DumbKeyboard")
+#         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter the user's name", locked=locked)
+#         oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterUserName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
+#     else:
+#         oc.add(InputDirectoryObject(key=Callback(RegisterUserName, token=token, locked=locked), title="Enter the user's name",
+#                                     prompt="Enter the user's name"))
+#     return oc
+#
+#
+# @route(PREFIX + '/registerusername')
+# def RegisterUserName(query="", token="", locked='locked'):
+#     if not query:
+#         return RegisterUser(token, message="You must enter a name. Try again.", locked=locked)
+#     Dict['register'][token]['nickname] = query
+#     return ManageUser(token=token, message="Username has been set", locked=locked)
+
+
 @route(PREFIX + "/blockuser")
-def BlockUser(token, set, locked='locked'):
-    if set == 'True':
+def BlockUser(token, setter, locked='locked'):
+    if setter == 'True':
         if token in Dict['blocked']:
             return ManageUser(token=token, locked=locked, message="User is already blocked.")
         else:
             Dict['blocked'].append(token)
             return ManageUser(token=token, locked=locked, message="User has been blocked.")
-    elif set == 'False':
+    elif setter == 'False':
         if token in Dict['blocked']:
             Dict['blocked'].remove(token)
             return ManageUser(token=token, locked=locked, message="User has been unblocked.")
@@ -1160,14 +1427,14 @@ def BlockUser(token, set, locked='locked'):
 
 
 @route(PREFIX + "/sonarruser")
-def SonarrUser(token, set, locked='locked'):
-    if set == 'True':
+def SonarrUser(token, setter, locked='locked'):
+    if setter == 'True':
         if token in Dict['sonarr_users']:
             return ManageUser(token=token, locked=locked, message="User already in Sonarr list")
         else:
             Dict['sonarr_users'].append(token)
             return ManageUser(token=token, locked=locked, message="User is now allowed to manage Sonarr")
-    elif set == 'False':
+    elif setter == 'False':
         if token in Dict['blocked']:
             Dict['sonarr_users'].remove(token)
             return ManageUser(token=token, locked=locked, message="User can no longer manage Sonarr")
@@ -1260,7 +1527,8 @@ def ReportGeneralProblem(locked='locked'):
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked), title="Report a General Problem"))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked),
+                               title="Report a General Problem"))
     else:
         oc.add(
             InputDirectoryObject(key=Callback(ConfirmReportProblem, locked=locked), title="Report a General Problem", prompt="What is the problem?"))
@@ -1300,19 +1568,18 @@ def NotifyProblem(problem, locked='locked', rating_key="", path=""):
 def notifyRequest(req_id, req_type, title="", message=""):
     if Prefs['pushbullet_api']:
         try:
-            user = "A user"
-            token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
-                user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
-                title_year = movie['title'] + " (" + movie['year'] + ")"
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year',None) else "")
+                user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',"IMDB") + " id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',"TVDB") + " id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             if Prefs['pushbullet_devices']:
@@ -1329,19 +1596,18 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Pushbullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
-            user = "A user"
-            token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
-                user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
-                title_year = movie['title'] + " (" + movie['year'] + ")"
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\nIMDB id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',"IMDB") + " id: " + req_id + "\nPoster: " + movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\nTVDB id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + tv['poster']
             else:
                 return
             response = sendPushover(title, message)
@@ -1351,15 +1617,12 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['email_to']:
         try:
-            user = "A user"
-            token = Request.Headers['X-Plex-Token']
-            if token in Dict['register'] and Dict['register'][token]['nickname']:
-                user = Dict['register'][token]['nickname']
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
                 title = movie['title'] + " (" + movie['year'] + ")"
                 poster = movie['poster']
-                id_type = "IMDB"
+                user = movie['user'] if movie['user'] else "A user"
+                id_type = movie.get('source', "IMDB")
                 subject = "Plex Request Channel - New Movie Request"
                 summary = ""
                 if movie['summary']:
@@ -1367,7 +1630,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 title = tv['title']
-                id_type = "TVDB"
+                user = tv['user'] if tv['user'] else "A user"
+                id_type = tv.get('source', "TVDB")
                 poster = tv['poster']
                 subject = "Plex Request Channel - New TV Show Request"
                 summary = ""
@@ -1488,4 +1752,7 @@ NZBGet 	                NZBGet
 Xbox One            	Xbox One
 Xbox 360                Xbox 360
 Samsung                 Samsung
+
+
+Screenshots: http://imgur.com/a/cxKU9/all
 """
