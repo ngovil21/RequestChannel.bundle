@@ -1383,15 +1383,43 @@ def ManageUser(token, locked='locked', message=None):
     return oc
 
 
+# @route(PREFIX + '/registeruser')
+# def RegisterUser(token, message="", locked='locked'):
+#     if Client.Product == "Plex Web":
+#         if message:
+#             message += "\n"
+#         message += " Enter your user name in the searchbox and press enter."
+#     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+#         oc = ObjectContainer(title1=TITLE, title2="Register User Name)
+#     else:
+#         oc = ObjectContainer(header=TITLE, message=message)
+#     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+#         Log.Debug("Client does not support Input. Using DumbKeyboard")
+#         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter the user's name", locked=locked)
+#         oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterUserName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
+#     else:
+#         oc.add(InputDirectoryObject(key=Callback(RegisterUserName, token=token, locked=locked), title="Enter the user's name",
+#                                     prompt="Enter the user's name"))
+#     return oc
+#
+#
+# @route(PREFIX + '/registerusername')
+# def RegisterUserName(query="", token="", locked='locked'):
+#     if not query:
+#         return RegisterUser(token, message="You must enter a name. Try again.", locked=locked)
+#     Dict['register'][token]['nickname] = query
+#     return ManageUser(token=token, message="Username has been set", locked=locked)
+
+
 @route(PREFIX + "/blockuser")
-def BlockUser(token, set, locked='locked'):
-    if set == 'True':
+def BlockUser(token, setter, locked='locked'):
+    if setter == 'True':
         if token in Dict['blocked']:
             return ManageUser(token=token, locked=locked, message="User is already blocked.")
         else:
             Dict['blocked'].append(token)
             return ManageUser(token=token, locked=locked, message="User has been blocked.")
-    elif set == 'False':
+    elif setter == 'False':
         if token in Dict['blocked']:
             Dict['blocked'].remove(token)
             return ManageUser(token=token, locked=locked, message="User has been unblocked.")
@@ -1399,14 +1427,14 @@ def BlockUser(token, set, locked='locked'):
 
 
 @route(PREFIX + "/sonarruser")
-def SonarrUser(token, set, locked='locked'):
-    if set == 'True':
+def SonarrUser(token, setter, locked='locked'):
+    if setter == 'True':
         if token in Dict['sonarr_users']:
             return ManageUser(token=token, locked=locked, message="User already in Sonarr list")
         else:
             Dict['sonarr_users'].append(token)
             return ManageUser(token=token, locked=locked, message="User is now allowed to manage Sonarr")
-    elif set == 'False':
+    elif setter == 'False':
         if token in Dict['blocked']:
             Dict['sonarr_users'].remove(token)
             return ManageUser(token=token, locked=locked, message="User can no longer manage Sonarr")
