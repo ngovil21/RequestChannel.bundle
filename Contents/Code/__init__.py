@@ -357,7 +357,7 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
             if Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             else:
-                user = Hash.SHA1(token)[:10]
+                user = "guest_" + Hash.SHA1(token)[:10]
         title_year = title
         title_year += (" (" + year + ")" if year else "")
         Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year, 'title_year': title_year,
@@ -537,7 +537,7 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
             if Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             else:
-                user = Hash.SHA1(token)[:10]
+                user = "guest_" + Hash.SHA1(token)[:10]
         Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year, 'poster': poster,
                                  'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
@@ -1347,7 +1347,7 @@ def ManageUsers(locked='locked', message=None):
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
                 user = Dict['register'][token]['nickname']
             else:
-                user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
+                user = "guest_" + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to identify user.
             oc.add(
                 DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title=user + ": " + str(Dict['register'][token]['requests'])))
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
@@ -1361,7 +1361,7 @@ def ManageUser(token, locked='locked', message=None):
     if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
         user = Dict['register'][token]['nickname']
     else:
-        user = "User " + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to try to identify user.
+        user = "guest_" + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to identify user.
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage User", title2=message)
     else:
