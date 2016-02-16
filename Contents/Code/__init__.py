@@ -195,8 +195,6 @@ def AddNewMovie(title="Request a Movie", locked='unlocked'):
         oc.message = None
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        # oc.add(DirectoryObject(key="", title=""))
-        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle=title, dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
     else:
         oc.add(
@@ -251,8 +249,6 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
             Log.Debug("No Results Found")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
-                # oc.add(DirectoryObject(key="", title=""))
-                # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
@@ -356,10 +352,13 @@ def AddMovieRequest(movie_id, title, source='', year="", poster="", backdrop="",
     else:
         user = ""
         token = Request.Headers['X-Plex-Token']
-        if token in Dict['register'] and Dict['register'][token]['nickname']:
-            user = Dict['register'][token]['nickname']
+        if token in Dict['register']:
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
-        title_year = key['title']
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
+            else:
+                user = Hash.SHA1(token)[:10]
+        title_year = title
         title_year += (" (" + year + ")" if year else "")
         Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year, 'title_year': title_year,
                                    'poster': poster,
@@ -533,9 +532,12 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
     else:
         token = Request.Headers['X-Plex-Token']
         user = ""
-        if token in Dict['register'] and Dict['register'][token]['nickname']:
-            user = Dict['register'][token]['nickname']
+        if token in Dict['register']:
             Dict['register'][token]['requests'] = Dict['register'][token]['requests'] + 1
+            if Dict['register'][token]['nickname']:
+                user = Dict['register'][token]['nickname']
+            else:
+                user = Hash.SHA1(token)[:10]
         Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year, 'poster': poster,
                                  'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
         Dict.Save()
@@ -575,8 +577,9 @@ def ViewRequests(query="", locked='unlocked', message=None):
         oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
-        for movie_id in Dict['movie']:
-            d = Dict['movie'][movie_id]
+        requests = Dict['movie'] + Dict['tv']
+        for req_id in sorted(requests):
+            d = requests[req_id]
             title_year = key['title']
             title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
             if d['automated']:
@@ -590,28 +593,46 @@ def ViewRequests(query="", locked='unlocked', message=None):
             else:
                 summary = ""
             if d['user']:
-                summary = "(Requested by " + d['user'] + ")\n " + summary
+                summary += " (Requested by " + d['user'] + ") "
             oc.add(TVShowObject(key=Callback(ViewRequest, req_id=movie_id, req_type=d['type'], locked=locked), rating_key=movie_id, title=title_year,
-                                thumb=thumb,
-                                summary=summary, art=d['backdrop']))
-        for series_id in Dict['tv']:
-            d = Dict['tv'][series_id]
-            title_year = d['title']
-            title_year += (" (" + d['year'] + ")" if d['year'] else "")
-            if d['automated']:
-                title_year = "+ " + title_year
-            if d['poster']:
-                thumb = d['poster']
-            else:
-                thumb = R('no-poster.jpg')
-            summary = ""
-            if d['summary']:
-                summary = d['summary']
-            if d['user']:
-                summary = "(Requested by " + d['user'] + ")\n " + summary
-            oc.add(
-                TVShowObject(key=Callback(ViewRequest, req_id=series_id, req_type=d['type'], locked=locked), rating_key=series_id, title=title_year,
-                             thumb=thumb, summary=summary, art=d['backdrop']))
+                                thumb=thumb, summary=summary, art=d['backdrop']))
+        # for movie_id in Dict['movie']:
+        #     d = Dict['movie'][movie_id]
+        #     title_year = key['title']
+        #     title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
+        #     if d['automated']:
+        #         title_year = "+ " + title_year
+        #     if d['poster']:
+        #         thumb = d['poster']
+        #     else:
+        #         thumb = R('no-poster.jpg')
+        #     if d['summary']:
+        #         summary = d['summary']
+        #     else:
+        #         summary = ""
+        #     if d['user']:
+        #         summary = "(Requested by " + d['user'] + ")\n " + summary
+        #     oc.add(TVShowObject(key=Callback(ViewRequest, req_id=movie_id, req_type=d['type'], locked=locked), rating_key=movie_id, title=title_year,
+        #                         thumb=thumb,
+        #                         summary=summary, art=d['backdrop']))
+        # for series_id in Dict['tv']:
+        #     d = Dict['tv'][series_id]
+        #     title_year = d['title']
+        #     title_year += (" (" + d['year'] + ")" if d['year'] else "")
+        #     if d['automated']:
+        #         title_year = "+ " + title_year
+        #     if d['poster']:
+        #         thumb = d['poster']
+        #     else:
+        #         thumb = R('no-poster.jpg')
+        #     summary = ""
+        #     if d['summary']:
+        #         summary = d['summary']
+        #     if d['user']:
+        #         summary = "(Requested by " + d['user'] + ")\n " + summary
+        #     oc.add(
+        #         TVShowObject(key=Callback(ViewRequest, req_id=series_id, req_type=d['type'], locked=locked), rating_key=series_id, title=title_year,
+        #                      thumb=thumb, summary=summary, art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1 and checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
