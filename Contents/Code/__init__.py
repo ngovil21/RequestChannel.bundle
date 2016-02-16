@@ -704,7 +704,6 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
         if 'imdb_id' in json and json['imdb_id']:
             imdb_id = json['imdb_id']
         else:
-            imdb_id = ""
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             else:
