@@ -514,7 +514,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
         oc.add(TVShowObject(
             key=Callback(ConfirmTVRequest, series_id=series_id, title=title, source=source, year=year, poster=poster, backdrop=backdrop,
-                         summary=summary, locked=locked), rating_key=movie_id, thumb=poster, summary=summary, title=title_year))
+                         summary=summary, locked=locked), rating_key=series_id, thumb=poster, summary=summary, title=title_year))
     oc.add(DirectoryObject(
         key=Callback(AddTVRequest, series_id=series_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
