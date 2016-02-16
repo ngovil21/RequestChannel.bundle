@@ -265,16 +265,15 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                     continue
                 if 'type' in key and not (key['type'] == "movie"):  # only show movie results
                     continue
-                title_year = key['title']
-                title_year += (" (" + movie['year'] + ")" if key.get('year', None) else "")
+                title_year = key['Title']
+                title_year += (" (" + key['Year'] + ")" if key.get('Year', None) else "")
                 if key['Poster']:
                     thumb = key['Poster']
                 else:
                     thumb = R('no-poster.jpg')
                 oc.add(TVShowObject(
-                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], source='IMDB', title=key['Title'], year=key['Year'],
-                                 poster=key['Poster'],
-                                 locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
+                    key=Callback(ConfirmMovieRequest, movie_id=key['imdbID'], title=key['Title'], source='IMDB', year=key['Year'],
+                                 poster=key['Poster'], locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
@@ -283,7 +282,6 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
-                # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchMovie, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
