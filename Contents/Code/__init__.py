@@ -1186,10 +1186,10 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
         else:
             Log.Debug(JSON.StringFromObject(resp))
             return MessageContainer(header=TITLE,
-                                    message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
+                                    message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + str(series_id) + " Season " + str(season))
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + title + " Season " + str(season))
+        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + str(series_id) + " Season " + str(season))
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
     else:
