@@ -81,6 +81,10 @@ def ValidatePrefs():
 def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
+    try:
+        HTTP.Request("http://127.0.0.1:32400/library")              #Do a http request so header is set
+    except:
+        pass
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2)
     else:
@@ -89,11 +93,12 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     if is_admin:
         Log.Debug("User is Admin")
     token = Request.Headers['X-Plex-Token']
-    if is_admin and token in Dict['register']:  # Do not save admin token in the register
-        del Dict['register'][token]
-    if Prefs['register'] and not is_admin and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
+    if is_admin:
+        if token in Dict['register']:  # Do not save admin token in the register
+            del Dict['register'][token]
+    elif Prefs['register'] and (token not in Dict['register'] or not Dict['register'][token]['nickname']):
         return Register(locked=locked)
-    if not is_admin and token not in Dict['register']:
+    elif token not in Dict['register']:
         Dict['register'][token] = {'nickname': "", 'requests': 0}
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
@@ -124,7 +129,7 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
                                    title="View Requests"))  # Set View Requests to locked and ask for password
     if Prefs['sonarr_api'] and (is_admin or token in Dict['sonarr_users']):
         oc.add(DirectoryObject(key=Callback(ManageSonarr, locked=locked), title="Manage Sonarr"))
-    if Prefs['sonarr_api'] and (is_admin or token in Dict['sonarr_users']):
+    if Prefs['sickbeard_api'] and (is_admin or token in Dict['sonarr_users']):
         oc.add(DirectoryObject(key=Callback(ManageSickbeard, locked=locked), title="Manage " + Prefs['sickbeard_fork']))
     oc.add(DirectoryObject(key=Callback(ReportProblem, locked=locked), title="Report a Problem"))
     if is_admin:
@@ -167,7 +172,7 @@ def RegisterName(query="", locked='locked'):
         return Register(message="You must enter a name. Try again.", locked=locked)
     token = Request.Headers['X-Plex-Token']
     Dict['register'][token] = {'nickname': query, 'requests': 0}
-    return MainMenu(message="Your device has been registered. Thank you.", locked=locked, title1="Main Menu", title2="Registered")
+    return MainMenu(message="Your device has been registered.", locked=locked, title1="Main Menu", title2="Registered")
 
 
 def checkAdmin():
@@ -205,13 +210,11 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
     query = String.Quote(query, usePlus=True)
     token = Request.Headers['X-Plex-Token']
     if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not checkAdmin():
-
         if Dict['register'].get(token, None) and Dict['register'][token]['requests'] >= int(Prefs['weekly_limit']):
             return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".", locked=locked,
                             title1="Main Menu", title2="Weekly Limit")
     if token in Dict['blocked']:
-        return MainMenu(message="Sorry you have been blocked.", locked=locked,
-                        title1="Main Menu", title2="User Blocked")
+        return MainMenu(message="Sorry you have been blocked.", locked=locked, title1="Main Menu", title2="User Blocked")
     if Prefs['movie_db'] == "TheMovieDatabase":
         headers = {
             'Accept': 'application/json'
@@ -381,7 +384,7 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     if token in Dict['blocked']:
         return MainMenu(message="Sorry you have been blocked.", locked=locked,
                         title1="Main Menu", title2="User Blocked")
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title2=title)
     else:
         oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
@@ -481,7 +484,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     else:
         title_year = title
 
-    if Client.Platform == "iOS" or Client.Product == "Plex for iOS":
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
