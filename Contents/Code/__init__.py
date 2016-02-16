@@ -592,43 +592,6 @@ def ViewRequests(query="", locked='unlocked', message=None):
                 summary += " (Requested by " + d['user'] + ") "
             oc.add(TVShowObject(key=Callback(ViewRequest, req_id=req_id, req_type=d['type'], locked=locked), rating_key=req_id, title=title_year,
                                 thumb=thumb, summary=summary, art=d['backdrop']))
-        # for movie_id in Dict['movie']:
-        #     d = Dict['movie'][movie_id]
-        #     title_year = d['title']
-        #     title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-        #     if d['automated']:
-        #         title_year = "+ " + title_year
-        #     if d['poster']:
-        #         thumb = d['poster']
-        #     else:
-        #         thumb = R('no-poster.jpg')
-        #     if d['summary']:
-        #         summary = d['summary']
-        #     else:
-        #         summary = ""
-        #     if d['user']:
-        #         summary = "(Requested by " + d['user'] + ")\n " + summary
-        #     oc.add(TVShowObject(key=Callback(ViewRequest, req_id=movie_id, req_type=d['type'], locked=locked), rating_key=movie_id, title=title_year,
-        #                         thumb=thumb,
-        #                         summary=summary, art=d['backdrop']))
-        # for series_id in Dict['tv']:
-        #     d = Dict['tv'][series_id]
-        #     title_year = d['title']
-        #     title_year += (" (" + d['year'] + ")" if d['year'] else "")
-        #     if d['automated']:
-        #         title_year = "+ " + title_year
-        #     if d['poster']:
-        #         thumb = d['poster']
-        #     else:
-        #         thumb = R('no-poster.jpg')
-        #     summary = ""
-        #     if d['summary']:
-        #         summary = d['summary']
-        #     if d['user']:
-        #         summary = "(Requested by " + d['user'] + ")\n " + summary
-        #     oc.add(
-        #         TVShowObject(key=Callback(ViewRequest, req_id=series_id, req_type=d['type'], locked=locked), rating_key=series_id, title=title_year,
-        #                      thumb=thumb, summary=summary, art=d['backdrop']))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu", thumb=R('return.png')))
     if len(oc) > 1 and checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequests, locked=locked), title="Clear All Requests", thumb=R('trash.png')))
@@ -729,7 +692,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     if movie_id not in Dict['movie']:
         return MessageContainer("Error", "The movie id was not found in the database")
     movie = Dict['movie'][movie_id]
-    if 'source' in movie and movie['source'] == 'tmdb':  # Check if id source is tmdb
+    if 'source' in movie and movie['source'] == 'TMDB':  # Check if id source is tmdb
         # we need to convert tmdb id to imdb
         json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
