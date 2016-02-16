@@ -82,7 +82,7 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
     try:
-        HTTP.Request("http://127.0.0.1:32400/library")              #Do a http request so header is set
+        HTTP.Request("http://127.0.0.1:32400/library")  # Do a http request so header is set
     except:
         pass
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
@@ -285,12 +285,14 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
             else:
-                oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again", prompt="Enter the name of the movie:", thumb=R('search.png')))
+                oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again", prompt="Enter the name of the movie:",
+                                            thumb=R('search.png')))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
+                               thumb=R('search.png')))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title="Search Again",
                                     prompt="Enter the name of the movie:", thumb=R('search.png')))
@@ -300,8 +302,7 @@ def SearchMovie(title="Search Results", query="", locked='unlocked'):
 
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
-    title_year = title
-    title_year += (" (" + year + ")" if year else "")
+    title_year = title + " (" + year + ")" if year else title
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
@@ -311,7 +312,6 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
     try:
         local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
         if local_search:
-            # Log.Debug(XML.StringFromElement(local_search))
             videos = local_search.xpath("//Video")
             for video in videos:
                 if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
@@ -331,6 +331,9 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
     if not found_match and Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
+    if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
+        oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), rating_key=movie_id, thumb=poster,
+                            summary=summary, title=title_year))
     oc.add(DirectoryObject(
         key=Callback(AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
@@ -473,10 +476,8 @@ def SearchTV(query, locked='unlocked'):
 
 @route(PREFIX + '/confirmtvrequest')
 def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
-    if year:
-        title_year = title + " " + "(" + year + ")"
-    else:
-        title_year = title
+
+    title_year = title + " " + "(" + year + ")" if year else title
 
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
@@ -510,6 +511,10 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
             oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
     if not found_match and Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
+    if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
+        oc.add(TVShowObject(
+            key=Callback(ConfirmTVRequest, series_id=series_id, title=title, source=source, year=year, poster=poster, backdrop=backdrop,
+                         summary=summary, locked=locked), rating_key=movie_id, thumb=poster, summary=summary, title=title_year))
     oc.add(DirectoryObject(
         key=Callback(AddTVRequest, series_id=series_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
@@ -574,7 +579,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
     else:
         requests = Dict['movie'].copy()
         requests.update(Dict['tv'])
-        for req_id in sorted(requests, key=lambda k:requests[k]['title']):
+        for req_id in sorted(requests, key=lambda k: requests[k]['title']):
             d = requests[req_id]
             title_year = d['title']
             title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
@@ -633,7 +638,8 @@ def ClearRequests(locked='unlocked'):
 def ViewRequest(req_id, req_type, locked='unlocked'):
     key = Dict[req_type][req_id]
     title_year = key['title']
-    title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key['title']  # If there is already a year in the title, just use title
+    title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
+        'title']  # If there is already a year in the title, just use title
     oc = ObjectContainer(title2=title_year)
     if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
@@ -692,7 +698,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     if movie_id not in Dict['movie']:
         return MessageContainer("Error", "The movie id was not found in the database")
     movie = Dict['movie'][movie_id]
-    if 'source' in movie and movie['source'] == 'TMDB':  # Check if id source is tmdb
+    if 'source' in movie and movie['source'].upper() == 'TMDB':  # Check if id source is tmdb
         # we need to convert tmdb id to imdb
         json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY, headers={'Accept': 'application/json'})
         if 'imdb_id' in json and json['imdb_id']:
@@ -751,7 +757,7 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
             oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
     key = Dict['movie'][movie_id]
     title_year = key['title']
-    title_year += (" (" + key['year'] + ")" if key.get('year',None) else "")
+    title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
     if checkAdmin():
         oc.add(DirectoryObject(key=Callback(ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year, locked=locked),
                                title="Delete Request"))
@@ -1529,15 +1535,17 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
                 title_year = movie['title']
-                title_year += (" (" + movie['year'] + ")" if movie.get('year',None) else "")
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',"IMDB") + " id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',"TVDB") + " id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
             else:
                 return
             if Prefs['pushbullet_devices']:
@@ -1560,12 +1568,14 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',"IMDB") + " id: " + req_id + "\nPoster: " + movie['poster']
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + tv['poster']
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
             else:
                 return
             response = sendPushover(title, message)
