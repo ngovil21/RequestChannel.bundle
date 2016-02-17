@@ -192,13 +192,12 @@ def checkAdmin():
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        oc.message = None
+        oc = ObjectContainer(title2="Enter Movie")
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
     else:
-        oc.add(
-            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
+        oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
     return oc
 
 
@@ -1300,7 +1299,7 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
 def ManageUsers(locked='locked', message=None):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+    if not message or Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         oc = ObjectContainer(title1="Manage Users", title2=message)
     else:
         oc = ObjectContainer(header=TITLE, message=message)
