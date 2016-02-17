@@ -1071,7 +1071,7 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     # Log.Debug(str(data))
 
     try:
-        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
         if 'result' in resp and resp['result'] == "success":
             if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
                 oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
@@ -1114,7 +1114,7 @@ def ManageSickbeard(locked='unlocked'):
         sickbeard_url += "/"
     data = dict(cmd='shows')
     try:
-        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
                 poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
@@ -1140,7 +1140,7 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
         sickbeard_url += "/"
     data = dict(cmd='show.seasonlist', tvdbid=series_id)
     try:
-        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
         if 'result' in resp and resp['result'] == "success":
             pass
         else:
@@ -1179,7 +1179,7 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
         sickbeard_url += "/"
     data = dict(cmd='show.seasons', tvdbid=series_id, season=season)
     try:
-        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
         if 'result' in resp and resp['result'] == "success":
             pass
         else:
@@ -1218,12 +1218,12 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
     if seasons == 'all':
         data = dict(cmd='show.seasons', tvdbid=series_id)
         try:
-            resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)  # Search for all episodes in series
+            resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')  # Search for all episodes in series
             if 'result' in resp and resp['result'] == "success":
                 for s in resp['data']:
                     try:
                         data2 = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
-                        JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data2)
+                        JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data2, method='GET')
                     except:
                         Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
             else:
@@ -1238,7 +1238,7 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
         try:
             for s in season_list:
                 data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
-                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
             return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
@@ -1248,7 +1248,7 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
         try:
             for e in episode_list:
                 data = dict(cmd='episode.setstatus', tvdbid=series_id, season=seasons, episode=e, status="wanted")
-                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+                JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
             return ManageSickbeardSeason(series_id=series_id, season=seasons, locked=locked, callback=callback,
                                          message="Episode(s) sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
@@ -1266,7 +1266,7 @@ def SickbeardShowExists(tvdbid):
         sickbeard_url += "/"
     data = dict(cmd='shows')
     try:
-        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data)
+        resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
         # Log.Debug(JSON.StringFromObject(resp))
         if 'result' in resp and resp['result'] == "success":
             if str(tvdbid) in resp['data']:
