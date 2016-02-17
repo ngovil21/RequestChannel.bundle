@@ -1115,6 +1115,7 @@ def ManageSickbeard(locked='unlocked'):
     data = dict(cmd='shows')
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET')
+        Log.Debug(str(JSON.StringFromObject(resp)))
         if 'result' in resp and resp['result'] == "success":
             for show_id in resp['data']:
                 poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
