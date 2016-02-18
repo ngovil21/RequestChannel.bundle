@@ -631,6 +631,8 @@ def ConfirmDeleteRequests(locked='unlocked'):
 @indirect
 @route(PREFIX + '/clearrequests')
 def ClearRequests(locked='unlocked'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
     Dict['tv'] = {}
     Dict['movie'] = {}
     Dict.Save()
