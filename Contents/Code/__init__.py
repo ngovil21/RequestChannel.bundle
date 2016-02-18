@@ -1345,6 +1345,7 @@ def ManageUser(token, locked='locked', message=None):
         oc = ObjectContainer(title1="Manage User", title2=message)
     oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked),
                            title=user + " has made " + str(Dict['register'][token]['requests']) + " requests."))
+    oc.add(DirectoryObject(key=Callback(RenameUser, token=token, locked='locked'), title="Rename User"))
     tv_auto = ""
     if Prefs['sonarr_api']:
         tv_auto = "Sonarr"
@@ -1365,32 +1366,35 @@ def ManageUser(token, locked='locked', message=None):
     return oc
 
 
-# @route(PREFIX + '/registeruser')
-# def RegisterUser(token, message="", locked='locked'):
-#     if Client.Product == "Plex Web":
-#         if message:
-#             message += "\n"
-#         message += " Enter your user name in the searchbox and press enter."
-#     if Client.Platform in MESSAGE_CONTAINER_CLIENTS or Client.Product in MESSAGE_CONTAINER_CLIENTS:
-#         oc = ObjectContainer(header=TITLE, message=message)
-#     else:
-#         oc = ObjectContainer(title1=TITLE, title2="Register User Name)
-#     if isClient(DUMB_KEYBOARD_CLIENTS):
-#         Log.Debug("Client does not support Input. Using DumbKeyboard")
-#         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter the user's name", locked=locked)
-#         oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterUserName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
-#     else:
-#         oc.add(InputDirectoryObject(key=Callback(RegisterUserName, token=token, locked=locked), title="Enter the user's name",
-#                                     prompt="Enter the user's name"))
-#     return oc
-#
-#
-# @route(PREFIX + '/registerusername')
-# def RegisterUserName(query="", token="", locked='locked'):
-#     if not query:
-#         return RegisterUser(token, message="You must enter a name. Try again.", locked=locked)
-#     Dict['register'][token]['nickname] = query
-#     return ManageUser(token=token, message="Username has been set", locked=locked)
+@route(PREFIX + '/renameuser')
+def RenameUser(token, message="", locked='locked'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+    if Client.Product == "Plex Web":
+        if message:
+            message += "\n"
+        message += " Enter your user name in the searchbox and press enter."
+    if Client.Platform in MESSAGE_CONTAINER_CLIENTS or Client.Product in MESSAGE_CONTAINER_CLIENTS:
+        oc = ObjectContainer(header=TITLE, message=message)
+    else:
+        oc = ObjectContainer(title1=TITLE, title2="Register User Name")
+    if isClient(DUMB_KEYBOARD_CLIENTS):
+        Log.Debug("Client does not support Input. Using DumbKeyboard")
+        return MessageContainer(header=TITLE, message="You must use a keyboard enabled client (Plex Web) to use this feature")
+    else:
+        oc.add(InputDirectoryObject(key=Callback(RegisterUserName, token=token, locked=locked), title="Enter the user's name",
+                                    prompt="Enter the user's name"))
+    return oc
+
+
+@route(PREFIX + '/registerusername')
+def RegisterUserName(query="", token="", locked='locked'):
+    if not checkAdmin():
+        return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
+    if not query:
+        return RegisterUser(token, message="You must enter a name. Try again.", locked=locked)
+    Dict['register'][token]['nickname'] = query
+    return ManageUser(token=token, message="Username has been set", locked=locked)
 
 
 @route(PREFIX + "/blockuser")
