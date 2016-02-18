@@ -478,7 +478,6 @@ def SearchTV(query, locked='unlocked'):
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
         oc.add(
             DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
     else:
@@ -507,7 +506,6 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     try:
         local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
         if local_search:
-            # Log.Debug(XML.StringFromElement(local_search))
             videos = local_search.xpath("//Directory")
             for video in videos:
                 video_attr = video.attrib
