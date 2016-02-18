@@ -14,6 +14,7 @@ NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Pl
 
 MESSAGE_OVERLAY_CLIENTS = ['Android', 'Roku', 'Konvergo', 'Plex Web']
 
+
 @route(PREFIX + "/dumbtools/keyboard")
 def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False', locked='locked', title="Search", message=None):
     if 'DumbKeyboard-History' not in Dict:

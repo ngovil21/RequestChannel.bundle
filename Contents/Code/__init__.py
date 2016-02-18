@@ -35,7 +35,7 @@ PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 ########################################################
 
-TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Samsung", "Plex for Android", "Plex for Samsung"]
+TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 
 
 ########################################################
@@ -248,7 +248,6 @@ def SearchMovie(query="", locked='unlocked'):
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             else:
-                Log.Debug("Client does support message overlays")
                 oc = ObjectContainer(title2="No results")
             Log.Debug("No Results Found")
             if isClient(DUMB_KEYBOARD_CLIENTS):
@@ -283,7 +282,6 @@ def SearchMovie(query="", locked='unlocked'):
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             else:
-                Log.Debug("Client does support message overlays")
                 oc = ObjectContainer(title2="No results")
             if isClient(DUMB_KEYBOARD_CLIENTS):
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
@@ -308,7 +306,7 @@ def SearchMovie(query="", locked='unlocked'):
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " (" + year + ")" if year else title
-    if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?", header=TITLE, message="Request Movie " + title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
@@ -483,7 +481,7 @@ def SearchTV(query, locked='unlocked'):
 def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " " + "(" + year + ")" if year else title
 
-    if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
                              header=TITLE, message="Request TV Show " + title_year + "?")
     else:
@@ -508,7 +506,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         pass
 
     if found_match:
-        if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
         else:
             oc.title1 = "Show Already Exists"
@@ -1394,6 +1392,7 @@ def RegisterUserName(query="", token="", locked='locked'):
     if not query:
         return RegisterUser(token, message="You must enter a name. Try again.", locked=locked)
     Dict['register'][token]['nickname'] = query
+    Dict.Save()
     return ManageUser(token=token, message="Username has been set", locked=locked)
 
 
@@ -1404,10 +1403,12 @@ def BlockUser(token, setter, locked='locked'):
             return ManageUser(token=token, locked=locked, message="User is already blocked.")
         else:
             Dict['blocked'].append(token)
+            Dict.Save()
             return ManageUser(token=token, locked=locked, message="User has been blocked.")
     elif setter == 'False':
         if token in Dict['blocked']:
             Dict['blocked'].remove(token)
+            Dict.Save()
             return ManageUser(token=token, locked=locked, message="User has been unblocked.")
     return ManageUser(token=token, locked=locked)
 
@@ -1424,10 +1425,12 @@ def SonarrUser(token, setter, locked='locked'):
             return ManageUser(token=token, locked=locked, message="User already in " + tv_auto + " list")
         else:
             Dict['sonarr_users'].append(token)
+            Dict.Save()
             return ManageUser(token=token, locked=locked, message="User is now allowed to manage " + tv_auto)
     elif setter == 'False':
         if token in Dict['blocked']:
             Dict['sonarr_users'].remove(token)
+            Dict.Save()
             return ManageUser(token=token, locked=locked, message="User can no longer manage " + tv_auto)
     return ManageUser(token=token, locked=locked)
 
@@ -1442,6 +1445,7 @@ def DeleteUser(token, locked='locked', confirmed='False'):
         oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked), title="No"))
     elif confirmed == 'True':
         Dict['register'].pop(token, None)
+        Dict.Save()
         return ManageUsers(locked=locked, message="User registration has been deleted.")
     return oc
 
@@ -1467,8 +1471,10 @@ def ResetDict(locked='locked', confirm='False'):
         Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
         Dict['blocked'] = []
         Dict['sonarr_users'] = []
+        Dict.Save()
+        return ManageChannel(message="Dictionary has been reset!", locked=locked)
 
-    return ManageChannel(message="Dictionary has been reset!", locked=locked)
+    return MessageContainer(header=TITLE, message="Unknown response")
 
 
 @route(PREFIX + "/changelog")
