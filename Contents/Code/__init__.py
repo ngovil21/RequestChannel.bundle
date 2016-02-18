@@ -54,7 +54,7 @@ def Start():
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
 
-    Log.Debug("PlexRequestChannel Version: " + VERSION)
+    Log.Debug("Channel Version: " + VERSION)
 
     if 'tv' not in Dict:
         Dict['tv'] = {}
@@ -309,6 +309,10 @@ def SearchMovie(query="", locked='unlocked'):
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " (" + year + ")" if year else title
+
+    Log.Debug("Platform: " + str(Client.Platform))
+    Log.Debug("Product: " + str(Client.Product))
+
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
@@ -488,6 +492,9 @@ def SearchTV(query, locked='unlocked'):
 def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
 
     title_year = title + " " + "(" + year + ")" if year else title
+
+    Log.Debug("Platform: " + Client.Platform)
+    Log.Debug("Product: " + Client.Product)
 
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
         Log.Debug("Client does support message overlays")
