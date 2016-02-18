@@ -12,6 +12,8 @@ DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater
 
 NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Plex for Xbox One', 'iOS', 'Mystery 4', 'Samsung', 'Plex for Samsung']
 
+MESSAGE_OVERLAY_CLIENTS = ['Android', 'Roku', 'Konvergo', 'Plex Web']
+
 @route(PREFIX + "/dumbtools/keyboard")
 def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False', locked='locked', title="Search", message=None):
     if 'DumbKeyboard-History' not in Dict:
@@ -23,9 +25,9 @@ def Keyboard(query=None, callback=None, parent=None, shift=False, secure='False'
     else:
         string = query if query else ""
     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        oc = ObjectContainer(title1=title, title2=string)
-    else:
         oc = ObjectContainer(title1=title, title2=string, message=message)
+    else:
+        oc = ObjectContainer(title1=title, title2=string)
     # Submit
     # Log.Debug("Create Submit key")
     oc.add(DirectoryObject(key=Callback(callback, query=query, locked=locked), title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))

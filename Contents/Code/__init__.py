@@ -1,4 +1,4 @@
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, NO_MESSAGE_CONTAINER_CLIENTS
+from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, MESSAGE_OVERLAY_CLIENTS
 
 import re
 
@@ -87,11 +87,10 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
         HTTP.Request("http://127.0.0.1:32400/library")  # Do a http request so header is set
     except:
         pass
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2)
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(replace_parent=True, message=message, title1=title1, title2=title2)
+    else:
+        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2)
     is_admin = checkAdmin()
     if is_admin:
         Log.Debug("User is Admin")
@@ -106,7 +105,7 @@ def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
     register_date = Datetime.FromTimestamp(Dict['register_reset'])
     if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
         resetRegister()
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
+    if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(
             key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked, title="Search for Movie",
@@ -155,14 +154,13 @@ def resetRegister():
 def Register(message="Unrecognized device. The admin would like you to register it.", locked='locked'):
     if Client.Product == "Plex Web":
         message += "\nEnter your name in the searchbox and press enter."
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
+        oc = ObjectContainer(header=TITLE, message=message)
+    else:
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title1="Unrecognized Device", title2="Please register")
-    else:
-        oc = ObjectContainer(header=TITLE, message=message)
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter your name or nickname", locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
     else:
         oc.add(InputDirectoryObject(key=Callback(RegisterName, locked=locked), title="Enter your name or nickname",
@@ -194,15 +192,16 @@ def checkAdmin():
 
 @route(PREFIX + '/addnewmovie')
 def AddNewMovie(title="Request a Movie", locked='unlocked'):
-    oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title2="Enter Movie")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    Log.Debug("Client does support message overlays")
+    oc = ObjectContainer(title2="Enter Movie")
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
+        oc = ObjectContainer(header=TITLE, message="Please enter the movie name in the searchbox and press enter.")
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title=title, thumb=R('search.png')))
     else:
-        oc.add(InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
+        oc.add(
+            InputDirectoryObject(key=Callback(SearchMovie, locked=locked), title=title, prompt="Enter the name of the movie:", thumb=R('search.png')))
     return oc
 
 
@@ -246,13 +245,13 @@ def SearchMovie(query="", locked='unlocked'):
                                  summary=key['overview'], locked=locked), rating_key=key['id'], title=title_year, thumb=thumb,
                     summary=key['overview'], art=art))
         else:
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
+            else:
                 Log.Debug("Client does support message overlays")
                 oc = ObjectContainer(title2="No results")
-            else:
-                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
             Log.Debug("No Results Found")
-            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+            if isClient(DUMB_KEYBOARD_CLIENTS):
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
@@ -281,12 +280,12 @@ def SearchMovie(query="", locked='unlocked'):
                                  poster=key['Poster'], locked=locked), rating_key=key['imdbID'], title=title_year, thumb=thumb))
         else:
             Log.Debug("No Results Found")
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
+            else:
                 Log.Debug("Client does support message overlays")
                 oc = ObjectContainer(title2="No results")
-            else:
-                oc = ObjectContainer(header=TITLE, message="Sorry there were no results found for your search.")
-            if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+            if isClient(DUMB_KEYBOARD_CLIENTS):
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                        thumb=R('search.png')))
@@ -295,7 +294,7 @@ def SearchMovie(query="", locked='unlocked'):
                                             thumb=R('search.png')))
             oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Back to Main Menu", thumb=R('return.png')))
             return oc
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent=MainMenu, locked=locked), title="Search Again",
                                thumb=R('search.png')))
@@ -309,16 +308,10 @@ def SearchMovie(query="", locked='unlocked'):
 @route(PREFIX + '/confirmmovierequest')
 def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop="", summary="", locked='unlocked'):
     title_year = title + " (" + year + ")" if year else title
-
-    Log.Debug("Platform: " + str(Client.Platform))
-    Log.Debug("Product: " + str(Client.Product))
-
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
-        Log.Debug("Client does support message overlays: " + Client.Platform)
-        oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
+    if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
+        oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?", header=TITLE, message="Request Movie " + title_year + "?")
     else:
-        oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
-                             header=TITLE, message="Request Movie " + title_year + "?")
+        oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     found_match = False
     try:
         local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
@@ -336,16 +329,17 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
     except:
         pass
     if found_match:
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
-            Log.Debug("Client does support message overlays")
-            oc.title1 = "Movie Already Exists"
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
             oc.message = "Movie appears to already exist in the library. Are you sure you would still like to request it?"
+        else:
+            oc.title1 = "Movie Already Exists"
     if not found_match and Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
-        oc.add(TVShowObject(key=Callback(ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year, poster=poster, backdrop=backdrop, summary=summary, locked=locked), rating_key=movie_id, thumb=poster,
-                            summary=summary, title=title_year))
+        oc.add(TVShowObject(
+            key=Callback(ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year, poster=poster, backdrop=backdrop,
+                         summary=summary, locked=locked), rating_key=movie_id, thumb=poster,
+            summary=summary, title=title_year))
     oc.add(DirectoryObject(
         key=Callback(AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop, summary=summary,
                      locked=locked), title="Add Anyways" if found_match else "Yes", thumb=R('check.png')))
@@ -393,12 +387,11 @@ def AddNewTVShow(title="Request a TV Show", locked='unlocked'):
     if token in Dict['blocked']:
         return MainMenu(message="Sorry you have been blocked.", locked=locked,
                         title1="Main Menu", title2="User Blocked")
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title2=title)
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    else:
+        oc = ObjectContainer(title2=title)
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Request a TV Show",
@@ -416,12 +409,11 @@ def SearchTV(query, locked='unlocked'):
     xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
     series = xml.xpath("//Series")
     if len(series) == 0:
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title2="No Results")
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="Sorry there were no results found.")
-        if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+        else:
+            oc = ObjectContainer(title2="No Results")
+        if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again",
@@ -476,7 +468,7 @@ def SearchTV(query, locked='unlocked'):
                 key=Callback(ConfirmTVRequest, series_id=series_id, source='TVDB', title=title, year=year, poster=poster, summary=summary,
                              locked=locked),
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(
             DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent=MainMenu, locked=locked), title="Search Again", thumb=R('search.png')))
@@ -489,18 +481,13 @@ def SearchTV(query, locked='unlocked'):
 
 @route(PREFIX + '/confirmtvrequest')
 def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="", summary="", locked='unlocked'):
-
     title_year = title + " " + "(" + year + ")" if year else title
 
-    Log.Debug("Platform: " + Client.Platform)
-    Log.Debug("Product: " + Client.Product)
-
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
-        Log.Debug("Client does support message overlays: " + Client.Platform)
-        oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
                              header=TITLE, message="Request TV Show " + title_year + "?")
+    else:
+        oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
 
     found_match = False
     try:
@@ -521,11 +508,11 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         pass
 
     if found_match:
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
-            Log.Debug("Client does support message overlays")
-            oc.title1 = "Show Already Exists"
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS) or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
             oc.message = "TV Show appears to already exist in the library. Are you sure you would still like to request it?"
+        else:
+            oc.title1 = "Show Already Exists"
+
     if not found_match and Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
         oc.add(DirectoryObject(key=None, title=""))
     if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
@@ -573,27 +560,25 @@ def AddTVRequest(series_id, title, source='', year="", poster="", backdrop="", s
 @route(PREFIX + '/viewrequests')
 def ViewRequests(query="", locked='unlocked', message=None):
     if locked == 'unlocked':
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title2=message)
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(content=ContainerContent.Mixed, message=message)
+        else:
+            oc = ObjectContainer(title2=message)
+
     elif query == Prefs['password']:
         locked = 'unlocked'
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title2="Password correct")
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
+        else:
+            oc = ObjectContainer(title2="Password correct")
     else:
         return MainMenu(locked='locked', message="Password incorrect", title1="Main Menu", title2="Password incorrect")
     if not Dict['movie'] and not Dict['tv']:
         Log.Debug("There are no requests")
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title1="View Requests", title2="No Requests")
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
+        else:
+            oc = ObjectContainer(title1="View Requests", title2="No Requests")
         oc.add(DirectoryObject(key=Callback(MainMenu, locked='unlocked'), title="Return to Main Menu", thumb=R('return.png')))
         return oc
     else:
@@ -626,7 +611,7 @@ def ViewRequests(query="", locked='unlocked', message=None):
 @route(PREFIX + '/getrequestspassword')
 def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent=MainMenu, locked=locked), title="Enter password:"))
@@ -724,11 +709,10 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
         if 'imdb_id' in json and json['imdb_id']:
             imdb_id = json['imdb_id']
         else:
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                Log.Debug("Client does support message overlays")
-                oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
-            else:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
+            else:
+                oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
             oc.add(DirectoryObject(key=Callback(ViewRequests, locked=locked), title="Return to View Requests"))
             return oc
     else:  # Assume we have an imdb_id by default
@@ -760,24 +744,21 @@ def SendToCouchpotato(movie_id, locked='unlocked'):
     try:
         json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
         if 'success' in json and json['success']:
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                Log.Debug("Client does support message overlays")
-                oc = ObjectContainer(title1="Couchpotato", title2="Success")
-            else:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
+            else:
+                oc = ObjectContainer(title1="Couchpotato", title2="Success")
             Dict['movie'][movie_id]['automated'] = True
         else:
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                Log.Debug("Client does support message overlays")
-                oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
-            else:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
+            else:
+                oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
     except:
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
+        else:
+            oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
     key = Dict['movie'][movie_id]
     title_year = key['title']
     title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
@@ -860,18 +841,16 @@ def SendToSonarr(tvdbid, locked='unlocked', callback=None):
     values = JSON.StringFromObject(options)
     try:
         HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title1="Sonarr", title2="Success")
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr")
         else:
-            oc = ObjectContainer(header=TITLE, message="Show has been sent to ")
+            oc = ObjectContainer(title1="Sonarr", title2="Success")
         Dict['tv'][series_id]['automated'] = True
     except:
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
+        else:
+            oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
     series_id = SonarrShowExists(tvdbid)
     if Prefs['sonarr_monitor'] == "manual" and series_id:
         return ManageSonarrShow(series_id, title=title, locked=locked, callback=callback)
@@ -931,11 +910,10 @@ def ManageSonarrShow(series_id, title="", locked='unlocked', callback=None, mess
     except Exception as e:
         Log.Debug(e.message)
         return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'], header=TITLE if message else None, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
     else:
@@ -963,11 +941,10 @@ def ManageSonarrSeason(series_id, season, locked='unlocked', message=None, callb
     api_header = {
         'X-Api-Key': Prefs['sonarr_api']
     }
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back"))
     oc.add(DirectoryObject(key=Callback(ManageSonarrShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
@@ -1102,18 +1079,16 @@ def SendToSickbeard(tvdbid, locked='unlocked', callback=None):
     try:
         resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
         if 'result' in resp and resp['result'] == "success":
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                Log.Debug("Client does support message overlays")
-                oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
-            else:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_fork'])
+            else:
+                oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
             Dict['tv'][tvdbid]['automated'] = True
         else:
-            if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-                Log.Debug("Client does support message overlays")
-                oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
-            else:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=resp['message'])
+            else:
+                oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
     except Exception as e:
         oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
         Log.Debug(e.message)
@@ -1185,11 +1160,10 @@ def ManageSickbeardShow(series_id, title="", locked='unlocked', callback=None, m
         Log.Debug(e.message)
         return MessageContainer(header=TITLE,
                                 message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (title if title else str(series_id)))
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title)
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title, header=TITLE if message else None, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title)
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
     else:
@@ -1224,12 +1198,12 @@ def ManageSickbeardSeason(series_id, season, locked='unlocked', message=None, ca
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
     except Exception as e:
         Log.Debug(e.message)
-        return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
-    else:
+        return MessageContainer(header=TITLE,
+                                message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
     if callback:
         oc.add(DirectoryObject(key=callback, title="Go Back"))
     oc.add(DirectoryObject(key=Callback(ManageSickbeardShow, series_id=series_id, locked=locked, callback=callback), title="Return to Seasons"))
@@ -1256,7 +1230,8 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
     if seasons == 'all':
         data = dict(cmd='show.seasons', tvdbid=series_id)
         try:
-            resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')  # Search for all episodes in series
+            resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data,
+                                      method='GET' if use_sickrage else 'POST')  # Search for all episodes in series
             if 'result' in resp and resp['result'] == "success":
                 for s in resp['data']:
                     try:
@@ -1267,7 +1242,8 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             else:
                 Log.Debug(JSON.StringFromObject(resp))
                 return MessageContainer(header=TITLE, message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
-            return ManageSickbeardShow(series_id=series_id, title="", locked=locked, callback=callback, message="Series sent to " + Prefs['sickbeard_fork'])
+            return ManageSickbeardShow(series_id=series_id, title="", locked=locked, callback=callback,
+                                       message="Series sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
             return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
@@ -1277,7 +1253,8 @@ def SickbeardMonitorShow(series_id, seasons, episodes='all', locked='unlocked', 
             for s in season_list:
                 data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
                 JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
-            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback, message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
+            return ManageSickbeardShow(series_id=series_id, locked=locked, callback=callback,
+                                       message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
         except Exception as e:
             Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
             return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
@@ -1323,11 +1300,10 @@ def SickbeardShowExists(tvdbid):
 def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    if not message or Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage", title2=message)
-    else:
+    if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(header=TITLE, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage", title2=message)
     oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Users"))
     oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
     oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Changelog"))
@@ -1339,11 +1315,10 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
 def ManageUsers(locked='locked', message=None):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    if not message or Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage Users", title2=message)
-    else:
+    if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(header=TITLE, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage Users", title2=message)
     if len(Dict['register']) > 0:
         for token in Dict['register']:
             if 'nickname' in Dict['register'][token] and Dict['register'][token]['nickname']:
@@ -1364,11 +1339,10 @@ def ManageUser(token, locked='locked', message=None):
         user = Dict['register'][token]['nickname']
     else:
         user = "guest_" + Hash.SHA1(token)[:10]  # Get first 10 digits of token hash to identify user.
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title1="Manage User", title2=message)
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(title1="Manage User", title2=user, message=message)
+    else:
+        oc = ObjectContainer(title1="Manage User", title2=message)
     oc.add(DirectoryObject(key=Callback(ManageUser, token=token, locked=locked),
                            title=user + " has made " + str(Dict['register'][token]['requests']) + " requests."))
     tv_auto = ""
@@ -1397,11 +1371,11 @@ def ManageUser(token, locked='locked', message=None):
 #         if message:
 #             message += "\n"
 #         message += " Enter your user name in the searchbox and press enter."
-#     if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-#         oc = ObjectContainer(title1=TITLE, title2="Register User Name)
-#     else:
+#     if Client.Platform in MESSAGE_CONTAINER_CLIENTS or Client.Product in MESSAGE_CONTAINER_CLIENTS:
 #         oc = ObjectContainer(header=TITLE, message=message)
-#     if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+#     else:
+#         oc = ObjectContainer(title1=TITLE, title2="Register User Name)
+#     if isClient(DUMB_KEYBOARD_CLIENTS):
 #         Log.Debug("Client does not support Input. Using DumbKeyboard")
 #         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterName, dktitle="Enter the user's name", locked=locked)
 #         oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterUserName, parent=MainMenu, locked=locked), title="Enter your name or nickname"))
@@ -1473,12 +1447,11 @@ def ResetDict(locked='locked', confirm='False'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
     if confirm == 'False':
-        if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-            Log.Debug("Client does support message overlays")
-            oc = ObjectContainer(title1="Reset Info", title2="Confirm")
-        else:
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE,
                                  message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
+        else:
+            oc = ObjectContainer(title1="Reset Info", title2="Confirm")
         oc.add(DirectoryObject(key=Callback(ResetDict, locked=locked, confirm='True'), title="Yes"))
         oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="No"))
         return oc
@@ -1519,7 +1492,7 @@ def ShowMessage(header, message):
 def ReportProblem(locked='locked'):
     oc = ObjectContainer(title1=TITLE, title2="Report Problem")
     # oc.add(DirectoryObject(key=Callback(ReportProblemMedia, locked=locked), title="Report Problem with Media"))
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:  # Clients in this list do not support InputDirectoryObjects
+    if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         oc.add(
             DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked, title="Report General Problem",
@@ -1534,12 +1507,11 @@ def ReportProblem(locked='locked'):
 
 @route(PREFIX + "/reportgeneralproblem")
 def ReportGeneralProblem(locked='locked'):
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
-        Log.Debug("Client does support message overlays")
-        oc = ObjectContainer(title2=title)
-    else:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(header=TITLE, message="Please enter your problem in the search box and press enter.")
-    if Client.Product in DUMB_KEYBOARD_CLIENTS or Client.Platform in DUMB_KEYBOARD_CLIENTS:
+    else:
+        oc = ObjectContainer(title2=title)
+    if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Request a TV Show", dkthumb=R('search.png'), locked=locked)
         oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked),
@@ -1730,6 +1702,10 @@ def sendEmail(subject, body, email_type='html'):
     senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
     server.quit()
     return senders
+
+
+def isClient(obj_list):
+    return Client.Platform in obj_list or Client.Product in obj_list
 
 
 """
