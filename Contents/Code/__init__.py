@@ -1300,7 +1300,7 @@ def SickbeardShowExists(tvdbid):
 def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='locked'):
     if not checkAdmin():
         return MainMenu("Only an admin can manage the channel!", locked=locked, title1="Main Menu", title2="Admin only")
-    if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
+    if message and isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(header=TITLE, message=message)
     else:
         oc = ObjectContainer(title1="Manage", title2=message)
