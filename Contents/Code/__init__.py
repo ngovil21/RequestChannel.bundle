@@ -313,7 +313,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
     Log.Debug("Platform: " + str(Client.Platform))
     Log.Debug("Product: " + str(Client.Product))
 
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
@@ -495,7 +495,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
     Log.Debug("Platform: " + Client.Platform)
     Log.Debug("Product: " + Client.Product)
 
-    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS:
+    if Client.Platform in NO_MESSAGE_CONTAINER_CLIENTS or Client.Product in NO_MESSAGE_CONTAINER_CLIENTS or 'Samsung' in Client.Product or 'Samsung' in Client.Platform:
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
     else:
