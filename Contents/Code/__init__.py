@@ -1374,7 +1374,7 @@ def RenameUser(token, message="", locked='locked'):
         if message:
             message += "\n"
         message += " Enter your user name in the searchbox and press enter."
-    if Client.Platform in MESSAGE_CONTAINER_CLIENTS or Client.Product in MESSAGE_CONTAINER_CLIENTS:
+    if isClient(MESSAGE_OVERLAY_CLIENTS):
         oc = ObjectContainer(header=TITLE, message=message)
     else:
         oc = ObjectContainer(title1=TITLE, title2="Register User Name")
