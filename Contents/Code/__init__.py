@@ -306,7 +306,7 @@ def ConfirmMovieRequest(movie_id, title, source='', year="", poster="", backdrop
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm Movie Request", title2=title_year + "?",
-                             header=TITLE, message="Request movie " + title_year + "?")
+                             header=TITLE, message="Request Movie " + title_year + "?")
     found_match = False
     try:
         local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title), headers=Request.Headers)
@@ -482,7 +482,7 @@ def ConfirmTVRequest(series_id, title, source="", year="", poster="", backdrop="
         oc = ObjectContainer(title1="Confirm TV Request", title2=title_year + "?")
     else:
         oc = ObjectContainer(title1="Confirm TV Request", title2="Are you sure you would like to request the TV Show " + title_year + "?",
-                             header=TITLE, message="Request tv show " + title_year + "?")
+                             header=TITLE, message="Request TV Show " + title_year + "?")
 
     found_match = False
     try:
