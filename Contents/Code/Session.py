@@ -39,31 +39,65 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 
 
-def sendPushBullet(title, body, device_iden=""):
-    api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
-                  'Content-Type': 'application/json'
-                  }
-    data = {'type': 'note', 'title': title, 'body': body}
-    if device_iden:
-        data['device_iden'] = device_iden
-    values = JSON.StringFromObject(data)
-    return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
-
-
 class Session:
-    def __init__(self):
+    def __init__(self, session_id):
         self.locked = True
         try:
             HTTP.Request("127.0.0.1:32400/library")
         except:
             pass
+        Route.Connect(PREFIX + '/%s/mainmenu' % session_id, self.MainMenu)
+        Route.Connect(PREFIX + '/%s/register' % session_id, self.Register)
+        Route.Connect(PREFIX + '/%s/registername' % session_id, self.RegisterName)
+        Route.Connect(PREFIX + '/%s/addnewmovie' % session_id, self.AddNewMovie)
+        Route.Connect(PREFIX + '/%s/searchmovie' % session_id, self.SearchMovie)
+        Route.Connect(PREFIX + '/%s/confirmmovierequest' % session_id, self.ConfirmMovieRequest)
+        Route.Connect(PREFIX + '/%s/addmovierequest' % session_id, self.AddMovieRequest)
+        Route.Connect(PREFIX + '/%s/addnewtvshow' % session_id, self.AddNewTVShow)
+        Route.Connect(PREFIX + '/%s/searchTV' % session_id, self.SearchTV)
+        Route.Connect(PREFIX + '/%s/confirmtvrequest' % session_id, self.ConfirmTVRequest)
+        Route.Connect(PREFIX + '/%s/addtvrequest' % session_id, self.AddTVRequest)
+        Route.Connect(PREFIX + '/%s/viewrequests' % session_id, self.ViewRequests)
+        Route.Connect(PREFIX + '/%s/viewrequestspassword' % session_id, self.ViewRequestsPassword)
+        Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
+        Route.Connect(PREFIX + '/%s/clearrequests' % session_id, self.ClearRequests)
+        Route.Connect(PREFIX + '/%s/viewrequest' % session_id, self.ViewRequest)
+        Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
+        Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
+        Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
+        Route.Connect(PREFIX + '/%s/sendtosonarr' % session_id, self.SendToSonarr)
+        Route.Connect(PREFIX + '/%s/managesonarr' % session_id, self.ManageSonarr)
+        Route.Connect(PREFIX + '/%s/managesonarrshow' % session_id, self.ManageSonarrShow)
+        Route.Connect(PREFIX + '/%s/managesonarrseason' % session_id, self.ManageSonarrSeason)
+        Route.Connect(PREFIX + '/%s/sonarrmonitorshow' % session_id, self.SonarrMonitorShow)
+        Route.Connect(PREFIX + '/%s/sonarrshowexists' % session_id, self.SonarrShowExists)
+        Route.Connect(PREFIX + '/%s/sendtosickbeard' % session_id, self.SendToSickbeard)
+        Route.Connect(PREFIX + '/%s/managesickbeard' % session_id, self.ManageSickbeard)
+        Route.Connect(PREFIX + '/%s/managesickbeardshow' % session_id, self.ManageSickbeardShow)
+        Route.Connect(PREFIX + '/%s/managesickbeardseason' % session_id, self.ManageSickbeardSeason)
+        Route.Connect(PREFIX + '/%s/sickbeardmonitorshow' % session_id, self.SickbeardMonitorShow)
+        Route.Connect(PREFIX + '/%s/sickbeardshowexists' % session_id, self.SickbeardShowExists)
+        Route.Connect(PREFIX + '/%s/managechannel' % session_id, self.ManageChannel)
+        Route.Connect(PREFIX + '/%s/manageusers' % session_id, self.ManageUsers)
+        Route.Connect(PREFIX + '/%s/manageuser' % session_id, self.ManageUser)
+        Route.Connect(PREFIX + '/%s/renameuser' % session_id, self.RenameUser)
+        Route.Connect(PREFIX + '/%s/registerusername' % session_id, self.RegisterUserName)
+        Route.Connect(PREFIX + '/%s/blockuser' % session_id, self.BlockUser)
+        Route.Connect(PREFIX + '/%s/sonarruser' % session_id, self.SonarrUser)
+        Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
+        Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
+        Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
+        Route.Connect(PREFIX + '/%s/toggledebug' % session_id, self.ToggleDebug)
+        Route.Connect(PREFIX + '/%s/reportproblem' % session_id, self.ReportProblem)
+        Route.Connect(PREFIX + '/%s/reportgeneralproblem' % session_id, self.ReportGeneralProblem)
+        Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
+        Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
         self.token = Request.Headers.get("X-Plex-Token", "")
-        self.is_admin = self.checkAdmin(self.token)
+        self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
-    @route(PREFIX + '/mainmenu')
     def MainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
         Log.Debug("Platform: " + str(Client.Platform))
         Log.Debug("Product: " + str(Client.Product))
@@ -128,13 +162,6 @@ class Session:
 
         return oc
 
-    @staticmethod
-    def resetRegister():
-        for key in Dict['register']:
-            Dict['register'][key]['requests'] = 0
-        Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
-
-    @route(PREFIX + '/register')
     def Register(self, message="Unrecognized device. The admin would like you to register it."):
         if Client.Product == "Plex Web":
             message += "\nEnter your name in the searchbox and press enter."
@@ -153,28 +180,12 @@ class Session:
                                         prompt="Enter your name or nickname"))
         return oc
 
-    @route(PREFIX + '/registername')
     def RegisterName(self, query=""):
         if not query:
             return Register(message="You must enter a name. Try again.")
         Dict['register'][self.token] = {'nickname': query, 'requests': 0}
         return MainMenu(message="Your device has been registered.", title1="Main Menu", title2="Registered")
 
-    @staticmethod
-    def checkAdmin(toke):
-        import urllib2
-        try:
-            req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': toke})
-            resp = urllib2.urlopen(req)
-            if resp.read():
-                if Dict['debug']:
-                    Log.Debug(resp.read())
-                return True
-        except:
-            pass
-        return False
-
-    @route(PREFIX + '/addnewmovie')
     def AddNewMovie(self, title="Request a Movie"):
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title2="Enter Movie")
@@ -191,7 +202,6 @@ class Session:
                                      thumb=R('search.png')))
         return oc
 
-    @route(PREFIX + '/searchmovie')
     def SearchMovie(self, query=""):
         oc = ObjectContainer(title1="Search Results", title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
@@ -294,7 +304,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         return oc
 
-    @route(PREFIX + '/confirmmovierequest')
     def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
         title_year = title + " (" + year + ")" if year else title
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -338,7 +347,6 @@ class Session:
 
         return oc
 
-    @route(PREFIX + '/addmovierequest')
     def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
         if movie_id in Dict['movie']:
             Log.Debug("Movie is already requested")
@@ -363,9 +371,6 @@ class Session:
             return MainMenu(message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
 
     # TVShow Functions
-
-
-    @route(PREFIX + '/addtvshow')
     def AddNewTVShow(self, title="Request a TV Show"):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
@@ -389,7 +394,6 @@ class Session:
                                         thumb=R('search.png')))
         return oc
 
-    @route(PREFIX + '/searchtv')
     def SearchTV(self, query):
         oc = ObjectContainer(title1="Search Results", title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
@@ -468,7 +472,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         return oc
 
-    @route(PREFIX + '/confirmtvrequest')
     def ConfirmTVRequest(self, series_id, title, source="", year="", poster="", backdrop="", summary=""):
         title_year = title + " " + "(" + year + ")" if year else title
 
@@ -518,8 +521,6 @@ class Session:
 
         return oc
 
-    @indirect
-    @route(PREFIX + '/addtvrequest')
     def AddTVRequest(self, series_id, title, source='', year="", poster="", backdrop="", summary=""):
         if series_id in Dict['tv']:
             Log.Debug("TV Show is already requested")
@@ -547,8 +548,6 @@ class Session:
             return MainMenu(message="TV Show has been requested", title1=title, title2="Requested")
 
     # Request Functions
-
-    @route(PREFIX + '/viewrequests')
     def ViewRequests(self, query="", message=None):
         if not self.locked:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -598,7 +597,6 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests), title="Clear All Requests", thumb=R('trash.png')))
         return oc
 
-    @route(PREFIX + '/getrequestspassword')
     def ViewRequestsPassword(self):
         oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
         if isClient(DUMB_KEYBOARD_CLIENTS):
@@ -610,7 +608,6 @@ class Session:
             oc.add(InputDirectoryObject(key=Callback(self.ViewRequests), title="Enter password:", prompt="Please enter the password:"))
         return oc
 
-    @route(PREFIX + '/confirmclearrequests')
     def ConfirmDeleteRequests(self, locked='unlocked'):
         oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
@@ -619,8 +616,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="No", thumb=R('x-mark.png')))
         return oc
 
-    @indirect
-    @route(PREFIX + '/clearrequests')
     def ClearRequests(self, locked='unlocked'):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -629,7 +624,6 @@ class Session:
         Dict.Save()
         return ViewRequests(message="All requests have been cleared")
 
-    @route(PREFIX + '/viewrequest')
     def ViewRequest(self, req_id, req_type):
         key = Dict[req_type][req_id]
         title_year = key['title']
@@ -662,7 +656,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests", thumb=R('return.png')))
         return oc
 
-    @route(PREFIX + '/confirmdeleterequest')
     def ConfirmDeleteRequest(self, req_id, req_type, title_year=""):
         oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
@@ -671,8 +664,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), title="No", thumb=R('x-mark.png')))
         return oc
 
-    @indirect
-    @route(PREFIX + '/deleterequest')
     def DeleteRequest(self, req_id, req_type):
         if req_id in Dict[req_type]:
             message = "Request was deleted"
@@ -683,9 +674,6 @@ class Session:
         return ViewRequests(message=message)
 
     # CouchPotato Functions
-
-
-    @route(PREFIX + '/sendtocouchpotato')
     def SendToCouchpotato(self, movie_id):
         if movie_id not in Dict['movie']:
             return MessageContainer("Error", "The movie id was not found in the database")
@@ -757,9 +745,6 @@ class Session:
         return oc
 
     # Sonarr Methods
-
-
-    @route(PREFIX + '/sendtosonarr')
     def SendToSonarr(self, tvdbid, callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -850,7 +835,6 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    @route(PREFIX + '/managesonarr')
     def ManageSonarr(self, locked='unlocked'):
         oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
         if not Prefs['sonarr_url'].startswith("http"):
@@ -878,7 +862,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    @route(PREFIX + '/managesonarrshow')
     def ManageSonarrShow(self, series_id, title="", callback=None, message=None):
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -913,7 +896,6 @@ class Session:
                                    thumb=None))
         return oc
 
-    @route(PREFIX + '/managesonarrseason')
     def ManageSonarrSeason(self, series_id, season, message=None, callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -947,7 +929,6 @@ class Session:
                     summary=(episode.get('overview', None)), thumb=None))
         return oc
 
-    @route(PREFIX + '/sonarrmonitorshow')
     def SonarrMonitorShow(self, series_id, seasons, episodes='all', callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -1023,7 +1004,6 @@ class Session:
         return False
 
     # Sickbeard Functions
-    @route(PREFIX + "/sendtosickbeard")
     def SendToSickbeard(self, tvdbid, callback=None):
         # return ViewRequests(message="Sorry, Sickbeard is not available yet.")
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -1089,7 +1069,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    @route(PREFIX + '/managesickbeard')
     def ManageSickbeard(self, locked='unlocked'):
         oc = ObjectContainer(title1=TITLE, title2="Manage " + Prefs['sickbeard_fork'])
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -1117,7 +1096,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    @route(PREFIX + '/managesickbeardshow')
     def ManageSickbeardShow(self, series_id, title="", callback=None, message=None):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -1158,7 +1136,6 @@ class Session:
             DirectoryObject(key=Callback(self.ManageSickbeardShow, series_id=series_id, title=title, callback=callback), title="Refresh"))
         return oc
 
-    @route(PREFIX + '/managesickbeardseason')
     def ManageSickbeardSeason(self, series_id, season, message=None, callback=None):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -1198,7 +1175,6 @@ class Session:
                                 title=marked + e + ". " + episode.get('name', ""), summary=(episode.get('status', None)), thumb=None))
         return oc
 
-    @route(PREFIX + '/sickbeardmonitorshow')
     def SickbeardMonitorShow(self, series_id, seasons, episodes='all', callback=None):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -1274,8 +1250,6 @@ class Session:
         return False
 
     # ManageChannel Functions
-
-    @route(PREFIX + "/managechannel")
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1290,7 +1264,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    @route(PREFIX + "/manageusers")
     def ManageUsers(self, message=None):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1310,7 +1283,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title="Return to Manage Channel"))
         return oc
 
-    @route(PREFIX + "/manageuser")
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1343,7 +1315,6 @@ class Session:
 
         return oc
 
-    @route(PREFIX + '/renameuser')
     def RenameUser(self, toke, message=""):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1366,7 +1337,6 @@ class Session:
                                         prompt="Enter the user's name"))
         return oc
 
-    @route(PREFIX + '/registerusername')
     def RegisterUserName(self, query="", toke=""):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1376,7 +1346,6 @@ class Session:
         Dict.Save()
         return ManageUser(toke=toke, message="Username has been set")
 
-    @route(PREFIX + "/blockuser")
     def BlockUser(self, toke, setter):
         if setter == 'True':
             if toke in Dict['blocked']:
@@ -1392,7 +1361,6 @@ class Session:
                 return ManageUser(toke=toke, message="User has been unblocked.")
         return ManageUser(toke=toke)
 
-    @route(PREFIX + "/sonarruser")
     def SonarrUser(self, toke, setter):
         tv_auto = ""
         if Prefs['sonarr_api']:
@@ -1413,7 +1381,6 @@ class Session:
                 return ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
         return ManageUser(toke=toke)
 
-    @route(PREFIX + "/deleteuser")
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1427,7 +1394,6 @@ class Session:
             return ManageUsers(message="User registration has been deleted.")
         return oc
 
-    @route(PREFIX + "/resetdict")
     def ResetDict(self, confirm='False'):
         if not self.is_admin:
             return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -1453,7 +1419,6 @@ class Session:
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
-    @route(PREFIX + "/changelog")
     def Changelog(self):
         oc = ObjectContainer(title1=TITLE, title2="Changelog")
         clog = HTTP.Request(CHANGELOG_URL)
@@ -1468,16 +1433,13 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title="Return to Manage Channel", thumb=R('return.png')))
         return oc
 
-    @route(PREFIX + "/toggledebug")
     def ToggleDebug(self):
         Dict['debug'] = not Dict['debug']
         return ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
-    @route(PREFIX + "/showmessage")
     def ShowMessage(self, header, message):
         return MessageContainer(header=header, message=message)
 
-    @route(PREFIX + "/reportproblem")
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2="Report Problem")
         # oc.add(DirectoryObject(key=Callback(ReportProblemMedia), title="Report Problem with Media"))
@@ -1497,7 +1459,6 @@ class Session:
                                      prompt="What is the Problem?"))
         return oc
 
-    @route(PREFIX + "/reportgeneralproblem")
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="Please enter your problem in the search box and press enter.")
@@ -1516,19 +1477,16 @@ class Session:
                                      prompt="What is the problem?"))
         return oc
 
-    @route(PREFIX + "/reportproblemmedia")
     def ReportProblemMedia(self):
         oc = ObjectContainer()
         return oc
 
-    @route(PREFIX + "/confirmreportproblem")
     def ConfirmReportProblem(self, query=""):
         oc = ObjectContainer(title1="Confirm", title2=query)
         oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title="Yes", thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="No", thumb=R('x-mark.png')))
         return oc
 
-    @route(PREFIX + "/notifyproblem")
     def NotifyProblem(self, problem, rating_key="", path=""):
         title = "Plex Request Channel - Problem Reported"
         user = "A user"
@@ -1539,153 +1497,184 @@ class Session:
         Notify(title=title, body=body, devices=Prefs['pushbullet_devices'])
         return MainMenu(message="The admin will be notified", title1="Main Menu", title2="Admin notified of problem")
 
-    # Notifications Functions
 
-    # Notify user of requests
-    @staticmethod
-    def notifyRequest(req_id, req_type, title="", message=""):
-        if Prefs['pushbullet_api']:
-            try:
-                if req_type == 'movie':
-                    movie = Dict['movie'][req_id]
-                    title_year = movie['title']
-                    title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
-                    user = movie['user'] if movie['user'] else "A user"
-                    title = "Plex Request Channel - New Movie Request"
-                    message = user + " has requested a new movie.\n" + title_year + "\n" + \
-                              movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
-                              movie['poster']
-                elif req_type == 'tv':
-                    tv = Dict['tv'][req_id]
-                    user = tv['user'] if tv['user'] else "A user"
-                    title = "Plex Request Channel - New TV Show Request"
-                    message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',
-                                                                                                     "TVDB") + " id: " + req_id + "\nPoster: " + \
-                              tv['poster']
-                else:
-                    return
-                if Prefs['pushbullet_devices']:
-                    devices = Prefs['pushbullet_devices'].split(",")
-                    for d in devices:
-                        response = sendPushBullet(title, message, d)
-                        if response:
-                            Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
-                else:
-                    response = sendPushBullet(title, message)
+def checkAdmin(toke):
+    import urllib2
+    try:
+        req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': toke})
+        resp = urllib2.urlopen(req)
+        if resp.read():
+            if Dict['debug']:
+                Log.Debug(resp.read())
+            return True
+    except:
+        pass
+    return False
+
+
+def resetRegister():
+    for key in Dict['register']:
+        Dict['register'][key]['requests'] = 0
+    Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+
+
+# Notifications Functions
+
+# Notify user of requests
+def notifyRequest(req_id, req_type, title="", message=""):
+    if Prefs['pushbullet_api']:
+        try:
+            if req_type == 'movie':
+                movie = Dict['movie'][req_id]
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
+                title = "Plex Request Channel - New Movie Request"
+                message = user + " has requested a new movie.\n" + title_year + "\n" + \
+                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
+            elif req_type == 'tv':
+                tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
+                title = "Plex Request Channel - New TV Show Request"
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',
+                                                                                                 "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
+            else:
+                return
+            if Prefs['pushbullet_devices']:
+                devices = Prefs['pushbullet_devices'].split(",")
+                for d in devices:
+                    response = sendPushBullet(title, message, d)
                     if response:
-                        Log.Debug("Pushbullet notification sent for: " + req_id)
-            except Exception as e:
-                Log.Debug("Pushbullet failed: " + e.message)
-        if Prefs['pushover_user']:
-            try:
-                if req_type == 'movie':
-                    movie = Dict['movie'][req_id]
-                    title_year = movie['title']
-                    title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
-                    user = movie['user'] if movie['user'] else "A user"
-                    title = "Plex Request Channel - New Movie Request"
-                    message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',
-                                                                                                     "IMDB") + " id: " + req_id + "\nPoster: " + \
-                              movie['poster']
-                elif req_type == 'tv':
-                    tv = Dict['tv'][req_id]
-                    user = tv['user'] if tv['user'] else "A user"
-                    title = "Plex Request Channel - New TV Show Request"
-                    message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',
-                                                                                                     "TVDB") + " id: " + req_id + "\nPoster: " + \
-                              tv['poster']
-                else:
-                    return
-                response = sendPushover(title, message)
+                        Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
+            else:
+                response = sendPushBullet(title, message)
                 if response:
-                    Log.Debug("Pushover notification sent for :" + req_id)
-            except Exception as e:
-                Log.Debug("Pushover failed: " + e.message)
-        if Prefs['email_to']:
-            try:
-                if req_type == 'movie':
-                    movie = Dict['movie'][req_id]
-                    title = movie['title'] + " (" + movie['year'] + ")"
-                    poster = movie['poster']
-                    user = movie['user'] if movie['user'] else "A user"
-                    id_type = movie.get('source', "IMDB")
-                    subject = "Plex Request Channel - New Movie Request"
-                    summary = ""
-                    if movie['summary']:
-                        summary = movie['summary'] + "<br>\n"
-                elif req_type == 'tv':
-                    tv = Dict['tv'][req_id]
-                    title = tv['title']
-                    user = tv['user'] if tv['user'] else "A user"
-                    id_type = tv.get('source', "TVDB")
-                    poster = tv['poster']
-                    subject = "Plex Request Channel - New TV Show Request"
-                    summary = ""
-                    if tv['summary']:
-                        summary = tv['summary'] + "<br>\n"
-                else:
-                    return
-                message = user + " has made a new request! <br><br>\n" + \
-                          "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
-                          "(" + id_type + " id: " + req_id + ") <br>\n" + \
-                          summary + \
-                          "<Poster:><img src= '" + poster + "' width='300'>"
-                sendEmail(subject, message, 'html')
-                Log.Debug("Email notification sent for: " + req_id)
-            except Exception as e:
-                Log.Debug("Email failed: " + e.message)
+                    Log.Debug("Pushbullet notification sent for: " + req_id)
+        except Exception as e:
+            Log.Debug("Pushbullet failed: " + e.message)
+    if Prefs['pushover_user']:
+        try:
+            if req_type == 'movie':
+                movie = Dict['movie'][req_id]
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
+                title = "Plex Request Channel - New Movie Request"
+                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',
+                                                                                                 "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
+            elif req_type == 'tv':
+                tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
+                title = "Plex Request Channel - New TV Show Request"
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',
+                                                                                                 "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
+            else:
+                return
+            response = sendPushover(title, message)
+            if response:
+                Log.Debug("Pushover notification sent for :" + req_id)
+        except Exception as e:
+            Log.Debug("Pushover failed: " + e.message)
+    if Prefs['email_to']:
+        try:
+            if req_type == 'movie':
+                movie = Dict['movie'][req_id]
+                title = movie['title'] + " (" + movie['year'] + ")"
+                poster = movie['poster']
+                user = movie['user'] if movie['user'] else "A user"
+                id_type = movie.get('source', "IMDB")
+                subject = "Plex Request Channel - New Movie Request"
+                summary = ""
+                if movie['summary']:
+                    summary = movie['summary'] + "<br>\n"
+            elif req_type == 'tv':
+                tv = Dict['tv'][req_id]
+                title = tv['title']
+                user = tv['user'] if tv['user'] else "A user"
+                id_type = tv.get('source', "TVDB")
+                poster = tv['poster']
+                subject = "Plex Request Channel - New TV Show Request"
+                summary = ""
+                if tv['summary']:
+                    summary = tv['summary'] + "<br>\n"
+            else:
+                return
+            message = user + " has made a new request! <br><br>\n" + \
+                      "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
+                      "(" + id_type + " id: " + req_id + ") <br>\n" + \
+                      summary + \
+                      "<Poster:><img src= '" + poster + "' width='300'>"
+            sendEmail(subject, message, 'html')
+            Log.Debug("Email notification sent for: " + req_id)
+        except Exception as e:
+            Log.Debug("Email failed: " + e.message)
 
-    @staticmethod
-    def Notify(title, body, devices=None):
-        if Prefs['email_to']:
-            try:
-                if not sendEmail(title, body, 'html'):
-                    Log.Debug("Email notification sent")
-            except Exception as e:
-                Log.Debug("Email failed: " + e.message)
-        if Prefs['pushbullet_api']:
-            try:
-                if devices:
-                    for d in devices.split(','):
-                        if sendPushBullet(title, body, d):
-                            Log.Debug("Pushbullet notification sent to " + d)
-                elif sendPushBullet(title, body):
-                    Log.Debug("Pushbullet notification sent")
-            except Exception as e:
-                Log.Debug("PushBullet failed: " + e.message)
-        if Prefs['pushover_user']:
-            try:
-                if sendPushover(title, body):
-                    Log.Debug("Pushover notification sent")
-            except Exception as e:
-                Log.Debug("Pushover failed: " + e.message)
 
-    @staticmethod
-    def sendPushover(title, message):
-        data = {'token': Prefs['pushover_api'], 'user': Prefs['pushover_user'], 'title': title, 'message': message}
-        return HTTP.Request(PUSHOVER_API_URL, values=data)
+def Notify(title, body, devices=None):
+    if Prefs['email_to']:
+        try:
+            if not sendEmail(title, body, 'html'):
+                Log.Debug("Email notification sent")
+        except Exception as e:
+            Log.Debug("Email failed: " + e.message)
+    if Prefs['pushbullet_api']:
+        try:
+            if devices:
+                for d in devices.split(','):
+                    if sendPushBullet(title, body, d):
+                        Log.Debug("Pushbullet notification sent to " + d)
+            elif sendPushBullet(title, body):
+                Log.Debug("Pushbullet notification sent")
+        except Exception as e:
+            Log.Debug("PushBullet failed: " + e.message)
+    if Prefs['pushover_user']:
+        try:
+            if sendPushover(title, body):
+                Log.Debug("Pushover notification sent")
+        except Exception as e:
+            Log.Debug("Pushover failed: " + e.message)
 
-    # noinspection PyUnresolvedReferences
-    @staticmethod
-    def sendEmail(subject, body, email_type='html'):
-        from email.MIMEText import MIMEText
-        from email.MIMEMultipart import MIMEMultipart
-        import smtplib
 
-        msg = MIMEMultipart()
-        msg['From'] = Prefs['email_from']
-        msg['To'] = Prefs['email_to']
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, email_type))
-        server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login(Prefs['email_username'], Prefs['email_password'])
-        text = msg.as_string()
-        senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
-        server.quit()
-        return senders
+def sendPushBullet(title, body, device_iden=""):
+    api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
+                  'Content-Type': 'application/json'
+                  }
+    data = {'type': 'note', 'title': title, 'body': body}
+    if device_iden:
+        data['device_iden'] = device_iden
+    values = JSON.StringFromObject(data)
+    return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+
+
+def sendPushover(title, message):
+    data = {'token': Prefs['pushover_api'], 'user': Prefs['pushover_user'], 'title': title, 'message': message}
+    return HTTP.Request(PUSHOVER_API_URL, values=data)
+
+
+# noinspection PyUnresolvedReferences
+def sendEmail(subject, body, email_type='html'):
+    from email.MIMEText import MIMEText
+    from email.MIMEMultipart import MIMEMultipart
+    import smtplib
+
+    msg = MIMEMultipart()
+    msg['From'] = Prefs['email_from']
+    msg['To'] = Prefs['email_to']
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, email_type))
+    server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+    server.login(Prefs['email_username'], Prefs['email_password'])
+    text = msg.as_string()
+    senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
+    server.quit()
+    return senders
 
 
 def isClient(obj_list):
