@@ -621,7 +621,7 @@ class Session:
         Dict['tv'] = {}
         Dict['movie'] = {}
         Dict.Save()
-        return ViewRequests(message="All requests have been cleared")
+        return self.ViewRequests(message="All requests have been cleared")
 
     def ViewRequest(self, req_id, req_type):
         key = Dict[req_type][req_id]
@@ -670,7 +670,7 @@ class Session:
             Dict.Save()
         else:
             message = "Request could not be deleted"
-        return ViewRequests(message=message)
+        return self.ViewRequests(message=message)
 
     # CouchPotato Functions
     def SendToCouchpotato(self, movie_id):
@@ -1004,7 +1004,6 @@ class Session:
 
     # Sickbeard Functions
     def SendToSickbeard(self, tvdbid, callback=None):
-        # return ViewRequests(message="Sorry, Sickbeard is not available yet.")
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
         else:
@@ -1340,7 +1339,7 @@ class Session:
         if not self.is_admin:
             return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if not query:
-            return RegisterUser(toke, message="You must enter a name. Try again.")
+            return self.RegisterUser(toke, message="You must enter a name. Try again.")
         Dict['register'][toke]['nickname'] = query
         Dict.Save()
         return self.ManageUser(toke=toke, message="Username has been set")
