@@ -185,7 +185,7 @@ def RegisterName(query="", locked='locked'):
 def checkAdmin():
     import urllib2
     try:
-        token = Request.Headers['X-Plex-Token']
+        token = Request.Headers.get('X-Plex-Token','')
         req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': token})
         resp = urllib2.urlopen(req)
         if resp.read():
@@ -427,7 +427,6 @@ def SearchTV(query, locked='unlocked'):
             oc = ObjectContainer(title2="No Results")
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, dktitle="Search Again", dkthumb=R('search.png'), locked=locked)
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,locked=locked), locked=locked), title="Search Again",
             #                        thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, parent_call=Callback(MainMenu, locked=locked), dktitle="Search Again",
@@ -629,7 +628,6 @@ def ViewRequestsPassword(locked='locked'):
     oc = ObjectContainer(header=TITLE, message="Please enter the password in the searchbox")
     if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        # DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, dktitle="Enter password:", dksecure=True, locked=locked)
         # oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent_call=Callback(MainMenu,locked=locked), locked=locked), title="Enter password:"))
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=ViewRequests, parent_call=Callback(MainMenu, locked=locked), dktitle="Enter Password:",
                      message="Enter the password", dksecure=True)

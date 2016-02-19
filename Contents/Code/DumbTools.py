@@ -23,7 +23,7 @@ class DumbKeyboard:
         Route.Connect(prefix + '/dumbkeyboard/%s/history/clear' % cb_hash, self.ClearHistory)
         Route.Connect(prefix + '/dumbkeyboard/%s/history/add/{query}' % cb_hash, self.AddHistory)
         Log.Debug("Generated Routes")
-        Log.Debug(str(Callback(self.Keyboard)))
+        # Log.Debug(str(Callback(self.Keyboard)))
         # Add our directory item
         oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder, message=message),
                                title=str(dktitle) if dktitle else u'%s' % 'DumbKeyboard Search', thumb=dkthumb))
@@ -50,7 +50,7 @@ class DumbKeyboard:
         #                      title=u'%s: %s' % ('Submit', string.replace(' ', '_')))), -why replace with underscores?
         # Search History
         if Dict['DumbKeyboard-History']:
-            Log.Debug("Create History")
+            # Log.Debug("Create History")
             oc.add(DirectoryObject(key=Callback(self.History),
                                    title=u'%s' % 'Search History'))
         # Space
@@ -60,7 +60,7 @@ class DumbKeyboard:
                                title='Space'))
         # Backspace (not really needed since you can just hit back)
         if query is not None:
-            Log.Debug("Create backspace key")
+            # Log.Debug("Create backspace key")
             oc.add(DirectoryObject(key=Callback(self.Keyboard, query=query[:-1]),
                                    title='Backspace'))
         # Shift
