@@ -524,7 +524,7 @@ class Session:
     def AddTVRequest(self, series_id, title, source='', year="", poster="", backdrop="", summary=""):
         if series_id in Dict['tv']:
             Log.Debug("TV Show is already requested")
-            return MainMenu(message="TV Show has already been requested", title1=title, title2="Already Requested")
+            return self.MainMenu(message="TV Show has already been requested", title1=title, title2="Already Requested")
         else:
             user = ""
             if self.token in Dict['register']:
@@ -543,7 +543,7 @@ class Session:
             if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
                 return self.SendToSickbeard(tvdbid=series_id, callback=Callback(self.MainMenu, message="TV Show has been requested", title1=title,
                                                                                 title2="Requested"))
-            return MainMenu(message="TV Show has been requested", title1=title, title2="Requested")
+            return self.MainMenu(message="TV Show has been requested", title1=title, title2="Requested")
 
     # Request Functions
     def ViewRequests(self, query="", message=None):
@@ -560,7 +560,7 @@ class Session:
             else:
                 oc = ObjectContainer(title2="Password correct")
         else:
-            return MainMenu(message="Password incorrect", title1="Main Menu", title2="Password incorrect")
+            return self.MainMenu(message="Password incorrect", title1="Main Menu", title2="Password incorrect")
         if not Dict['movie'] and not Dict['tv']:
             Log.Debug("There are no requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -616,7 +616,7 @@ class Session:
 
     def ClearRequests(self, locked='unlocked'):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         Dict['tv'] = {}
         Dict['movie'] = {}
         Dict.Save()
@@ -983,7 +983,7 @@ class Session:
             except Exception as e:
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message="Error sending episode to Sonarr")
-                # return MainMenu()
+                # return self.MainMenu()
 
     def SonarrShowExists(self, tvdbid):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1224,7 +1224,7 @@ class Session:
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
-                # return MainMenu()
+                # return self.MainMenu()
 
     def SickbeardShowExists(self, tvdbid):
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -1250,7 +1250,7 @@ class Session:
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if message and isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
@@ -1264,7 +1264,7 @@ class Session:
 
     def ManageUsers(self, message=None):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
@@ -1283,7 +1283,7 @@ class Session:
 
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if 'nickname' in Dict['register'][toke] and Dict['register'][toke]['nickname']:
             user = Dict['register'][toke]['nickname']
         else:
@@ -1315,7 +1315,7 @@ class Session:
 
     def RenameUser(self, toke, message=""):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if Client.Product == "Plex Web":
             if message:
                 message += "\n"
@@ -1337,7 +1337,7 @@ class Session:
 
     def RegisterUserName(self, query="", toke=""):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if not query:
             return RegisterUser(toke, message="You must enter a name. Try again.")
         Dict['register'][toke]['nickname'] = query
@@ -1381,7 +1381,7 @@ class Session:
 
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         oc = ObjectContainer(title1="Confirm Delete User?", title2=Dict['register'][toke]['nickname'])
         if confirmed == 'False':
             oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title="Yes"))
@@ -1394,7 +1394,7 @@ class Session:
 
     def ResetDict(self, confirm='False'):
         if not self.is_admin:
-            return MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if confirm == 'False':
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE,
@@ -1493,7 +1493,7 @@ class Session:
         body = user + " has reported a problem with the Plex Server. \n" + \
                "Issue: " + problem
         Notify(title=title, body=body, devices=Prefs['pushbullet_devices'])
-        return MainMenu(message="The admin will be notified", title1="Main Menu", title2="Admin notified of problem")
+        return self.MainMenu(message="The admin will be notified", title1="Main Menu", title2="Admin notified of problem")
 
 
 def checkAdmin(toke):
