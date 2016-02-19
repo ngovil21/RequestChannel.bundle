@@ -85,7 +85,7 @@ from Session import Session
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
-@route(PREFIX + '/mainmenu')
+@route(PREFIX + '/main')
 def MainMenu():
     sesh = Session()
     return sesh.MainMenu()

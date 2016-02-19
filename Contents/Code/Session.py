@@ -62,9 +62,8 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
-        pass
 
-    @handler(PREFIX, TITLE, art=ART, thumb=ICON)
+    # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     @route(PREFIX + '/mainmenu')
     def MainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
         Log.Debug("Platform: " + str(Client.Platform))
