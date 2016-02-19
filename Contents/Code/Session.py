@@ -59,7 +59,7 @@ class Session:
         except:
             pass
         self.token = Request.Headers.get("X-Plex-Token", "")
-        self.is_admin = checkAdmin(self.token)
+        self.is_admin = self.checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
 
