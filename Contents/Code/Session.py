@@ -144,10 +144,11 @@ class Session:
                 InputDirectoryObject(key=Callback(self.SearchTV), title="Search for TV Show", prompt="Enter the name of the TV Show:"))
         if Prefs['usersviewrequests'] or self.is_admin:
             if not self.locked or Prefs['password'] is None or Prefs['password'] == "":
+                if self.locked:
+                    self.locked = False
                 oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="View Requests"))  # No password needed this session
             else:
-                oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword),
-                                       title="View Requests"))  # Set View Requests to locked and ask for password
+                oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword), title="View Requests"))  # Set View Requests to locked and ask for password
         if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title="Manage Sonarr"))
         if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
@@ -833,7 +834,7 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    def ManageSonarr(self, locked='unlocked'):
+    def ManageSonarr(self):
         oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -1067,7 +1068,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
 
-    def ManageSickbeard(self, locked='unlocked'):
+    def ManageSickbeard(self):
         oc = ObjectContainer(title1=TITLE, title2="Manage " + Prefs['sickbeard_fork'])
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
