@@ -87,7 +87,7 @@ from Session import Session
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
-    sesh = Session(session_id=Hash.MD5(Datetime.Now()))
+    sesh = Session(session_id=Hash.MD5(str(Datetime.Now())))
     return sesh.MainMenu()
 
 '''
