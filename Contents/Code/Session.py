@@ -92,6 +92,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/reportgeneralproblem' % session_id, self.ReportGeneralProblem)
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
+        Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
         self.token = Request.Headers.get("X-Plex-Token", "")
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
@@ -1256,7 +1257,7 @@ class Session:
         else:
             oc = ObjectContainer(title1="Manage", title2=message)
         oc.add(DirectoryObject(key=Callback(self.ManageUsers), title="Manage Users"))
-        oc.add(DirectoryObject(key=Callback(self.ToggleDebug), title="Turn Debugging " + ("off" if Dict['debug'] else "on")))
+        oc.add(DirectoryObject(key=Callback(self.ToggleDebug), title="Turn Debugging " + ("Off" if Dict['debug'] else "On")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title="Reset Dictionary Settings"))
         oc.add(DirectoryObject(key=Callback(self.Changelog), title="Changelog"))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
