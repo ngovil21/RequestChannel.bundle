@@ -366,7 +366,7 @@ class Session:
                                        'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
-                SendToCouchpotato(movie_id)
+                self.SendToCouchpotato(movie_id)
             notifyRequest(req_id=movie_id, req_type='movie')
             return MainMenu(message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
 
@@ -378,7 +378,7 @@ class Session:
                                 title1="Main Menu", title2="Weekly Limit")
         if self.token in Dict['blocked']:
             return self.MainMenu(message="Sorry you have been blocked.",
-                            title1="Main Menu", title2="User Blocked")
+                                 title1="Main Menu", title2="User Blocked")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
         else:
@@ -538,13 +538,11 @@ class Session:
             Dict.Save()
             notifyRequest(req_id=series_id, req_type='tv')
             if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
-                return SendToSonarr(tvdbid=series_id,
-                                    callback=Callback(self.MainMenu, message="TV Show has been requested", title1=title,
-                                                      title2="Requested"))
+                return self.SendToSonarr(tvdbid=series_id, callback=Callback(self.MainMenu, message="TV Show has been requested", title1=title,
+                                                                             title2="Requested"))
             if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-                return SendToSickbeard(tvdbid=series_id,
-                                       callback=Callback(self.MainMenu, message="TV Show has been requested", title1=title,
-                                                         title2="Requested"))
+                return self.SendToSickbeard(tvdbid=series_id, callback=Callback(self.MainMenu, message="TV Show has been requested", title1=title,
+                                                                                title2="Requested"))
             return MainMenu(message="TV Show has been requested", title1=title, title2="Requested")
 
     # Request Functions
