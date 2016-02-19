@@ -79,8 +79,18 @@ def ValidatePrefs():
     return
 
 
+from Session import Session
+
+
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
+@handler(PREFIX, TITLE, art=ART, thumb=ICON)
+@route(PREFIX + '/mainmenu')
+def MainMenu():
+    sesh = Session()
+    return sesh.MainMenu()
+
+'''
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/mainmenu')
 def MainMenu(locked='locked', message=None, title1=TITLE, title2="Main Menu"):
@@ -1753,7 +1763,7 @@ def sendEmail(subject, body, email_type='html'):
 def isClient(obj_list):
     return Client.Platform in obj_list or Client.Product in obj_list
 
-
+'''
 """
 List of Client.Product and Client.Platform
 
