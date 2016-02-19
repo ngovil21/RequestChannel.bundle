@@ -821,7 +821,7 @@ class Session:
                 oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
             else:
                 oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
-        series_id = SonarrShowExists(tvdbid)
+        series_id = self.SonarrShowExists(tvdbid)
         if Prefs['sonarr_monitor'] == "manual" and series_id:
             return self.ManageSonarrShow(series_id, title=title, callback=callback)
         if self.is_admin:
