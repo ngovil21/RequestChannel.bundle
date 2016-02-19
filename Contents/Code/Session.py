@@ -755,7 +755,7 @@ class Session:
         api_header = {
             'X-Api-Key': Prefs['sonarr_api']
         }
-        series_id = SonarrShowExists(tvdbid)
+        series_id = self.SonarrShowExists(tvdbid)
         if series_id:
             Dict['tv'][tvdbid]['automated'] = True
             return self.ManageSonarrShow(series_id=series_id, callback=callback)
