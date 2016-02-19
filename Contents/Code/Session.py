@@ -1687,6 +1687,6 @@ class Session:
         server.quit()
         return senders
 
-    @staticmethod
-    def isClient(obj_list):
-        return Client.Platform in obj_list or Client.Product in obj_list
+
+def isClient(obj_list):
+    return Client.Platform in obj_list or Client.Product in obj_list
