@@ -549,14 +549,14 @@ class Session:
 
     @route(PREFIX + '/viewrequests')
     def ViewRequests(self, query="", message=None):
-        if locked == 'unlocked':
+        if not self.locked:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(content=ContainerContent.Mixed, message=message)
             else:
                 oc = ObjectContainer(title2=message)
 
         elif query == Prefs['password']:
-            locked = 'unlocked'
+            self.locked = False
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
             else:
