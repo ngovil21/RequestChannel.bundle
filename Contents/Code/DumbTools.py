@@ -1,4 +1,6 @@
 # DumbTools for Plex v1.1 by Cory <babylonstudio@gmail.com>
+# Slightly modified by ngovil21 for Plex Request Channel
+
 import urllib2
 
 NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Plex for Xbox One', 'iOS', 'Mystery 4', 'Samsung',

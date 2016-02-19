@@ -70,6 +70,8 @@ def Start():
         Dict['sonarr_users'] = []
     if 'sickbeard_users' not in Dict:
         Dict['sickbeard_users'] = []
+    if 'debug' not in Dict:
+        Dict['debug'] = False
     Dict.Save()
 
 
@@ -189,6 +191,8 @@ def checkAdmin():
         req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': token})
         resp = urllib2.urlopen(req)
         if resp.read():
+            if Dict['debug']:
+                Log.Debug(resp.read())
             return True
     except:
         pass
@@ -1323,6 +1327,7 @@ def ManageChannel(message=None, title1=TITLE, title2="Manage Channel", locked='l
     else:
         oc = ObjectContainer(title1="Manage", title2=message)
     oc.add(DirectoryObject(key=Callback(ManageUsers, locked=locked), title="Manage Users"))
+    oc.add(DirectoryObject(key=Callback(ToggleDebug, locked=locked), title="Turn Debugging " + ("off" if Dict['debug'] else "on")))
     oc.add(PopupDirectoryObject(key=Callback(ResetDict, locked=locked), title="Reset Dictionary Settings"))
     oc.add(DirectoryObject(key=Callback(Changelog, locked=locked), title="Changelog"))
     oc.add(DirectoryObject(key=Callback(MainMenu, locked=locked), title="Return to Main Menu"))
@@ -1378,7 +1383,6 @@ def ManageUser(token, locked='locked', message=None):
     else:
         oc.add(DirectoryObject(key=Callback(BlockUser, token=token, set='True', locked=locked), title="Block User"))
     oc.add(PopupDirectoryObject(key=Callback(DeleteUser, token=token, locked=locked, confirmed='False'), title="Delete User"))
-
     oc.add(DirectoryObject(key=Callback(ManageChannel, locked=locked), title="Return to Manage Channel"))
 
     return oc
@@ -1515,6 +1519,13 @@ def Changelog(locked='locked'):
     return oc
 
 
+@route(PREFIX + "/toggledebug")
+def ToggleDebug(locked='locked'):
+    Dict['debug'] = not Dict['debug']
+    return ManageChannel(locked=locked, message="Debug is " + ("on" if Dict['debug'] else "off"))
+
+
+
 @route(PREFIX + "/showmessage")
 def ShowMessage(header, message):
     return MessageContainer(header=header, message=message)
@@ -1527,8 +1538,8 @@ def ReportProblem(locked='locked'):
     if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
         Log.Debug("Client does not support Input. Using DumbKeyboard")
         # oc.add(
-            # DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked, title="Report General Problem",
-            #                              message="What is the problem?"), title="Report General Problem"))
+        #     DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, locked=locked, title="Report General Problem",
+        #                                  message="What is the problem?"), title="Report General Problem"))
         DumbKeyboard(prefix=PREFIX, oc=oc, callback=ConfirmReportProblem, parent_call=Callback(ReportProblem, locked=locked), dktitle="Report General Problem",
                      message="What is the problem?")
     elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
