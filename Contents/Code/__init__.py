@@ -484,10 +484,10 @@ def SearchTV(query, locked='unlocked'):
                 rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
     if isClient(DUMB_KEYBOARD_CLIENTS):
         Log.Debug("Client does not support Input. Using DumbKeyboard")
-        oc.add(
+        # oc.add(
             # DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,locked=locked), locked=locked), title="Search Again", thumb=R('search.png')))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, parent_call=Callback(MainMenu, locked=locked), dktitle="Search Again",
-                         message="Enter the name of the TV Show", dkthumb=R('search.png'))
+        DumbKeyboard(prefix=PREFIX, oc=oc, callback=SearchTV, parent_call=Callback(MainMenu, locked=locked), dktitle="Search Again",
+                     message="Enter the name of the TV Show", dkthumb=R('search.png'))
     else:
         oc.add(InputDirectoryObject(key=Callback(SearchTV, locked=locked), title="Search Again", prompt="Enter the name of the TV Show:",
                                     thumb=R('search.png')))
