@@ -1445,9 +1445,9 @@ class Session:
         if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
-            #     DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem, title="Report General Problem",
+            #     DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem, title="Report General Problem",
             #                                  message="What is the problem?"), title="Report General Problem"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=ConfirmReportProblem, parent_call=Callback(self.ReportProblem),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ConfirmReportProblem, parent_call=Callback(self.ReportProblem),
                          dktitle="Report General Problem",
                          message="What is the problem?")
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
@@ -1465,7 +1465,7 @@ class Session:
             oc = ObjectContainer(title2=title)
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=ConfirmReportProblem, parent=ReportProblem),
+            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
             #                        title="Report a General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ConfirmReportProblem, parent_call=Callback(self.ReportProblem),
                          dktitle="Report General Problem",
