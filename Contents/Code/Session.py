@@ -301,7 +301,7 @@ class Session:
         else:
             oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title="Search Again",
                                         prompt="Enter the name of the movie:", thumb=R('search.png')))
-        oc.add(DirectoryObject(key=Callback(MainMenu), title="Return to Main Menu", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         return oc
 
     def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
@@ -377,7 +377,7 @@ class Session:
                 return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
                                 title1="Main Menu", title2="Weekly Limit")
         if self.token in Dict['blocked']:
-            return MainMenu(message="Sorry you have been blocked.",
+            return self.MainMenu(message="Sorry you have been blocked.",
                             title1="Main Menu", title2="User Blocked")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message="Please enter the name of the TV Show in the search box and press enter.")
