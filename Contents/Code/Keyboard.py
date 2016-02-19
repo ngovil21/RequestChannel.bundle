@@ -8,7 +8,7 @@ PREFIX = '/video/plexrequestchannel'
 
 
 DUMB_KEYBOARD_CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
-                         'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One', 'Xbox One', 'Mystery 4']
+                         'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One', 'Xbox One', 'Mystery 4', 'Plex for Vizio', 'Plex TV']
 
 NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Plex for Xbox One', 'iOS', 'Mystery 4', 'Samsung', 'Plex for Samsung']
 
