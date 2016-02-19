@@ -115,7 +115,7 @@ class Session:
             if self.token in Dict['register']:  # Do not save admin token in the register
                 del Dict['register'][self.token]
         elif Prefs['register'] and (self.token not in Dict['register'] or not Dict['register'][self.token]['nickname']):
-            return Register()
+            return self.Register()
         elif self.token not in Dict['register']:
             Dict['register'][self.token] = {'nickname': "", 'requests': 0}
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
@@ -182,9 +182,9 @@ class Session:
 
     def RegisterName(self, query=""):
         if not query:
-            return Register(message="You must enter a name. Try again.")
+            return self.Register(message="You must enter a name. Try again.")
         Dict['register'][self.token] = {'nickname': query, 'requests': 0}
-        return MainMenu(message="Your device has been registered.", title1="Main Menu", title2="Registered")
+        return self.MainMenu(message="Your device has been registered.", title1="Main Menu", title2="Registered")
 
     def AddNewMovie(self, title="Request a Movie"):
         Log.Debug("Client does support message overlays")
@@ -207,10 +207,10 @@ class Session:
         query = String.Quote(query, usePlus=True)
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not self.is_admin:
             if Dict['register'].get(self.token, None) and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
-                return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
+                return self.MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
                                 title1="Main Menu", title2="Weekly Limit")
         if self.token in Dict['blocked']:
-            return MainMenu(message="Sorry you have been blocked.", title1="Main Menu", title2="User Blocked")
+            return self.MainMenu(message="Sorry you have been blocked.", title1="Main Menu", title2="User Blocked")
         if Prefs['movie_db'] == "TheMovieDatabase":
             headers = {
                 'Accept': 'application/json'
@@ -350,7 +350,7 @@ class Session:
     def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
         if movie_id in Dict['movie']:
             Log.Debug("Movie is already requested")
-            return MainMenu(message="Movie has already been requested", title1=title, title2="Already Requested")
+            return self.MainMenu(message="Movie has already been requested", title1=title, title2="Already Requested")
         else:
             user = ""
             if self.token in Dict['register']:
@@ -368,13 +368,13 @@ class Session:
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
             notifyRequest(req_id=movie_id, req_type='movie')
-            return MainMenu(message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
+            return self.MainMenu(message="Movie has been requested", title1="Main Menu", title2="Movie Requested")
 
     # TVShow Functions
     def AddNewTVShow(self, title="Request a TV Show"):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
-                return MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
+                return self.MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
                                 title1="Main Menu", title2="Weekly Limit")
         if self.token in Dict['blocked']:
             return self.MainMenu(message="Sorry you have been blocked.",
@@ -757,7 +757,7 @@ class Session:
         series_id = SonarrShowExists(tvdbid)
         if series_id:
             Dict['tv'][tvdbid]['automated'] = True
-            return ManageSonarrShow(series_id=series_id, callback=callback)
+            return self.ManageSonarrShow(series_id=series_id, callback=callback)
         lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=tvdbid:" + tvdbid, headers=api_header)
         found_show = None
         for show in lookup_json:
@@ -822,7 +822,7 @@ class Session:
                 oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
         series_id = SonarrShowExists(tvdbid)
         if Prefs['sonarr_monitor'] == "manual" and series_id:
-            return ManageSonarrShow(series_id, title=title, callback=callback)
+            return self.ManageSonarrShow(series_id, title=title, callback=callback)
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title),
                                    title="Delete Request"))
@@ -950,7 +950,7 @@ class Session:
             try:
                 HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
                 HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
-                return ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback, message="Series sent to Sonarr")
+                return self.ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback, message="Series sent to Sonarr")
             except Exception as e:
                 Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message="Error sending series to Sonarr")
@@ -965,7 +965,7 @@ class Session:
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'name': 'SeasonSearch', 'seriesId': int(series_id), 'seasonNumber': int(s)})
                     HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-                return ManageSonarrShow(series_id=series_id, callback=callback, message="Season(s) sent sent to Sonarr")
+                return self.ManageSonarrShow(series_id=series_id, callback=callback, message="Season(s) sent sent to Sonarr")
             except Exception as e:
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message="Error sending season to Sonarr")
@@ -979,7 +979,7 @@ class Session:
                     HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
                 data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
                 HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-                return ManageSonarrSeason(series_id=series_id, season=seasons, callback=callback, message="Episode sent to Sonarr")
+                return self.ManageSonarrSeason(series_id=series_id, season=seasons, callback=callback, message="Episode sent to Sonarr")
             except Exception as e:
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message="Error sending episode to Sonarr")
@@ -1014,7 +1014,7 @@ class Session:
 
         if SickbeardShowExists(tvdbid):
             Dict['tv'][tvdbid]['automated'] = True
-            return ManageSickbeardShow(series_id=tvdbid, callback=callback)
+            return self.ManageSickbeardShow(series_id=tvdbid, callback=callback)
 
         data = dict(cmd='show.addnew', tvdbid=tvdbid)
         use_sickrage = (Prefs['sickbeard_fork'] == 'SickRage')
@@ -1056,7 +1056,7 @@ class Session:
             count = 0
             while count < 5:
                 if SickbeardShowExists(tvdbid):
-                    return ManageSickbeardShow(tvdbid, title=title, callback=callback)
+                    return self.ManageSickbeardShow(tvdbid, title=title, callback=callback)
                 Thread.Sleep(1)
                 Log.Debug("Slept for " + str(count) + " seconds")
                 count += 1
@@ -1197,7 +1197,7 @@ class Session:
                 else:
                     Log.Debug(JSON.StringFromObject(resp))
                     return MessageContainer(header=TITLE, message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
-                return ManageSickbeardShow(series_id=series_id, title="", callback=callback,
+                return self.ManageSickbeardShow(series_id=series_id, title="", callback=callback,
                                            message="Series sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
@@ -1208,7 +1208,7 @@ class Session:
                 for s in season_list:
                     data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
                     JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
-                return ManageSickbeardShow(series_id=series_id, callback=callback,
+                return self.ManageSickbeardShow(series_id=series_id, callback=callback,
                                            message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
@@ -1219,7 +1219,7 @@ class Session:
                 for e in episode_list:
                     data = dict(cmd='episode.setstatus', tvdbid=series_id, season=seasons, episode=e, status="wanted")
                     JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
-                return ManageSickbeardSeason(series_id=series_id, season=seasons, callback=callback,
+                return self.ManageSickbeardSeason(series_id=series_id, season=seasons, callback=callback,
                                              message="Episode(s) sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
@@ -1342,22 +1342,22 @@ class Session:
             return RegisterUser(toke, message="You must enter a name. Try again.")
         Dict['register'][toke]['nickname'] = query
         Dict.Save()
-        return ManageUser(toke=toke, message="Username has been set")
+        return self.ManageUser(toke=toke, message="Username has been set")
 
     def BlockUser(self, toke, setter):
         if setter == 'True':
             if toke in Dict['blocked']:
-                return ManageUser(toke=toke, message="User is already blocked.")
+                return self.ManageUser(toke=toke, message="User is already blocked.")
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
-                return ManageUser(toke == toke, message="User has been blocked.")
+                return self.ManageUser(toke == toke, message="User has been blocked.")
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['blocked'].remove(toke)
                 Dict.Save()
-                return ManageUser(toke=toke, message="User has been unblocked.")
-        return ManageUser(toke=toke)
+                return self.ManageUser(toke=toke, message="User has been unblocked.")
+        return self.ManageUser(toke=toke)
 
     def SonarrUser(self, toke, setter):
         tv_auto = ""
@@ -1367,17 +1367,17 @@ class Session:
             tv_auto = "Sickbeard"
         if setter == 'True':
             if toke in Dict['sonarr_users']:
-                return ManageUser(toke=toke, message="User already in " + tv_auto + " list")
+                return self.ManageUser(toke=toke, message="User already in " + tv_auto + " list")
             else:
                 Dict['sonarr_users'].append(toke)
                 Dict.Save()
-                return ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
+                return self.ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['sonarr_users'].remove(toke)
                 Dict.Save()
-                return ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
-        return ManageUser(toke=toke)
+                return self.ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
+        return self.ManageUser(toke=toke)
 
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
@@ -1389,7 +1389,7 @@ class Session:
         elif confirmed == 'True':
             Dict['register'].pop(toke, None)
             Dict.Save()
-            return ManageUsers(message="User registration has been deleted.")
+            return self.ManageUsers(message="User registration has been deleted.")
         return oc
 
     def ResetDict(self, confirm='False'):
@@ -1413,7 +1413,7 @@ class Session:
             Dict['blocked'] = []
             Dict['sonarr_users'] = []
             Dict.Save()
-            return ManageChannel(message="Dictionary has been reset!")
+            return self.ManageChannel(message="Dictionary has been reset!")
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
@@ -1433,7 +1433,7 @@ class Session:
 
     def ToggleDebug(self):
         Dict['debug'] = not Dict['debug']
-        return ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
+        return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
     def ShowMessage(self, header, message):
         return MessageContainer(header=header, message=message)
