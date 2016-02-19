@@ -1,15 +1,20 @@
 # DumbTools for Plex v1.1 by Cory <babylonstudio@gmail.com>
 import urllib2
 
+NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Plex for Xbox One', 'iOS', 'Mystery 4', 'Samsung',
+                                'Plex for Samsung']
+MESSAGE_OVERLAY_CLIENTS = ['Android', 'Roku', 'Konvergo', 'Plex Web']
+
 
 class DumbKeyboard:
-    clients = ['Plex for iOS', 'Plex Media Player', 'Plex Web']
+    CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
+               'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One', 'Xbox One', 'Mystery 4', 'Plex for Vizio', 'Plex TV']
 
     KEYS = list('abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./')
     SHIFT_KEYS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+:{}|\"<>?')
 
-    def __init__(self, prefix, oc, callback, dktitle=None, dkthumb=None,
-                 dkplaceholder=None, dksecure=False, **kwargs):
+    def __init__(self, prefix, oc, callback, parent_call=None, dktitle=None, dkthumb=None,
+                 dkplaceholder=None, dksecure=False, message=None, **kwargs):
         cb_hash = hash(str(callback) + str(kwargs))
         Log.Debug("Generated callback hash: " + str(cb_hash))
         Route.Connect(prefix + '/dumbkeyboard/%s/keyboard' % cb_hash, self.Keyboard)
@@ -20,32 +25,36 @@ class DumbKeyboard:
         Log.Debug("Generated Routes")
         Log.Debug(str(Callback(self.Keyboard)))
         # Add our directory item
-        oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder),
+        oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder, message=message),
                                title=str(dktitle) if dktitle else u'%s' % 'DumbKeyboard Search', thumb=dkthumb))
 
         self.Callback = callback
         self.callback_args = kwargs
         self.secure = dksecure
+        self.parent_call = parent_call
 
-    def Keyboard(self, query=None, shift=False):
-        Log.Debug("Keyboard created.")
+    def Keyboard(self, query=None, shift=False, message=None):
+        # Log.Debug("Keyboard created.")
         if self.secure and query is not None:
             string = ''.join(['*' for i in range(len(query[:-1]))]) + query[-1]
         else:
             string = query if query else ""
 
         oc = ObjectContainer()
+        if message and (Client.Product in MESSAGE_OVERLAY_CLIENTS or Client.Platform in MESSAGE_OVERLAY_CLIENTS):
+            oc.message = message
         # Submit
-        Log.Debug("Create Submit key")
+        # Log.Debug("Create Submit key")
         oc.add(DirectoryObject(key=Callback(self.Submit, query=query),
-                               title=u'%s: %s' % ('Submit', string.replace(' ', '_'))))
+                               title=u'%s: %s' % ('Submit', string)))
+        #                      title=u'%s: %s' % ('Submit', string.replace(' ', '_')))), -why replace with underscores?
         # Search History
         if Dict['DumbKeyboard-History']:
             Log.Debug("Create History")
             oc.add(DirectoryObject(key=Callback(self.History),
                                    title=u'%s' % 'Search History'))
         # Space
-        Log.Debug("Create Space Key")
+        # Log.Debug("Create Space Key")
         oc.add(DirectoryObject(key=Callback(self.Keyboard,
                                             query=query + " " if query else " "),
                                title='Space'))
@@ -55,16 +64,19 @@ class DumbKeyboard:
             oc.add(DirectoryObject(key=Callback(self.Keyboard, query=query[:-1]),
                                    title='Backspace'))
         # Shift
-        Log.Debug("Create Shift Key")
+        # Log.Debug("Create Shift Key")
         oc.add(DirectoryObject(key=Callback(self.Keyboard, query=query, shift=True),
                                title='Shift'))
+        # Cancel - return to parent
+        if self.parent_call:
+            oc.add(DirectoryObject(key=self.parent_call, title="Cancel"))
         # Keys
-        Log.Debug("Generating keys")
+        # Log.Debug("Generating keys")
         for key in self.KEYS if not shift else self.SHIFT_KEYS:
             oc.add(DirectoryObject(key=Callback(self.Keyboard,
                                                 query=query + key if query else key),
                                    title=u'%s' % key))
-        Log.Debug("Return Object Container")
+        # Log.Debug("Return Object Container")
         return oc
 
     def History(self):
