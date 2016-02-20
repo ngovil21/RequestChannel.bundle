@@ -1413,6 +1413,7 @@ class Session:
             Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
             Dict['blocked'] = []
             Dict['sonarr_users'] = []
+            Dict['debug'] = False
             Dict.Save()
             return self.ManageChannel(message="Dictionary has been reset!")
 
@@ -1434,6 +1435,7 @@ class Session:
 
     def ToggleDebug(self):
         Dict['debug'] = not Dict['debug']
+        Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
     def ShowMessage(self, header, message):
