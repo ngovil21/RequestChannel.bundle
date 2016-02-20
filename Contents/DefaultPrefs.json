@@ -59,13 +59,13 @@
   },
   {
     "id": "couchpotato_profile",
-    "label": "CouchPotato Profile Name",
+    "label": "CouchPotato Profile Name (optional)",
     "type": "text",
     "default": ""
   },
   {
-    "id": "couchpotato_category (optional)",
-    "label": "CouchPotato Category Name",
+    "id": "couchpotato_category",
+    "label": "CouchPotato Category Name (optional)",
     "type": "text",
     "default": ""
   },
@@ -95,7 +95,7 @@
   },
   {
     "id": "sonarr_path",
-    "label": "Root folder for Show media to be placed in (optional)",
+    "label": "Root folder for Show to be placed in (optional)",
     "type": "text",
     "default": ""
   },
