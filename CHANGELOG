@@ -1,4 +1,4 @@
-2/19/16 - 0.6.8 - Use unique sessions for each login. Check admin user using plex.tv
+2/19/16 - 0.6.8 - Use unique sessions for each login. Option to check admin user using plex.tv. Add Season Folder option to Sonarr.
 2/17/16 - 0.6.7 - Add preliminary SickRage support. Ability to rename users.
 2/16/16 - 0.6.6 - Fixed sending to Couchpotato when using TMDB. Also added posters when confirming request in Plex Web
 2/15/16 - 0.6.5 - Fixes for managing users. More specific user information displayed and cosmetic improvements.
