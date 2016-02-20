@@ -149,7 +149,8 @@ class Session:
                     self.locked = False
                 oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="View Requests"))  # No password needed this session
             else:
-                oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword), title="View Requests"))  # Set View Requests to locked and ask for password
+                oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword),
+                                       title="View Requests"))  # Set View Requests to locked and ask for password
         if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title="Manage Sonarr"))
         if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
@@ -210,7 +211,7 @@ class Session:
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not self.is_admin:
             if Dict['register'].get(self.token, None) and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
-                                title1="Main Menu", title2="Weekly Limit")
+                                     title1="Main Menu", title2="Weekly Limit")
         if self.token in Dict['blocked']:
             return self.MainMenu(message="Sorry you have been blocked.", title1="Main Menu", title2="User Blocked")
         if Prefs['movie_db'] == "TheMovieDatabase":
@@ -377,7 +378,7 @@ class Session:
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.MainMenu(message="Sorry you have reached your weekly request limit of " + Prefs['weekly_limit'] + ".",
-                                title1="Main Menu", title2="Weekly Limit")
+                                     title1="Main Menu", title2="Weekly Limit")
         if self.token in Dict['blocked']:
             return self.MainMenu(message="Sorry you have been blocked.",
                                  title1="Main Menu", title2="User Blocked")
@@ -1199,7 +1200,7 @@ class Session:
                     Log.Debug(JSON.StringFromObject(resp))
                     return MessageContainer(header=TITLE, message="Error retrieving from " + Prefs['sickbeard_fork'] + " TVDB id: " + series_id)
                 return self.ManageSickbeardShow(series_id=series_id, title="", callback=callback,
-                                           message="Series sent to " + Prefs['sickbeard_fork'])
+                                                message="Series sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
@@ -1210,7 +1211,7 @@ class Session:
                     data = dict(cmd='episode.setstatus', tvdbid=series_id, season=s, status="wanted")
                     JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
                 return self.ManageSickbeardShow(series_id=series_id, callback=callback,
-                                           message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
+                                                message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
@@ -1221,7 +1222,7 @@ class Session:
                     data = dict(cmd='episode.setstatus', tvdbid=series_id, season=seasons, episode=e, status="wanted")
                     JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
                 return self.ManageSickbeardSeason(series_id=series_id, season=seasons, callback=callback,
-                                             message="Episode(s) sent to " + Prefs['sickbeard_fork'])
+                                                  message="Episode(s) sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
@@ -1507,7 +1508,7 @@ def checkAdmin(toke):
         if resp.read():
             if Dict['debug']:
                 Log("Debug is true")
-                Log.Debug(resp.read())
+                Log.Debug(str(resp.read()))
             return True
     except:
         pass
@@ -1539,8 +1540,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',
-                                                                                                 "TVDB") + " id: " + req_id + "\nPoster: " + \
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
+                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             else:
                 return
@@ -1564,15 +1565,15 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
                 title = "Plex Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + movie.get('source',
-                                                                                                 "IMDB") + " id: " + req_id + "\nPoster: " + \
+                message = user + " has requested a new movie.\n" + title_year + "\n" + \
+                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
                 title = "Plex Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + tv.get('source',
-                                                                                                 "TVDB") + " id: " + req_id + "\nPoster: " + \
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
+                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             else:
                 return
