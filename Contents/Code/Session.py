@@ -1500,7 +1500,7 @@ class Session:
 def checkAdmin(toke):
     import urllib2
     try:
-        req = urllib2.Request("http://plex.tv/user/account", headers={'X-Plex-Token': toke})
+        req = urllib2.Request("http://plex.tv/users/account", headers={'X-Plex-Token': toke})
         resp = urllib2.urlopen(req)
         if resp.read():
             if Dict['debug']:
