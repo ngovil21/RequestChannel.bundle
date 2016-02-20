@@ -13,6 +13,12 @@
     "default": false
   },
   {
+    "id": "plextv",
+    "label": "Authenticate admin user through Plex.tv (Use if you do not have Plex Home enabled)",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "password",
     "label": "View Requests Password",
     "type": "text",
@@ -58,7 +64,7 @@
     "default": ""
   },
   {
-    "id": "couchpotato_category",
+    "id": "couchpotato_category (optional)",
     "label": "CouchPotato Category Name",
     "type": "text",
     "default": ""
@@ -83,19 +89,25 @@
   },
   {
     "id": "sonarr_profile",
-    "label": "Sonarr Profile",
+    "label": "Sonarr Quality Profile",
     "type": "text",
     "default": ""
   },
   {
     "id": "sonarr_path",
-    "label": "Sonarr Download Path",
+    "label": "Root folder for Show media to be placed in (optional)",
     "type": "text",
     "default": ""
   },
   {
+    "id": "sonarr_seasonfolder",
+    "label": "Create season folders?",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "sonarr_monitor",
-    "label": "Monitor Seasons",
+    "label": "Monitor Seasons (manual will allow selecting of seasons/episodes after adding)",
     "type": "enum",
     "values": ["manual","all", "future", "latest", "first", "missing", "existing", "none"],
     "default": "none"
@@ -127,7 +139,7 @@
   },
   {
     "id": "sickbeard_language",
-    "label": "Sickbeard Language",
+    "label": "Sickbeard Language (required if using SickRage)",
     "type": "text",
     "default": ""
   },
@@ -139,20 +151,20 @@
   },
   {
     "id": "sickbeard_status",
-    "label": "Sickbeard Initial Status of episodes",
+    "label": "Sickbeard Initial Status of episodes (manual will allow selecting of seasons/episodes after adding)",
     "type": "enum",
     "values": ["manual","wanted","skipped","archived","ignored"],
     "default": "wanted"
   },
   {
     "id": "sickbeard_initial",
-    "label": "Sickbeard Initial Qualities (|)",
+    "label": "Sickbeard Initial Qualities, separated with | (optional)",
     "type": "text",
     "default": ""
   },
   {
     "id": "sickbeard_archive",
-    "label": "Sickbeard Archive Qualities (|)",
+    "label": "Sickbeard Archive Qualities separated with | (optional)",
     "type": "text",
     "default": ""
   },

@@ -785,7 +785,8 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
         options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'qualityProfileId': int(profile_id),
-                   'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath, 'seasons': found_show['seasons'], 'monitored': True}
+                   'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath, 'seasons': found_show['seasons'], 'monitored': True,
+                   'seasonFolder': Prefs['sonarr_seasonfolder']}
 
         add_options = {'ignoreEpisodesWithFiles': False,
                        'ignoreEpisodesWithoutFiles': False,
@@ -1503,11 +1504,11 @@ class Session:
 def checkAdmin(toke):
     import urllib2
     try:
-        req = urllib2.Request("https://plex.tv/users/account", headers={'X-Plex-Token': toke})
+        url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://127.0.0.1:32400/"
+        req = urllib2.Request(url, headers={'X-Plex-Token': toke})
         resp = urllib2.urlopen(req)
         if resp.read():
             if Dict['debug']:
-                Log("Debug is true")
                 Log.Debug(str(resp.read()))
             return True
     except:
