@@ -103,7 +103,7 @@ class Session:
         Log.Debug("Platform: " + str(Client.Platform))
         Log.Debug("Product: " + str(Client.Product))
         try:
-            HTTP.Request("http://127.0.0.1:32400/library")  # Do a http request so header is set
+            HTTP.Request("http://127.0.0.1:32400")  # Do a http request so header is set
         except:
             pass
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -1500,7 +1500,7 @@ class Session:
 def checkAdmin(toke):
     import urllib2
     try:
-        req = urllib2.Request("http://127.0.0.1:32400/myplex/account", headers={'X-Plex-Token': toke})
+        req = urllib2.Request("http://plex.tv/user/account", headers={'X-Plex-Token': toke})
         resp = urllib2.urlopen(req)
         if resp.read():
             if Dict['debug']:
