@@ -1506,6 +1506,7 @@ def checkAdmin(toke):
         resp = urllib2.urlopen(req)
         if resp.read():
             if Dict['debug']:
+                Log("Debug is true")
                 Log.Debug(resp.read())
             return True
     except:
