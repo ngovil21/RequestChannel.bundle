@@ -72,6 +72,8 @@ def Start():
         Dict['sickbeard_users'] = []
     if 'debug' not in Dict:
         Dict['debug'] = False
+    if 'DumbKeyboard-History' not in Dict:
+        Dict['DumbKeyboard-History'] = []
     Dict.Save()
 
 

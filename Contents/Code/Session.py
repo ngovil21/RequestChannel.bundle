@@ -9,7 +9,7 @@ PREFIX = '/video/plexrequestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.6.8"
+VERSION = "0.6.8b"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -579,20 +579,14 @@ class Session:
                 d = requests[req_id]
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d['automated']:
+                if d.get('automated',False):
                     title_year = "+ " + title_year
-                if d['poster']:
-                    thumb = d['poster']
-                else:
-                    thumb = R('no-poster.jpg')
-                if d['summary']:
-                    summary = d['summary']
-                else:
-                    summary = ""
-                if d['user']:
+                thumb = d/get('poster', R('no-poster.jpg'))
+                summary = d.get('summary', "")
+                if d.get('user',None):
                     summary += " (Requested by " + d['user'] + ") "
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type']), rating_key=req_id, title=title_year,
-                                    thumb=thumb, summary=summary, art=d['backdrop']))
+                                    thumb=thumb, summary=summary, art=d.get('backdrop',None)))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         if len(oc) > 1 and self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests), title="Clear All Requests", thumb=R('trash.png')))
@@ -609,15 +603,15 @@ class Session:
             oc.add(InputDirectoryObject(key=Callback(self.ViewRequests), title="Enter password:", prompt="Please enter the password:"))
         return oc
 
-    def ConfirmDeleteRequests(self, locked='unlocked'):
+    def ConfirmDeleteRequests(self):
         oc = ObjectContainer(title2="Are you sure you would like to clear all requests?")
-        if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
+        if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         oc.add(DirectoryObject(key=Callback(self.ClearRequests), title="Yes", thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="No", thumb=R('x-mark.png')))
         return oc
 
-    def ClearRequests(self, locked='unlocked'):
+    def ClearRequests(self):
         if not self.is_admin:
             return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         Dict['tv'] = {}

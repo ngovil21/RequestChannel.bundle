@@ -25,11 +25,14 @@ class DumbKeyboard:
         Route.Connect(prefix + '/dumbkeyboard/%s/history' % cb_hash, self.History)
         Route.Connect(prefix + '/dumbkeyboard/%s/history/clear' % cb_hash, self.ClearHistory)
         Route.Connect(prefix + '/dumbkeyboard/%s/history/add/{query}' % cb_hash, self.AddHistory)
-        Log.Debug("Generated Routes")
+        Log.Debug("Generated Keyboard Routes")
         # Log.Debug(str(Callback(self.Keyboard)))
         # Add our directory item
         oc.add(DirectoryObject(key=Callback(self.Keyboard, query=dkplaceholder, message=message),
                                title=str(dktitle) if dktitle else u'%s' % 'DumbKeyboard Search', thumb=dkthumb))
+
+        if 'DumbKeyboard-History' not in Dict:
+            Dict['DumbKeyboard-History'] = []
 
         self.Callback = callback
         self.callback_args = kwargs
