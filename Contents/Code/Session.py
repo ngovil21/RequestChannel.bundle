@@ -581,7 +581,7 @@ class Session:
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated',False):
                     title_year = "+ " + title_year
-                thumb = d/get('poster', R('no-poster.jpg'))
+                thumb = d.get('poster', R('no-poster.jpg'))
                 summary = d.get('summary', "")
                 if d.get('user',None):
                     summary += " (Requested by " + d['user'] + ") "
@@ -624,12 +624,15 @@ class Session:
         title_year = key['title']
         title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
             'title']  # If there is already a year in the title, just use title
+        summary = d.get('summary', "")
+        if d.get('user', None):
+            summary += " (Requested by " + d['user'] + ") "
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
-            oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), rating_key=req_id, thumb=key['poster'],
-                                summary=key['summary'], title=title_year))
+            oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), rating_key=req_id, thumb=key.get('poster',None),
+                                summary=summary, title=title_year))
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year),
                                    title="Delete Request", thumb=R('x-mark.png')))
