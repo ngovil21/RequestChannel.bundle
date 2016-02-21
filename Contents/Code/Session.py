@@ -584,7 +584,7 @@ class Session:
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = d.get('summary', "")
                 if d.get('user',None):
-                    summary += " (Requested by " + d['user'] + ") "
+                    summary = " (Requested by " + d['user'] + ")   " + summary
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type']), rating_key=req_id, title=title_year,
                                     thumb=thumb, summary=summary, art=d.get('backdrop',None)))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
@@ -626,7 +626,7 @@ class Session:
             'title']  # If there is already a year in the title, just use title
         summary = key.get('summary', "")
         if key.get('user', None):
-            summary += " (Requested by " + key['user'] + ") "
+            summary = " (Requested by " + key['user'] + ")   " + summary
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
