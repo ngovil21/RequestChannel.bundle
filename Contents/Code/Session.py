@@ -1501,7 +1501,7 @@ class Session:
 def checkAdmin(toke):
     import urllib2
     try:
-        url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://127.0.0.1:32400/"
+        url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://127.0.0.1:32400/myplex/account"
         req = urllib2.Request(url, headers={'X-Plex-Token': toke})
         resp = urllib2.urlopen(req)
         if resp.read():
