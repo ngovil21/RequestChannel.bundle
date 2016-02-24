@@ -1012,7 +1012,7 @@ class Session:
             sickbeard_url += "/"
         title = Dict['tv'][tvdbid]['title']
 
-        if SickbeardShowExists(tvdbid):
+        if self.SickbeardShowExists(tvdbid):
             Dict['tv'][tvdbid]['automated'] = True
             return self.ManageSickbeardShow(series_id=tvdbid, callback=callback)
 
@@ -1055,7 +1055,7 @@ class Session:
         if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
             count = 0
             while count < 5:
-                if SickbeardShowExists(tvdbid):
+                if self.SickbeardShowExists(tvdbid):
                     return self.ManageSickbeardShow(tvdbid, title=title, callback=callback)
                 Thread.Sleep(1)
                 Log.Debug("Slept for " + str(count) + " seconds")
