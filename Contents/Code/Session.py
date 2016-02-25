@@ -810,18 +810,16 @@ class Session:
         options['addOptions'] = add_options
         values = JSON.StringFromObject(options)
         try:
-            Log.Debug("Making Request")
             resp = HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
-            Log.Debug(resp.content)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr")
             else:
                 oc = ObjectContainer(title1="Sonarr", title2="Success")
             Log.Debug("Setting series automated to true")
-            Dict['tv'][series_id]['automated'] = True
+            Dict['tv'][tvdbid]['automated'] = True
         except Exception as e:
             Log.Debug(e.message)
-            Log.Debug(str(Response.Status))
+            Log.Debug("Response Status: " + str(Response.Status))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
             else:
