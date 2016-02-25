@@ -827,12 +827,12 @@ class Session:
             return self.ManageSonarrShow(series_id, title=title, callback=callback)
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title),
-                                   title="Delete Request"))
+                                   title="Delete Request", thumb=R('trash.png')))
         if callback:
-            oc.add(DirectoryObject(key=callback, title="Return"))
+            oc.add(DirectoryObject(key=callback, title="Return", thumb=R('return.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests"))
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('plexrequestchannel.png')))
         return oc
 
     def ManageSonarr(self):
