@@ -874,7 +874,7 @@ class Session:
                         if Dict['debug']:
                             Log.Debug(str(traceback.format_exc()))  # raise e
             oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId',0),
-                                title=show['title'], thumb=poster, summary=show['overview']))
+                                title=show['title'], thumb=poster, summary=show.get('overview',"")))
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
