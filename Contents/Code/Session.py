@@ -816,7 +816,8 @@ class Session:
             else:
                 oc = ObjectContainer(title1="Sonarr", title2="Success")
             Dict['tv'][series_id]['automated'] = True
-        except:
+        except Exception as e:
+            Log.Debug(e.message)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
             else:
