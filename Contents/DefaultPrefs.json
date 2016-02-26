@@ -215,6 +215,12 @@
     "label": "SMTP Server Port",
     "type": "text",
     "default": ""
+  }
+  {
+    "id": "email_secure",
+    "label": "Use TLS",
+    "type": "boolean",
+    "default": "false"
   },
   {
     "id": "email_username",

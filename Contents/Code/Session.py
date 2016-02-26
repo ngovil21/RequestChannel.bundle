@@ -1729,7 +1729,7 @@ def sendEmail(subject, body, email_type='html'):
     msg['Date'] = formatdate(localtime=True)
     msg.attach(MIMEText(body, email_type))
     server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
-    if int(Prefs['email_port']) > 25:
+    if Prefs['email_secure']:
         server.ehlo()
         server.starttls()
         server.ehlo()
