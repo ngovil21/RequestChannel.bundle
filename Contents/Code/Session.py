@@ -1719,18 +1719,20 @@ def sendPushover(title, message):
 def sendEmail(subject, body, email_type='html'):
     from email.MIMEText import MIMEText
     from email.MIMEMultipart import MIMEMultipart
+    from email.Utils import formatdate
     import smtplib
 
     msg = MIMEMultipart()
     msg['From'] = Prefs['email_from']
     msg['To'] = Prefs['email_to']
     msg['Subject'] = subject
+    msg['Date'] = formatdate(localtime=True)
     msg.attach(MIMEText(body, email_type))
     server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
-    server.ehlo()
     if int(Prefs['email_port']) > 25:
+        server.ehlo()
         server.starttls()
-    server.ehlo()
+        server.ehlo()
     if Prefs['email_username']:
         server.login(Prefs['email_username'], Prefs['email_password'])
     text = msg.as_string()
