@@ -1536,7 +1536,7 @@ class Session:
         if len(dirs) > 0:
             for d in dirs:
                 type = d.attrib.get('type', None)
-                if type == 'show' and 'filter' not in d.attrib:
+                if type == 'show' and 'filters' not in d.attrib:
                     oc.add(
                         TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
                                      summary=d.get('summary'), thumb=d.get('thumb')))
