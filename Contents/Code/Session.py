@@ -1513,7 +1513,7 @@ class Session:
             path = "/library/sections"
             parent = None
         else:
-            parent = path[:path.rfind("/")]
+            parent = path[:path.rfind("/")-1]
         # headers = {'X-Plex-Token': self.token}
         try:
             page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
