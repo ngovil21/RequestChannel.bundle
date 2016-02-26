@@ -219,7 +219,7 @@
   {
     "id": "email_secure",
     "label": "Use TLS",
-    "type": "boolean",
+    "type": "bool",
     "default": "false"
   },
   {
