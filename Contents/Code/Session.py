@@ -780,8 +780,6 @@ class Session:
                 profile_id = profile['id']
                 break
         rootFolderPath = ""
-        if Dict['debug']:
-            Log.Debug(Prefs['sonarr_path'])
         if Prefs['sonarr_path']:
             rootFolderPath = Prefs['sonarr_path']
         else:
