@@ -1728,7 +1728,8 @@ def sendEmail(subject, body, email_type='html'):
     msg.attach(MIMEText(body, email_type))
     server = smtplib.SMTP(Prefs['email_server'], int(Prefs['email_port']))
     server.ehlo()
-    server.starttls()
+    if int(Prefs['email_port']) > 25:
+        server.starttls()
     server.ehlo()
     if Prefs['email_username']:
         server.login(Prefs['email_username'], Prefs['email_password'])
