@@ -1490,7 +1490,7 @@ class Session:
 
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2="Report Problem")
-        oc.add(DirectoryObject(key=Callback(ReportProblemMedia), title="Report Problem with Media"))
+        oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia), title="Report Problem with Media"))
         if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
