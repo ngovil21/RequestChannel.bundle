@@ -797,7 +797,8 @@ class Session:
                        'searchForMissingEpisodes': True
                        }
         if Prefs['sonarr_monitor'] == 'manual':
-            options['monitored'] = True
+            add_options['ignoreEpisodesWithFiles'] = True
+            add_options['ignoreEpisodesWithoutFiles'] = True
         elif Prefs['sonarr_monitor'] == 'all':
             for season in options['seasons']:
                 season['monitored'] = True
@@ -1729,7 +1730,8 @@ def sendEmail(subject, body, email_type='html'):
     server.ehlo()
     server.starttls()
     server.ehlo()
-    server.login(Prefs['email_username'], Prefs['email_password'])
+    if Prefs['email_username']:
+        server.login(Prefs['email_username'], Prefs['email_password'])
     text = msg.as_string()
     senders = server.sendmail(Prefs['email_from'], Prefs['email_to'], text)
     server.quit()
