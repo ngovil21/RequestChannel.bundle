@@ -1489,7 +1489,7 @@ class Session:
 
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2="Report Problem")
-        # oc.add(DirectoryObject(key=Callback(ReportProblemMedia), title="Report Problem with Media"))
+        oc.add(DirectoryObject(key=Callback(ReportProblemMedia), title="Report Problem with Media"))
         if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
@@ -1505,6 +1505,28 @@ class Session:
                 InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title="Report a General Problem",
                                      prompt="What is the Problem?"))
         return oc
+
+    def ReportProblemMedia(self, path=None):
+        if not path:
+            path = "/library/sections"
+        # headers = {'X-Plex-Token': self.token}
+        try:
+            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
+        except:
+            if Dict['debug']:
+                Log.Debug(str(traceback.format_exc()))  # raise e
+            return MessageContainer(header=TITLE, message="Unable to navigate path!")
+        container = page.xpath("/MediaContainer")[0]
+        title = container.attrib.get('title1',"")
+        oc = ObjectContainer(title1="Report Problem", title2=title)
+        dirs = page.xpath("//Directory")
+        if len(dirs) > 0:
+            for d in dirs:
+                oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, path = path + "/" + d.attrib['key'], title=d.attrib['title']), title=d.attrib['title'], thumb=d.attrib['thumb']))
+
+
+        return oc
+
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -1524,9 +1546,6 @@ class Session:
                                      prompt="What is the problem?"))
         return oc
 
-    def ReportProblemMedia(self):
-        oc = ObjectContainer()
-        return oc
 
     def ConfirmReportProblem(self, query=""):
         oc = ObjectContainer(title1="Confirm", title2=query)
