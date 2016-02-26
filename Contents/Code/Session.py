@@ -1548,15 +1548,15 @@ class Session:
         vids = page.xpath("//Video")
         if len(vids) > 0:
             for v in vids:
-                type = d.attrib.get('type', None)
+                type = v.attrib.get('type', None)
                 if type == 'movie':
-                    oc.add(MovieObject(key=Callback(self.ReportProblemMedia, rating_key=d.attrib['ratingKey'], title=d.get('title')),
-                                       title=d.get('title'), rating_key=d.get('ratingKey', "0"),
-                                       summary=d.get('summary'), thumb=d.get('thumb')))
+                    oc.add(MovieObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
+                                       title=v.get('title'), rating_key=v.get('ratingKey', "0"),
+                                       summary=v.get('summary'), thumb=v.get('thumb')))
                 elif type == 'episode':
-                    oc.add(EPisodeObject(key=Callback(self.ReportProblemMedia, rating_key=d.attrib['ratingKey'], title=d.get('title')),
-                                         title=d.get('title'), rating_key=d.get('ratingKey', "0"),
-                                         summary=d.get('summary'), thumb=d.get('thumb')))
+                    oc.add(EPisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
+                                         title=v.get('title'), rating_key=v.get('ratingKey', "0"),
+                                         summary=v.get('summary'), thumb=v.get('thumb')))
         return oc
 
     def ReportProblemMedia(self, rating_key, title):
