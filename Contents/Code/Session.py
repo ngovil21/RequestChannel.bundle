@@ -1542,14 +1542,21 @@ class Session:
                     oc.add(
                         SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
                                      summary=d.get('summary'), thumb=d.get('thumb')))
-                elif type == 'movie':
-                    oc.add(MovieObject(key=Callback(self.ReportProblemMedia, rating_key=d.attrib['ratingKey'], title=d.get('title')),
-                                       title=d.get('title'), rating_key=d.get('ratingKey', "0"),
-                                       summary=d.get('summary'), thumb=d.get('thumb')))
                 else:
                     oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=path + "/" + d.attrib['key']), title=d.attrib.get('title', ""),
                                            thumb=d.attrib.get('thumb', None)))
-
+        vids = page.xpath("//Video")
+        if len(vids) > 0:
+            for v in vids:
+                type = d.attrib.get('type', None)
+                if type == 'movie':
+                    oc.add(MovieObject(key=Callback(self.ReportProblemMedia, rating_key=d.attrib['ratingKey'], title=d.get('title')),
+                                       title=d.get('title'), rating_key=d.get('ratingKey', "0"),
+                                       summary=d.get('summary'), thumb=d.get('thumb')))
+                elif type == 'episode':
+                    oc.add(EPisodeObject(key=Callback(self.ReportProblemMedia, rating_key=d.attrib['ratingKey'], title=d.get('title')),
+                                         title=d.get('title'), rating_key=d.get('ratingKey', "0"),
+                                         summary=d.get('summary'), thumb=d.get('thumb')))
         return oc
 
     def ReportProblemMedia(self, rating_key, title):
