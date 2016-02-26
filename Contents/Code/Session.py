@@ -584,14 +584,14 @@ class Session:
                 d = requests[req_id]
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('automated',False):
+                if d.get('automated', False):
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = d.get('summary', "")
-                if d.get('user',None):
+                if d.get('user', None):
                     summary = " (Requested by " + d['user'] + ")   " + summary
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type']), rating_key=req_id, title=title_year,
-                                    thumb=thumb, summary=summary, art=d.get('backdrop',None)))
+                                    thumb=thumb, summary=summary, art=d.get('backdrop', None)))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         if len(oc) > 1 and self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests), title="Clear All Requests", thumb=R('trash.png')))
@@ -636,7 +636,7 @@ class Session:
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
-            oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), rating_key=req_id, thumb=key.get('poster',None),
+            oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), rating_key=req_id, thumb=key.get('poster', None),
                                 summary=summary, title=title_year))
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year),
@@ -828,7 +828,7 @@ class Session:
             Dict['tv'][tvdbid]['automated'] = True
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             Log.Debug("Response Status: " + str(Response.Status))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -863,7 +863,7 @@ class Session:
             shows = JSON.ObjectFromURL(sonarr_url + "/api/Series", headers=api_header)
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message="Error retrieving Sonarr Shows")
         for show in shows:
@@ -875,8 +875,8 @@ class Session:
                     except Exception:
                         if Dict['debug']:
                             Log.Debug(str(traceback.format_exc()))  # raise e
-            oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId',0),
-                                title=show['title'], thumb=poster, summary=show.get('overview',"")))
+            oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId', 0),
+                                title=show['title'], thumb=poster, summary=show.get('overview', "")))
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
         return oc
@@ -895,7 +895,7 @@ class Session:
             show = JSON.ObjectFromURL(sonarr_url + "/api/Series/" + str(series_id), headers=api_header)
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -964,7 +964,7 @@ class Session:
             show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + str(series_id))
         if seasons == 'all':
@@ -978,7 +978,7 @@ class Session:
                 return self.ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback, message="Series sent to Sonarr")
             except Exception as e:
                 if Dict['debug']:
-                    Log.Debug(str(traceback.format_exc()))                 # raise e
+                    Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message="Error sending series to Sonarr")
         elif episodes == 'all':
@@ -995,7 +995,7 @@ class Session:
                 return self.ManageSonarrShow(series_id=series_id, callback=callback, message="Season(s) sent sent to Sonarr")
             except Exception as e:
                 if Dict['debug']:
-                    Log.Debug(str(traceback.format_exc()))                 # raise e
+                    Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message="Error sending season to Sonarr")
         else:
@@ -1011,7 +1011,7 @@ class Session:
                 return self.ManageSonarrSeason(series_id=series_id, season=seasons, callback=callback, message="Episode sent to Sonarr")
             except Exception as e:
                 if Dict['debug']:
-                    Log.Debug(str(traceback.format_exc()))                 # raise e
+                    Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message="Error sending episode to Sonarr")
                 # return self.MainMenu()
@@ -1080,7 +1080,7 @@ class Session:
                     oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
             Log.Debug(e.message)
         # Thread.Sleep(2)
@@ -1121,7 +1121,7 @@ class Session:
                         rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Shows")
         oc.objects.sort(key=lambda obj: obj.title.lower())
@@ -1147,7 +1147,7 @@ class Session:
                                         message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (title if title else str(series_id)))
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (title if title else str(series_id)))
@@ -1190,7 +1190,7 @@ class Session:
                                             season))
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
@@ -1232,7 +1232,7 @@ class Session:
                                                method='GET' if use_sickrage else 'POST')
                         except:
                             if Dict['debug']:
-                                Log.Debug(str(traceback.format_exc()))                 # raise e
+                                Log.Debug(str(traceback.format_exc()))  # raise e
                             Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
                 else:
                     Log.Debug(JSON.StringFromObject(resp))
@@ -1241,7 +1241,7 @@ class Session:
                                                 message="Series sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 if Dict['debug']:
-                    Log.Debug(str(traceback.format_exc()))                 # raise e
+                    Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug(Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
         elif episodes == 'all':
@@ -1254,7 +1254,7 @@ class Session:
                                                 message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 if Dict['debug']:
-                    Log.Debug(str(traceback.format_exc()))                 # raise e
+                    Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
         else:
@@ -1267,7 +1267,7 @@ class Session:
                                                   message="Episode(s) sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
                 if Dict['debug']:
-                    Log.Debug(str(traceback.format_exc()))                 # raise e
+                    Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
                 # return self.MainMenu()
@@ -1290,7 +1290,7 @@ class Session:
                     return True
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
         Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
         return False
@@ -1510,6 +1510,9 @@ class Session:
     def ReportProblemMedia(self, path=None):
         if not path:
             path = "/library/sections"
+            parent = None
+        else:
+            parent = path[:path.rfind("/")]
         # headers = {'X-Plex-Token': self.token}
         try:
             page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
@@ -1518,16 +1521,18 @@ class Session:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
         container = page.xpath("/MediaContainer")[0]
-        title = container.attrib.get('title1',"")
+        title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
+        if parent:
+            oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia,path=parent), title="Go Up One", thumb=R('return.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
-                oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, path = path + "/" + d.attrib['key'], title=d.attrib['title']), title=d.attrib['title'], thumb=d.attrib['thumb']))
-
+                oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, path=path + "/" + d.attrib['key']), title=d.attrib['title'], thumb=d.attrib['thumb']))
 
         return oc
-
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -1546,7 +1551,6 @@ class Session:
                 InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title="Report a General Problem",
                                      prompt="What is the problem?"))
         return oc
-
 
     def ConfirmReportProblem(self, query=""):
         oc = ObjectContainer(title1="Confirm", title2=query)
@@ -1622,7 +1626,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                     Log.Debug("Pushbullet notification sent for: " + req_id)
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushbullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
@@ -1649,7 +1653,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 Log.Debug("Pushover notification sent for :" + req_id)
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['email_to']:
         try:
@@ -1684,7 +1688,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Email notification sent for: " + req_id)
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug("Email failed: " + e.message)
 
 
@@ -1695,7 +1699,7 @@ def Notify(title, body, devices=None):
                 Log.Debug("Email notification sent")
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug("Email failed: " + e.message)
     if Prefs['pushbullet_api']:
         try:
@@ -1707,7 +1711,7 @@ def Notify(title, body, devices=None):
                 Log.Debug("Pushbullet notification sent")
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug("PushBullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
@@ -1715,7 +1719,7 @@ def Notify(title, body, devices=None):
                 Log.Debug("Pushover notification sent")
         except Exception as e:
             if Dict['debug']:
-                Log.Debug(str(traceback.format_exc()))                 # raise e
+                Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
 
 
