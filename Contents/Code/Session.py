@@ -797,7 +797,7 @@ class Session:
                        'searchForMissingEpisodes': True
                        }
         if Prefs['sonarr_monitor'] == 'manual':
-            options['monitored'] = False
+            options['monitored'] = True
         elif Prefs['sonarr_monitor'] == 'all':
             for season in options['seasons']:
                 season['monitored'] = True
