@@ -215,7 +215,7 @@
     "label": "SMTP Server Port",
     "type": "text",
     "default": ""
-  }
+  },
   {
     "id": "email_secure",
     "label": "Use TLS",
