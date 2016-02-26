@@ -1530,7 +1530,7 @@ class Session:
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
-                oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, path=path + "/" + d.attrib['key']), title=d.attrib['title'], thumb=d.attrib['thumb']))
+                oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, path=path + "/" + d.attrib['key']), title=d.attrib.get('title',""), thumb=d.attrib.get('thumb',None)))
 
         return oc
 
