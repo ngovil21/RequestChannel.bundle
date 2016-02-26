@@ -1524,6 +1524,8 @@ class Session:
         container = page.xpath("/MediaContainer")[0]
         if 'parentKey' in container.attrib:
             parent = container.get("parentKey", None)
+        elif 'librarySectionID' in container.attrib:
+            parent = "/library/sections" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
         if parent:
@@ -1534,7 +1536,7 @@ class Session:
         if len(dirs) > 0:
             for d in dirs:
                 type = d.attrib.get('type', None)
-                if type == 'show':
+                if type == 'show' and 'filter' not in d.attrib:
                     oc.add(
                         TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
                                      summary=d.get('summary'), thumb=d.get('thumb')))
@@ -1550,11 +1552,11 @@ class Session:
             for v in vids:
                 type = v.attrib.get('type', None)
                 if type == 'movie':
-                    oc.add(MovieObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
+                    oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
                                        title=v.get('title'), rating_key=v.get('ratingKey', "0"),
                                        summary=v.get('summary'), thumb=v.get('thumb')))
                 elif type == 'episode':
-                    oc.add(EPisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
+                    oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
                                          title=v.get('title'), rating_key=v.get('ratingKey', "0"),
                                          summary=v.get('summary'), thumb=v.get('thumb')))
         return oc
