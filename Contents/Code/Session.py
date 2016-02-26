@@ -1522,13 +1522,13 @@ class Session:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
         container = page.xpath("/MediaContainer")[0]
-        view_group = container.get('viewGroup','list')
+        view_group = container.get('viewGroup','secondary')
         if 'parentKey' in container.attrib:
             parent = container.get("parentKey", None)
         elif 'librarySectionID' in container.attrib:
             parent = "/library/sections/" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
-        oc = ObjectContainer(title1="Report Problem", title2=title, view_group=view_group)
+        oc = ObjectContainer(title1="Report Problem", title2=title, content=view_group)
         if parent:
             oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=parent), title="Go Up One", thumb=R('return.png')))
         else:
