@@ -1525,7 +1525,7 @@ class Session:
         if 'parentKey' in container.attrib:
             parent = container.get("parentKey", None)
         elif 'librarySectionID' in container.attrib:
-            parent = "/library/sections" + container.attrib['librarySectionID']
+            parent = "/library/sections/" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
         if parent:
