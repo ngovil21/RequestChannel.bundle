@@ -90,6 +90,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
         Route.Connect(PREFIX + '/%s/toggledebug' % session_id, self.ToggleDebug)
         Route.Connect(PREFIX + '/%s/reportproblem' % session_id, self.ReportProblem)
+        Route.Connect(PREFIX + '/%s/reportproblemmedia' % session_id, self.NavigateMedia)
         Route.Connect(PREFIX + '/%s/reportproblemmedia' % session_id, self.ReportProblemMedia)
         Route.Connect(PREFIX + '/%s/reportgeneralproblem' % session_id, self.ReportGeneralProblem)
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
@@ -1490,7 +1491,7 @@ class Session:
 
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2="Report Problem")
-        oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia), title="Report Problem with Media"))
+        oc.add(DirectoryObject(key=Callback(self.NavigateMedia), title="Report Problem with Media"))
         if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
@@ -1507,7 +1508,7 @@ class Session:
                                      prompt="What is the Problem?"))
         return oc
 
-    def ReportProblemMedia(self, path=None):
+    def NavigateMedia(self, path=None):
         if not path:
             path = "/library/sections"
             parent = None
@@ -1521,18 +1522,38 @@ class Session:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
         container = page.xpath("/MediaContainer")[0]
+        if 'parentKey' in container.attrib:
+            parent = container.get("parentKey", None)
         title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
         if parent:
-            oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia,path=parent), title="Go Up One", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=parent), title="Go Up One", thumb=R('return.png')))
         else:
             oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
-                oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, path=path + "/" + d.attrib['key']), title=d.attrib.get('title',""), thumb=d.attrib.get('thumb',None)))
+                type = d.attrib.get('type', None)
+                if type == 'show':
+                    oc.add(
+                        TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
+                                     summary=d.get('summary'), thumb=d.get('thumb')))
+                elif type == 'season':
+                    oc.add(
+                        SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
+                                     summary=d.get('summary'), thumb=d.get('thumb')))
+                elif type == 'movie':
+                    oc.add(MovieObject(key=Callback(self.ReportProblemMedia, rating_key=d.attrib['ratingKey'], title=d.get('title')),
+                                       title=d.get('title'), rating_key=d.get('ratingKey', "0"),
+                                       summary=d.get('summary'), thumb=d.get('thumb')))
+                else:
+                    oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=path + "/" + d.attrib['key']), title=d.attrib.get('title', ""),
+                                           thumb=d.attrib.get('thumb', None)))
 
         return oc
+
+    def ReportProblemMedia(self, rating_key, title):
+        pass
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
