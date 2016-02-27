@@ -1547,7 +1547,7 @@ class Session:
                                      summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
                 elif type == 'season':
                     oc.add(
-                        SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'),
+                        TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'),
                                      rating_key=d.attrib.get('ratingKey', "0"),
                                      summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
                 else:
