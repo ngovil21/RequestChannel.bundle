@@ -1600,10 +1600,10 @@ class Session:
             #                        title="Report a General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ReportProblemMediaOther, parent_call=Callback(self.ReportProblem),
                          dktitle="Other Problem",
-                         message="What is the problem?", report)
+                         message="What is the problem?", report=report)
         else:
             oc.add(
-                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, type='media'), title="Other Problem",
+                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
                                      prompt="What is the problem?"))
 
         return oc
