@@ -1555,13 +1555,13 @@ class Session:
             for v in vids:
                 type = v.attrib.get('type', None)
                 if type == 'movie':
-                    oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
-                                        title=v.get('title'), rating_key=v.get('ratingKey', "0"),
-                                        summary=v.get('summary'), thumb=v.get('thumb')))
+                    oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
+                                        title=v.attrib.get('title'), rating_key=v.attrib.get('ratingKey', "0"),
+                                        summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
                 elif type == 'episode':
-                    oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
-                                         title=v.get('title'), rating_key=v.get('ratingKey', "0"),
-                                         summary=v.get('summary'), thumb=v.get('thumb')))
+                    oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
+                                         title=v.attrib.get('title'), rating_key=v.attrib.get('ratingKey', "0"),
+                                         summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
         return oc
 
     def ReportProblemMedia(self, rating_key, title):
