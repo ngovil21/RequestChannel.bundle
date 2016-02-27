@@ -1531,7 +1531,7 @@ class Session:
         elif 'librarySectionID' in container.attrib:
             parent = "/library/sections/" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
-        oc = ObjectContainer(title1="Report Problem", title2=title, content=view_group)
+        oc = ObjectContainer(title1="Report Problem", title2=title)
         if parent:
             oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=parent), title="Go Up One", thumb=R('return.png')))
         else:
