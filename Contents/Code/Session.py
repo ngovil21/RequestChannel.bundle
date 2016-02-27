@@ -39,6 +39,8 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 
+COMMON_MEDIA_PROBLEMS = ["Subtitles Missing", "Audio Problems", "Media Would Not Start", "File Not Available"]
+
 
 class Session:
     def __init__(self, session_id):
@@ -1513,7 +1515,7 @@ class Session:
             path = "/library/sections"
             parent = None
         else:
-            parent = path[:path.rfind("/")-1]
+            parent = path[:path.rfind("/") - 1]
         # headers = {'X-Plex-Token': self.token}
         try:
             page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
@@ -1522,7 +1524,7 @@ class Session:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
         container = page.xpath("/MediaContainer")[0]
-        view_group = container.get('viewGroup','secondary')
+        view_group = container.get('viewGroup', 'secondary')
         if 'parentKey' in container.attrib:
             parent = container.get("parentKey", None)
         elif 'librarySectionID' in container.attrib:
@@ -1554,8 +1556,8 @@ class Session:
                 type = v.attrib.get('type', None)
                 if type == 'movie':
                     oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
-                                       title=v.get('title'), rating_key=v.get('ratingKey', "0"),
-                                       summary=v.get('summary'), thumb=v.get('thumb')))
+                                        title=v.get('title'), rating_key=v.get('ratingKey', "0"),
+                                        summary=v.get('summary'), thumb=v.get('thumb')))
                 elif type == 'episode':
                     oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.get('title')),
                                          title=v.get('title'), rating_key=v.get('ratingKey', "0"),
@@ -1563,6 +1565,31 @@ class Session:
         return oc
 
     def ReportProblemMedia(self, rating_key, title):
+        oc = ObjectContainer(title1="What is the problem?", title2=title)
+        page = XML.ElementFromURL("http://127.0.0.1:32400/library/metadata/" + rating_key)
+        container = page.xpath("/MediaContainer")[0]
+        libraryTitle = container.attrib.get("librarySectionTitle", "Unknown")
+        vid = page.xpath("//Video")[0]
+        type = vid.attrib.get('type', 'unknown')
+        thumb = vid.attrib.get('thumb', None)
+        if type == 'movie':
+            if 'year' in vid.attrib:
+                title += " (" + vid.attrib['year'] + ")"
+            name = title
+        elif type == 'episode':
+            ep_num = int(vid.attrib.get('index', "1"))
+            sea_num = int(vid.attrib.get('parentIndex', "1"))
+            show_title = vid.attrib.get('grandparentTitle', "")
+            title = vid.attrib.get('title', "")
+            name = "%s - S%sxE%0d - %s" % (show_title, sea_num, ep_num, title)
+        if Client.Platform == 'Plex Web':
+            oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), title=title, thumb=thumb))
+        report = name + " in library: '" + libraryTitle + "'"
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Cancel"))
+        for problem in COMMON_MEDIA_PROBLEMS:
+            oc.add(DirectoryObject(key=Callback(self.ConfirmReportProblem,query=report + " - " + problem, type='media'), title=problem))
+
+    def ConfirmProblemMedia(self, title, ):
         pass
 
     def ReportGeneralProblem(self):
@@ -1579,25 +1606,26 @@ class Session:
                          message="What is the problem?")
         else:
             oc.add(
-                InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title="Report a General Problem",
+                InputDirectoryObject(key=Callback(self.ConfirmReportProblem, type='general'), title="Report a General Problem",
                                      prompt="What is the problem?"))
         return oc
 
-    def ConfirmReportProblem(self, query=""):
+    def ConfirmReportProblem(self, query="", type='general'):
+        if type == 'general':
+            query = "Issue: " + query
         oc = ObjectContainer(title1="Confirm", title2=query)
         oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title="Yes", thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="No", thumb=R('x-mark.png')))
         return oc
 
-    def NotifyProblem(self, problem, rating_key="", path=""):
+    def NotifyProblem(self, problem):
         title = "Plex Request Channel - Problem Reported"
         user = "A user"
         if self.token in Dict['register'] and Dict['register'][self.token]['nickname']:
             user = Dict['register'][self.token]['nickname']
-        body = user + " has reported a problem with the Plex Server. \n" + \
-               "Issue: " + problem
+        body = user + " has reported a problem with the Plex Server. \n" + problem
         Notify(title=title, body=body, devices=Prefs['pushbullet_devices'])
-        return self.MainMenu(message="The admin will be notified", title1="Main Menu", title2="Admin notified of problem")
+        return self.MainMenu(message="The admin has been notified", title1="Main Menu", title2="Admin notified of problem")
 
 
 def checkAdmin(toke):
