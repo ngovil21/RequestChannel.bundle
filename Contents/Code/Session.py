@@ -1601,6 +1601,8 @@ class Session:
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ReportProblemMediaOther, parent_call=Callback(self.ReportProblem),
                          dktitle="Other Problem",
                          message="What is the problem?", report=report)
+        elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
+            oc.add(DirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem"))
         else:
             oc.add(
                 InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
@@ -1608,7 +1610,15 @@ class Session:
 
         return oc
 
-    def ReportProblemMediaOther(self, query, report):
+    def ReportProblemMediaOther(self, query="", report=""):
+        if not query:
+            oc = ObjectContainer()
+            if Client.Platform == "Plex Web":
+                oc.message = "Enter your problem in the search box."
+            oc.add(
+                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
+                                     prompt="What is the problem?"))
+            return oc
         return self.ConfirmReportProblem(query=report + " - " + query, type='media')
 
     def ReportGeneralProblem(self):
