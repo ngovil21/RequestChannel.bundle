@@ -1612,9 +1612,9 @@ class Session:
 
     def ReportProblemMediaOther(self, query="", report=""):
         if not query:
-            oc = ObjectContainer()
+            oc = ObjectContainer(title2="Report Problem with Media")
             if Client.Platform == "Plex Web":
-                oc.message = "Enter your problem in the search box."
+                oc = ObjectContainer(header=TITLE, message = "Enter your problem in the search box.")
             oc.add(
                 InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
                                      prompt="What is the problem?"))
