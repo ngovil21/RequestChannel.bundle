@@ -1589,6 +1589,8 @@ class Session:
         for problem in COMMON_MEDIA_PROBLEMS:
             oc.add(DirectoryObject(key=Callback(self.ConfirmReportProblem,query=report + " - " + problem, type='media'), title=problem))
 
+        return oc
+
     def ConfirmProblemMedia(self, title, ):
         pass
 
