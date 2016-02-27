@@ -1526,7 +1526,7 @@ class Session:
         container = page.xpath("/MediaContainer")[0]
         view_group = container.get('viewGroup', 'secondary')
         if 'parentKey' in container.attrib:
-            parent = container.get("parentKey", None)
+            parent = container.attrib.get("parentKey", None)
         elif 'librarySectionID' in container.attrib:
             parent = "/library/sections/" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
@@ -1541,12 +1541,12 @@ class Session:
                 type = d.attrib.get('type', None)
                 if type == 'show' and 'filters' not in d.attrib:
                     oc.add(
-                        TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
-                                     summary=d.get('summary'), thumb=d.get('thumb')))
+                        TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'), rating_key=d.attrib.get('ratingKey', "0"),
+                                     summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
                 elif type == 'season':
                     oc.add(
-                        SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.get('title'), rating_key=d.get('ratingKey', "0"),
-                                     summary=d.get('summary'), thumb=d.get('thumb')))
+                        SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'), rating_key=d.attrib.get('ratingKey', "0"),
+                                     summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
                 else:
                     oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=path + "/" + d.attrib['key']), title=d.attrib.get('title', ""),
                                            thumb=d.attrib.get('thumb', None)))
