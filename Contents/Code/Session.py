@@ -92,7 +92,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
         Route.Connect(PREFIX + '/%s/toggledebug' % session_id, self.ToggleDebug)
         Route.Connect(PREFIX + '/%s/reportproblem' % session_id, self.ReportProblem)
-        Route.Connect(PREFIX + '/%s/reportproblemmedia' % session_id, self.NavigateMedia)
+        Route.Connect(PREFIX + '/%s/navigatemedia' % session_id, self.NavigateMedia)
         Route.Connect(PREFIX + '/%s/reportproblemmedia' % session_id, self.ReportProblemMedia)
         Route.Connect(PREFIX + '/%s/reportgeneralproblem' % session_id, self.ReportGeneralProblem)
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
