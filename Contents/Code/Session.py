@@ -1589,7 +1589,7 @@ class Session:
             title = vid.attrib.get('title', "")
             name = "%s - S%sxE%0d - %s" % (show_title, sea_num, ep_num, title)
         if Client.Product == 'Plex Web':
-            oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), title=title, thumb=thumb))
+            oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), rating_key=rating_key, title=title, thumb=thumb))
         report = name + " in Library: '" + libraryTitle + "'"
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
