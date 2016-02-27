@@ -94,6 +94,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/reportproblem' % session_id, self.ReportProblem)
         Route.Connect(PREFIX + '/%s/navigatemedia' % session_id, self.NavigateMedia)
         Route.Connect(PREFIX + '/%s/reportproblemmedia' % session_id, self.ReportProblemMedia)
+        Route.Connect(PREFIX + '/%s/reportproblemmediaother' % session_id, self.ReportProblemMediaOther)
         Route.Connect(PREFIX + '/%s/reportgeneralproblem' % session_id, self.ReportGeneralProblem)
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
@@ -1541,11 +1542,13 @@ class Session:
                 type = d.attrib.get('type', None)
                 if type == 'show' and 'filters' not in d.attrib:
                     oc.add(
-                        TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'), rating_key=d.attrib.get('ratingKey', "0"),
+                        TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'),
+                                     rating_key=d.attrib.get('ratingKey', "0"),
                                      summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
                 elif type == 'season':
                     oc.add(
-                        SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'), rating_key=d.attrib.get('ratingKey', "0"),
+                        SeasonObject(key=Callback(self.NavigateMedia, path=d.attrib['key']), title=d.attrib.get('title'),
+                                     rating_key=d.attrib.get('ratingKey', "0"),
                                      summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
                 else:
                     oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=path + "/" + d.attrib['key']), title=d.attrib.get('title', ""),
@@ -1559,9 +1562,11 @@ class Session:
                                         rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
                                         summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
                 elif type == 'episode':
-                    oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
-                                         rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
-                                         summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
+                    # oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
+                    #                      rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
+                    #                      summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
+                    oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
+                                           title=v.attrib.get('title'), summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
         return oc
 
     def ReportProblemMedia(self, rating_key, title):
@@ -1572,6 +1577,7 @@ class Session:
         vid = page.xpath("//Video")[0]
         type = vid.attrib.get('type', 'unknown')
         thumb = vid.attrib.get('thumb', None)
+        name = ""
         if type == 'movie':
             if 'year' in vid.attrib:
                 title += " (" + vid.attrib['year'] + ")"
@@ -1584,15 +1590,26 @@ class Session:
             name = "%s - S%sxE%0d - %s" % (show_title, sea_num, ep_num, title)
         if Client.Platform == 'Plex Web':
             oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), title=title, thumb=thumb))
-        report = name + " in library: '" + libraryTitle + "'"
+        report = name + " in Library: '" + libraryTitle + "'"
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
-            oc.add(DirectoryObject(key=Callback(self.ConfirmReportProblem,query=report + " - " + problem, type='media'), title=problem))
+            oc.add(DirectoryObject(key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, type='media'), title=problem))
+        if isClient(DUMB_KEYBOARD_CLIENTS):
+            Log.Debug("Client does not support Input. Using DumbKeyboard")
+            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
+            #                        title="Report a General Problem"))
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ReportProblemMediaOther, parent_call=Callback(self.ReportProblem),
+                         dktitle="Other Problem",
+                         message="What is the problem?", report)
+        else:
+            oc.add(
+                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, type='media'), title="Other Problem",
+                                     prompt="What is the problem?"))
 
         return oc
 
-    def ConfirmProblemMedia(self, title, ):
-        pass
+    def ReportProblemMediaOther(self, query, report):
+        return self.ConfirmReportProblem(query=report + " - " + query, type='media')
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
