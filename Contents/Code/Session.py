@@ -592,7 +592,8 @@ class Session:
                 summary = d.get('summary', "")
                 if d.get('user', None):
                     summary = " (Requested by " + d['user'] + ")   " + summary
-                oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type']), rating_key=req_id, title=title_year,
+                oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash), rating_key=req_id,
+                                    title=title_year,
                                     thumb=thumb, summary=summary, art=d.get('backdrop', None)))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         if len(oc) > 1 and self.is_admin:
@@ -626,13 +627,13 @@ class Session:
         Dict.Save()
         return self.ViewRequests(message="All requests have been cleared")
 
-    def ViewRequest(self, req_id, req_type):
+    def ViewRequest(self, req_id, req_type, token_hash=None):
         key = Dict[req_type][req_id]
         title_year = key['title']
         title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
             'title']  # If there is already a year in the title, just use title
         summary = key.get('summary', "")
-        if key.get('user', None):
+        if key.get('user'):
             summary = " (Requested by " + key['user'] + ")   " + summary
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
@@ -658,7 +659,7 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
                                                     callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv')),
                                        title="Send to " + Prefs['sickbeard_fork'], thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title="Return to View Requests", thumb=R('return.png')))
         return oc
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year=""):
