@@ -112,10 +112,10 @@ class Session:
             HTTP.Request("http://127.0.0.1:32400")  # Do a http request so header is set
         except:
             pass
+        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
+        return oc
         if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(replace_parent=True, message=message, title1=title1, title2=title2)
-        else:
-            oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2)
+            oc.message = message
         if self.is_admin:
             Log.Debug("User is Admin")
         if self.is_admin:
@@ -140,7 +140,7 @@ class Session:
             #                  message="Enter the name of the TV Show"), title="Request a TV Show"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Search for Movie"),
                          message=L("Enter the name of the movie"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle="Search for TV Show",
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Search for TV Show"),
                          message=L("Enter the name of the TV Show"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))

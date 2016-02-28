@@ -54,6 +54,7 @@ def Start():
     VideoClipObject.art = R(ART)
 
     Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
+    Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
 
     Log.Debug("Channel Version: " + VERSION)
 
