@@ -1855,7 +1855,7 @@ def isClient(obj_list):
 
 def userFromToken(token):
     if token in Dict['register']:
-        if Dict['register'][self.token]['nickname']:
+        if Dict['register'][token]['nickname']:
             return Dict['register'][token]['nickname']
         else:
             return "guest_" + Hash.SHA1(token)[:10]
