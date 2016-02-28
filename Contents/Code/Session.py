@@ -639,10 +639,12 @@ class Session:
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
-            oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), rating_key=req_id, thumb=key.get('poster', None),
+            oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type, token_hash=token_hash), rating_key=req_id,
+                                thumb=key.get('poster', None),
                                 summary=summary, title=title_year))
         if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
-            oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year),
+            oc.add(DirectoryObject(
+                key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year, token_hash=token_hash),
                                    title="Delete Request", thumb=R('x-mark.png')))
         if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
@@ -653,31 +655,33 @@ class Session:
             if Prefs['sonarr_url'] and Prefs['sonarr_api']:
                 oc.add(DirectoryObject(
                     key=Callback(self.SendToSonarr, tvdbid=req_id,
-                                 callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv')),
+                                 callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv', token_hash=token_hash)),
                     title="Send to Sonarr", thumb=R('sonarr.png')))
             if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
-                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv')),
+                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv', token_hash=token_hash)),
                                        title="Send to " + Prefs['sickbeard_fork'], thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
         oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title="Return to View Requests", thumb=R('return.png')))
         return oc
 
-    def ConfirmDeleteRequest(self, req_id, req_type, title_year=""):
+    def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
         oc = ObjectContainer(title2="Are you sure you would like to delete the request for " + title_year + "?")
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.DeleteRequest, req_id=req_id, req_type=req_type), title="Yes", thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), title="No", thumb=R('x-mark.png')))
+        oc.add(DirectoryObject(key=Callback(self.DeleteRequest, req_id=req_id, req_type=req_type, token_hash=token_hash), title="Yes",
+                               thumb=R('check.png')))
+        oc.add(DirectoryObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type, token_hash=token_hash), title="No",
+                               thumb=R('x-mark.png')))
         return oc
 
-    def DeleteRequest(self, req_id, req_type):
+    def DeleteRequest(self, req_id, req_type, token_hash=None):
         if req_id in Dict[req_type]:
             message = "Request was deleted"
             del Dict[req_type][req_id]
             Dict.Save()
         else:
             message = "Request could not be deleted"
-        return self.ViewRequests(message=message)
+        return self.ViewRequests(token_hash=token_hash, message=message)
 
     # CouchPotato Functions
     def SendToCouchpotato(self, movie_id):
