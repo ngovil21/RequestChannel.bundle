@@ -131,13 +131,6 @@ class Session:
             resetRegister()
         if isClient(DumbKeyboard.CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(
-            #     key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,), title="Search for Movie",
-            #                  message="Enter the name of the movie"),
-            #     title="Request a Movie"))
-            # oc.add(DirectoryObject(
-            #     key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,), title="Search for TV Show",
-            #                  message="Enter the name of the TV Show"), title="Request a TV Show"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Request a Movie"),
                          message=L("Enter the name of the Movie"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Request a TV Sho"),
@@ -145,6 +138,7 @@ class Session:
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
+            return oc
         else:  # All other clients
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
