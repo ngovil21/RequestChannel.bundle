@@ -131,13 +131,6 @@ class Session:
             resetRegister()
         if isClient(DumbKeyboard.CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(
-            #     key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,), title="Search for Movie",
-            #                  message="Enter the name of the movie"),
-            #     title="Request a Movie"))
-            # oc.add(DirectoryObject(
-            #     key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,), title="Search for TV Show",
-            #                  message="Enter the name of the TV Show"), title="Request a TV Show"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Request a Movie"),
                          message=L("Enter the name of the Movie"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Request a TV Sho"),
@@ -163,7 +156,7 @@ class Session:
         if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title=L("Manage Sonarr")))
         if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
-            oc.add(DirectoryObject(key=Callback(self.ManageSickbeard), title=F("Manage ", Prefs['sickbeard_fork'])))
+            oc.add(DirectoryObject(key=Callback(self.ManageSickbeard), title=F("managesickbeard", Prefs['sickbeard_fork'])))
         oc.add(DirectoryObject(key=Callback(self.ReportProblem), title=L("Report a Problem")))
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Manage Channel")))

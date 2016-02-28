@@ -8,7 +8,7 @@
   "View Requests": "View Requests",
   "View My Requests": "View My Requests",
   "Manage Sonarr": "Manage Sonarr",
-  "Manage Sickbeard": "Manage %s",
+  "managesickbeard": "Manage %s",
   "Report a Problem": "Report a Problem",
   "Manage Channel": "Manage Channel",
   "Register Device": "Register Device",
