@@ -158,6 +158,8 @@ class Session:
             else:
                 oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword),
                                        title="View Requests"))  # Set View Requests to locked and ask for password
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=Hash.SHA1(self.token)), title="View My Requests"))
         if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title="Manage Sonarr"))
         if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
@@ -554,20 +556,18 @@ class Session:
             return self.MainMenu(message="TV Show has been requested", title1=title, title2="Requested")
 
     # Request Functions
-    def ViewRequests(self, query="", message=None):
+    def ViewRequests(self, query="", token_hash=None, message=None):
+        oc = ObjectContainer(title2=message)
         if not self.locked:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(content=ContainerContent.Mixed, message=message)
-            else:
-                oc = ObjectContainer(title2=message)
-
+                oc.message = message
         elif query == Prefs['password']:
             self.locked = False
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message="Password is correct", content=ContainerContent.Mixed)
             else:
                 oc = ObjectContainer(title2="Password correct")
-        else:
+        elif not token_hash:
             return self.MainMenu(message="Password incorrect", title1="Main Menu", title2="Password incorrect")
         if not Dict['movie'] and not Dict['tv']:
             Log.Debug("There are no requests")
@@ -582,6 +582,8 @@ class Session:
             requests.update(Dict['tv'])
             for req_id in sorted(requests, key=lambda k: requests[k]['title']):
                 d = requests[req_id]
+                if token_hash and token_hash != d.get('token_hash'):
+                    continue
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -641,12 +643,12 @@ class Session:
         if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year),
                                    title="Delete Request", thumb=R('x-mark.png')))
-        if key['type'] == 'movie':
+        if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
                 oc.add(
                     DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id), title="Send to CouchPotato",
                                     thumb=R('couchpotato.png')))
-        if key['type'] == 'tv':
+        if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['sonarr_url'] and Prefs['sonarr_api']:
                 oc.add(DirectoryObject(
                     key=Callback(self.SendToSonarr, tvdbid=req_id,
@@ -1584,7 +1586,8 @@ class Session:
             title = vid.attrib.get('title', "")
             name = "%s - S%sxE%0d - %s" % (show_title, sea_num, ep_num, title)
         if Client.Product == 'Plex Web':
-            oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), rating_key=rating_key, title=title, thumb=thumb))
+            oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), rating_key=rating_key, title=title,
+                                thumb=thumb))
         report = name + " in Library: '" + libraryTitle + "'"
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
@@ -1609,7 +1612,7 @@ class Session:
         if not query:
             oc = ObjectContainer(title2="Report Problem with Media")
             if Client.Product == "Plex Web":
-                oc.message="Enter your problem in the search box."
+                oc.message = "Enter your problem in the search box."
             oc.add(
                 InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
                                      prompt="What is the problem?"))
