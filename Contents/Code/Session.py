@@ -138,7 +138,6 @@ class Session:
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
-            return oc
         else:  # All other clients
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
