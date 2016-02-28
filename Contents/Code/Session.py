@@ -113,7 +113,7 @@ class Session:
         except:
             pass
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
-        return oc
+
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc.message = message
         if self.is_admin:
@@ -139,7 +139,7 @@ class Session:
             #     key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,), title="Search for TV Show",
             #                  message="Enter the name of the TV Show"), title="Request a TV Show"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Search for Movie"),
-                         message=L("Enter the name of the movie"))
+                         message=L("Enter the name of the Movie"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Search for TV Show"),
                          message=L("Enter the name of the TV Show"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
