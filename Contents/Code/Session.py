@@ -125,6 +125,7 @@ class Session:
             return self.Register()
         elif self.token not in Dict['register']:
             Dict['register'][self.token] = {'nickname': "", 'requests': 0}
+            Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
             resetRegister()
@@ -193,6 +194,7 @@ class Session:
         if not query:
             return self.Register(message="You must enter a name. Try again.")
         Dict['register'][self.token] = {'nickname': query, 'requests': 0}
+        Dict.Save()
         return self.MainMenu(message="Your device has been registered.", title1="Main Menu", title2="Registered")
 
     def AddNewMovie(self, title="Request a Movie"):
@@ -725,6 +727,7 @@ class Session:
                 else:
                     oc = ObjectContainer(title1="Couchpotato", title2="Success")
                 Dict['movie'][movie_id]['automated'] = True
+                Dict.Save()
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
@@ -763,6 +766,7 @@ class Session:
         series_id = self.SonarrShowExists(tvdbid)
         if series_id:
             Dict['tv'][tvdbid]['automated'] = True
+            Dict.Save()
             return self.ManageSonarrShow(series_id=series_id, callback=callback)
         lookup_json = JSON.ObjectFromURL(sonarr_url + "api/Series/Lookup?term=tvdbid:" + tvdbid, headers=api_header)
         found_show = None
@@ -824,6 +828,7 @@ class Session:
                 oc = ObjectContainer(title1="Sonarr", title2="Success")
             Log.Debug("Setting series automated to true")
             Dict['tv'][tvdbid]['automated'] = True
+            Dict.Save()
         except Exception as e:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
@@ -1042,6 +1047,7 @@ class Session:
 
         if self.SickbeardShowExists(tvdbid):
             Dict['tv'][tvdbid]['automated'] = True
+            Dict.Save()
             return self.ManageSickbeardShow(series_id=tvdbid, callback=callback)
 
         data = dict(cmd='show.addnew', tvdbid=tvdbid)
@@ -1071,6 +1077,7 @@ class Session:
                 else:
                     oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
                 Dict['tv'][tvdbid]['automated'] = True
+                Dict.Save()
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=resp['message'])
@@ -1664,6 +1671,7 @@ def resetRegister():
     for key in Dict['register']:
         Dict['register'][key]['requests'] = 0
     Dict['register_reset'] = Datetime.TimestampFromDatetime(Datetime.Now())
+    Dict.Save()
 
 
 # Notifications Functions
