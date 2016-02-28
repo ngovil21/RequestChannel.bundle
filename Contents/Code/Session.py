@@ -364,15 +364,12 @@ class Session:
             user = ""
             if self.token in Dict['register']:
                 Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                if Dict['register'][self.token]['nickname']:
-                    user = Dict['register'][self.token]['nickname']
-                else:
-                    user = "guest_" + Hash.SHA1(self.token)[:10]
+                user = userFromToken(self.token)
             title_year = title
             title_year += (" (" + year + ")" if year else "")
             Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year, 'title_year': title_year,
-                                       'poster': poster,
-                                       'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
+                                       'poster': poster, 'backdrop': backdrop, 'summary': summary, 'user': user, 'token_hash': Hash.SHA1(self.token),
+                                       'automated': False}
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
@@ -541,12 +538,9 @@ class Session:
             user = ""
             if self.token in Dict['register']:
                 Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                if Dict['register'][self.token]['nickname']:
-                    user = Dict['register'][self.token]['nickname']
-                else:
-                    user = "guest_" + Hash.SHA1(self.token)[:10]
+                user = userFromToken(self.token)
             Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year, 'poster': poster,
-                                     'backdrop': backdrop, 'summary': summary, 'user': user, 'automated': False}
+                                     'backdrop': backdrop, 'summary': summary, 'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False}
             Dict.Save()
             notifyRequest(req_id=series_id, req_type='tv')
             if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
@@ -642,7 +636,7 @@ class Session:
         if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
             oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type), rating_key=req_id, thumb=key.get('poster', None),
                                 summary=summary, title=title_year))
-        if self.is_admin:
+        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year),
                                    title="Delete Request", thumb=R('x-mark.png')))
         if key['type'] == 'movie':
@@ -1323,10 +1317,7 @@ class Session:
             oc = ObjectContainer(title1="Manage Users", title2=message)
         if len(Dict['register']) > 0:
             for toke in Dict['register']:
-                if 'nickname' in Dict['register'][toke] and Dict['register'][toke]['nickname']:
-                    user = Dict['register'][toke]['nickname']
-                else:
-                    user = "guest_" + Hash.SHA1(toke)[:10]  # Get first 10 digits of token hash to identify user.
+                user = userFromToken(self.token)
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=toke),
                                     title=user + ": " + str(Dict['register'][toke]['requests'])))
@@ -1336,10 +1327,7 @@ class Session:
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
             return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
-        if 'nickname' in Dict['register'][toke] and Dict['register'][toke]['nickname']:
-            user = Dict['register'][toke]['nickname']
-        else:
-            user = "guest_" + Hash.SHA1(toke)[:10]  # Get first 10 digits of token hash to identify user.
+        user = userFromToken(self.token)
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1="Manage User", title2=user, message=message)
         else:
@@ -1855,3 +1843,11 @@ def sendEmail(subject, body, email_type='html'):
 
 def isClient(obj_list):
     return Client.Platform in obj_list or Client.Product in obj_list
+
+
+def userFromToken(token):
+    if token in Dict['register']:
+        if Dict['register'][self.token]['nickname']:
+            return Dict['register'][token]['nickname']
+        else:
+            return "guest_" + Hash.SHA1(token)[:10]
