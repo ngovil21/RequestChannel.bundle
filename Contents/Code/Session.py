@@ -1324,7 +1324,7 @@ class Session:
             oc = ObjectContainer(title1="Manage Users", title2=message)
         if len(Dict['register']) > 0:
             for toke in Dict['register']:
-                user = userFromToken(self.token)
+                user = userFromToken(toke)
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=toke),
                                     title=user + ": " + str(Dict['register'][toke]['requests'])))
