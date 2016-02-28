@@ -560,6 +560,7 @@ class Session:
         oc = ObjectContainer(title2=message)
         if not self.locked:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc.header = TITLE
                 oc.message = message
         elif query == Prefs['password']:
             self.locked = False
@@ -572,7 +573,7 @@ class Session:
         if not Dict['movie'] and not Dict['tv']:
             Log.Debug("There are no requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message="There are currently no requests.")
+                oc.message = "There are currently no requests."
             else:
                 oc = ObjectContainer(title1="View Requests", title2="No Requests")
             oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
@@ -593,8 +594,7 @@ class Session:
                 if d.get('user', None):
                     summary = " (Requested by " + d['user'] + ")   " + summary
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash), rating_key=req_id,
-                                    title=title_year,
-                                    thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+                                    title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
         oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
         if len(oc) > 1 and self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests), title="Clear All Requests", thumb=R('trash.png')))
@@ -645,7 +645,7 @@ class Session:
         if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year, token_hash=token_hash),
-                                   title="Delete Request", thumb=R('x-mark.png')))
+                title="Delete Request", thumb=R('x-mark.png')))
         if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
                 oc.add(
