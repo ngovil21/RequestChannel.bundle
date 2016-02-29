@@ -684,10 +684,10 @@ class Session:
                 imdb_id = json['imdb_id']
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message="Unable to get IMDB id for movie, add failed...")
+                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
                 else:
-                    oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
-                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests"))
+                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
                 return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
@@ -719,32 +719,32 @@ class Session:
             json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/", values=values)
             if 'success' in json and json['success']:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message="Movie Request Sent to CouchPotato!")
+                    oc = ObjectContainer(header=TITLE, message=L("Movie Request Sent to CouchPotato!"))
                 else:
-                    oc = ObjectContainer(title1="Couchpotato", title2="Success")
+                    oc = ObjectContainer(title1="Couchpotato", title2=L("Success"))
                 Dict['movie'][movie_id]['automated'] = True
                 Dict.Save()
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
+                    oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
                 else:
-                    oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
+                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
         except:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))
                 # raise e
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message="CouchPotato Send Failed!")
+                oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
             else:
-                oc = ObjectContainer(title1="CouchPotato", title2="Send Failed")
+                oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
         key = Dict['movie'][movie_id]
         title_year = key['title']
         title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year),
-                                   title="Delete Request"))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests"))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
+                                   title=L("Delete Request")))
+        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
         return oc
 
     # Sonarr Methods
@@ -819,9 +819,9 @@ class Session:
         try:
             resp = HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message="Show has been sent to Sonarr")
+                oc = ObjectContainer(header=TITLE, message=L("Show has been sent to Sonarr"))
             else:
-                oc = ObjectContainer(title1="Sonarr", title2="Success")
+                oc = ObjectContainer(title1="Sonarr", title2=L("Success"))
             Log.Debug("Setting series automated to true")
             Dict['tv'][tvdbid]['automated'] = True
             Dict.Save()
@@ -831,20 +831,20 @@ class Session:
             Log.Debug(e.message)
             Log.Debug("Response Status: " + str(Response.Status))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message="Could not send show to Sonarr!")
+                oc = ObjectContainer(header=TITLE, message=L("Could not send show to Sonarr!"))
             else:
-                oc = ObjectContainer(title1="Sonarr", title2="Send Failed")
+                oc = ObjectContainer(title1="Sonarr", title2=L("Send Failed"))
         series_id = self.SonarrShowExists(tvdbid)
         if Prefs['sonarr_monitor'] == "manual" and series_id:
             return self.ManageSonarrShow(series_id, title=title, callback=callback)
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title),
-                                   title="Delete Request", thumb=R('trash.png')))
+                                   title=L("Delete Request"), thumb=R('trash.png')))
         if callback:
-            oc.add(DirectoryObject(key=callback, title="Return", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests", thumb=R('return.png')))
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('plexrequestchannel.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests"), thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('plexrequestchannel.png')))
         return oc
 
     def ManageSonarr(self):
@@ -864,7 +864,7 @@ class Session:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message="Error retrieving Sonarr Shows")
+            return MessageContainer(header=TITLE, message=L("Error retrieving Sonarr Shows"))
         for show in shows:
             poster = None
             for image in show['images']:
@@ -877,7 +877,7 @@ class Session:
             oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId', 0),
                                 title=show['title'], thumb=poster, summary=show.get('overview', "")))
         oc.objects.sort(key=lambda obj: obj.title.lower())
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSonarrShow(self, series_id, title="", callback=None, message=None):
@@ -896,23 +896,23 @@ class Session:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + title)
+            return MessageContainer(header=TITLE, message=F("errorsonarrshow", title))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'], header=TITLE if message else None, message=message)
+            oc = ObjectContainer(title1=L("Manage Sonarr Show"), title2=show['title'], header=TITLE if message else None, message=message)
         else:
-            oc = ObjectContainer(title1="Manage Sonarr Show", title2=show['title'])
+            oc = ObjectContainer(title1=L("Manage Sonarr Show"), title2=show['title'])
         if callback:
-            oc.add(DirectoryObject(key=callback, title="Go Back", thumb=None))
+            oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=None))
         else:
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title="Return to Shows"))
         oc.add(DirectoryObject(key=Callback(self.SonarrMonitorShow, series_id=series_id, seasons='all', callback=callback),
-                               title="Monitor All Seasons", thumb=None))
+                               title=L("Monitor All Seasons"), thumb=None))
         # Log.Debug(show['seasons'])
         for season in show['seasons']:
             season_number = int(season['seasonNumber'])
             mark = "* " if season['monitored'] else ""
             oc.add(DirectoryObject(key=Callback(self.ManageSonarrSeason, series_id=series_id, season=season_number, callback=callback),
-                                   title=mark + ("Season " + str(season_number) if season_number > 0 else "Specials"),
+                                   title=mark + (L("Season ") + str(season_number) if season_number > 0 else "Specials"),
                                    thumb=None))
         return oc
 
@@ -927,14 +927,14 @@ class Session:
             'X-Api-Key': Prefs['sonarr_api']
         }
         if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+            oc = ObjectContainer(title1=L("Manage Season"), title2=L("Season ") + str(season), header=TITLE if message else None, message=message)
         else:
-            oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
+            oc = ObjectContainer(title1=L("Manage Season"), title2=L("Season ") + str(season))
         if callback:
-            oc.add(DirectoryObject(key=callback, title="Go Back"))
-        oc.add(DirectoryObject(key=Callback(self.ManageSonarrShow, series_id=series_id, callback=callback), title="Return to Seasons"))
+            oc.add(DirectoryObject(key=callback, title=L("Return")))
+        oc.add(DirectoryObject(key=Callback(self.ManageSonarrShow, series_id=series_id, callback=callback), title=L("Return to Seasons")))
         oc.add(DirectoryObject(key=Callback(self.SonarrMonitorShow, series_id=series_id, seasons=str(season), callback=callback),
-                               title="Get All Episodes", thumb=None))
+                               title=L("Get All Episodes"), thumb=None))
         # data = JSON.StringFromObject({'seriesId': series_id})
         episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
         # Log.Debug(JSON.StringFromObject(episodes))
@@ -965,7 +965,7 @@ class Session:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message="Error retrieving Sonarr Show: " + str(series_id))
+            return MessageContainer(header=TITLE, message=F("errorsonarrshow", str(series_id)))
         if seasons == 'all':
             for s in show['seasons']:
                 s['monitored'] = True
@@ -974,12 +974,12 @@ class Session:
             try:
                 HTTP.Request(url=sonarr_url + "/api/series/", data=data, headers=api_header, method='PUT')  # Post Series to monitor
                 HTTP.Request(url=sonarr_url + "/api/command", data=data2, headers=api_header)  # Search for all episodes in series
-                return self.ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback, message="Series sent to Sonarr")
+                return self.ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback, message=L("Series sent to Sonarr"))
             except Exception as e:
                 if Dict['debug']:
                     Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
-                return MessageContainer(header=Title, message="Error sending series to Sonarr")
+                return MessageContainer(header=Title, message=L("Error sending show to Sonarr"))
         elif episodes == 'all':
             season_list = seasons.split()
             for s in show['seasons']:
@@ -991,12 +991,12 @@ class Session:
                 for s in season_list:  # Search for each chosen season
                     data2 = JSON.StringFromObject({'name': 'SeasonSearch', 'seriesId': int(series_id), 'seasonNumber': int(s)})
                     HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-                return self.ManageSonarrShow(series_id=series_id, callback=callback, message="Season(s) sent sent to Sonarr")
+                return self.ManageSonarrShow(series_id=series_id, callback=callback, message=L("Season(s) sent sent to Sonarr"))
             except Exception as e:
                 if Dict['debug']:
                     Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
-                return MessageContainer(header=Title, message="Error sending season to Sonarr")
+                return MessageContainer(header=Title, message=L("Error sending season to Sonarr"))
         else:
             episode_list = episodes.split()
             try:
@@ -1007,12 +1007,12 @@ class Session:
                     HTTP.Request(sonarr_url + "/api/Episode/" + str(e), data=data, headers=api_header, method='PUT')
                 data2 = JSON.StringFromObject({'name': "EpisodeSearch", 'episodeIds': episode_list})
                 HTTP.Request(sonarr_url + "/api/command", headers=api_header, data=data2)
-                return self.ManageSonarrSeason(series_id=series_id, season=seasons, callback=callback, message="Episode sent to Sonarr")
+                return self.ManageSonarrSeason(series_id=series_id, season=seasons, callback=callback, message=L("Episode sent to Sonarr"))
             except Exception as e:
                 if Dict['debug']:
                     Log.Debug(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
-                return MessageContainer(header=Title, message="Error sending episode to Sonarr")
+                return MessageContainer(header=Title, message=L("Error sending episode to Sonarr"))
                 # return self.MainMenu()
 
     def SonarrShowExists(self, tvdbid):
