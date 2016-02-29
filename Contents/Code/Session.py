@@ -1069,20 +1069,20 @@ class Session:
             resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data, method='GET' if use_sickrage else 'POST')
             if 'result' in resp and resp['result'] == "success":
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message="Show added to " + Prefs['sickbeard_fork'])
+                    oc = ObjectContainer(header=TITLE, message=F("sickbeardshowadded", Prefs['sickbeard_fork']))
                 else:
-                    oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Success")
+                    oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2=L("Success"))
                 Dict['tv'][tvdbid]['automated'] = True
                 Dict.Save()
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=resp['message'])
                 else:
-                    oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2="Error")
+                    oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2=L("Error"))
         except Exception as e:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
-            oc = ObjectContainer(header=TITLE, message="Could not add show to " + Prefs['sickbeard_fork'])
+            oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
             Log.Debug(e.message)
         # Thread.Sleep(2)
         if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
@@ -1095,9 +1095,9 @@ class Session:
                 count += 1
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title),
-                                   title="Delete Request"))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title="Return to View Requests"))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
+                                   title=L("Delete Request")))
+        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSickbeard(self):
@@ -1124,9 +1124,9 @@ class Session:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message="Error retrieving " + Prefs['sickbeard_fork'] + " Shows")
+            return MessageContainer(header=TITLE, message=F("sickbeardshowserror", Prefs['sickbeard_fork']))
         oc.objects.sort(key=lambda obj: obj.title.lower())
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSickbeardShow(self, series_id, title="", callback=None, message=None):
@@ -1162,11 +1162,11 @@ class Session:
         else:
             oc.add(DirectoryObject(key=Callback(self.ManageSickbeard), title="Return to Shows"))
         oc.add(DirectoryObject(key=Callback(self.SickbeardMonitorShow, series_id=series_id, seasons='all', callback=callback),
-                               title="Monitor All Seasons", thumb=None))
+                               title=L("Monitor All Seasons"), thumb=None))
         # Log.Debug(show['seasons'])
         for season in resp['data']:
             oc.add(DirectoryObject(key=Callback(self.ManageSickbeardSeason, series_id=series_id, season=season, callback=callback),
-                                   title="Season " + str(season) if season > 0 else "Specials", thumb=None))
+                                   title=L("Season ") + str(season) if season > 0 else "Specials", thumb=None))
         oc.add(
             DirectoryObject(key=Callback(self.ManageSickbeardShow, series_id=series_id, title=title, callback=callback), title="Refresh"))
         return oc
@@ -1196,14 +1196,14 @@ class Session:
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(series_id) + " Season " + str(season))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season), header=TITLE if message else None, message=message)
+            oc = ObjectContainer(title1=L("Manage Season"), title2=L("Season ") + str(season), header=TITLE if message else None, message=message)
         else:
-            oc = ObjectContainer(title1="Manage Season", title2="Season " + str(season))
+            oc = ObjectContainer(title1=L("Manage Season"), title2=L("Season ") + str(season))
         if callback:
-            oc.add(DirectoryObject(key=callback, title="Go Back"))
-        oc.add(DirectoryObject(key=Callback(self.ManageSickbeardShow, series_id=series_id, callback=callback), title="Return to Seasons"))
+            oc.add(DirectoryObject(key=callback, title=L("Return")))
+        oc.add(DirectoryObject(key=Callback(self.ManageSickbeardShow, series_id=series_id, callback=callback), title=L("Return to Seasons")))
         oc.add(DirectoryObject(key=Callback(self.SickbeardMonitorShow, series_id=series_id, seasons=str(season), callback=callback),
-                               title="Get All Episodes", thumb=None))
+                               title=L("Get All Episodes"), thumb=None))
         for e in sorted(resp['data'], key=lambda s: int(s)):
             episode = resp['data'][e]
             marked = "* " if episode.get('status') == "Wanted" or episode.get('status') == "Downloaded" else ""
@@ -1299,42 +1299,42 @@ class Session:
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if message and isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
-            oc = ObjectContainer(title1="Manage", title2=message)
-        oc.add(DirectoryObject(key=Callback(self.ManageUsers), title="Manage Users"))
-        oc.add(DirectoryObject(key=Callback(self.ToggleDebug), title="Turn Debugging " + ("Off" if Dict['debug'] else "On")))
-        oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title="Reset Dictionary Settings"))
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title="Changelog"))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu"))
+            oc = ObjectContainer(title1=L("Manage"), title2=message)
+        oc.add(DirectoryObject(key=Callback(self.ManageUsers), title=L("Manage Users")))
+        oc.add(DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "Off" if Dict['debug'] else "On")))
+        oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
+        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageUsers(self, message=None):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
-            oc = ObjectContainer(title1="Manage Users", title2=message)
+            oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
             for toke in Dict['register']:
                 user = userFromToken(toke)
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=toke),
                                     title=user + ": " + str(Dict['register'][toke]['requests'])))
-        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title="Return to Manage Channel"))
+        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         user = userFromToken(self.token)
         if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(title1="Manage User", title2=user, message=message)
+            oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
-            oc = ObjectContainer(title1="Manage User", title2=message)
+            oc = ObjectContainer(title1=L("Manage User"), title2=message)
         oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke),
                                title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
         oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
@@ -1342,55 +1342,53 @@ class Session:
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
         elif Prefs['sickbeard_api']:
-            tv_auto = "Sickbeard"
-        if tv_auto and toke in Dict['sonarr_users']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='False'), title="Remove " + tv_auto + " Management"))
-        else:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='True'), title="Allow " + tv_auto + " Management"))
+            tv_auto = Prefs['sickbeard_fork']
+        if toke in Dict['sonarr_users']:
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='False'), title=F("removetvmanage", tv_auto)))
+        elif tv_auto:
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='True'), title=F("allowtvmanage", tv_auto)))
         if toke in Dict['blocked']:
-            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='False'), title="Unblock User"))
+            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='False'), title=L("Unblock User")))
         else:
-            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='True'), title="Block User"))
-        oc.add(PopupDirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='False'), title="Delete User"))
-        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title="Return to Manage Channel"))
+            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='True'), title=L("Block User")))
+        oc.add(PopupDirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='False'), title=L("Delete User")))
+        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
 
         return oc
 
     def RenameUser(self, toke, message=""):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if Client.Product == "Plex Web":
-            if message:
-                message += "\n"
-            message += " Enter your user name in the searchbox and press enter."
+            message += (" " if message else "") + L("Enter the user name in the searchbox and press enter")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
-            oc = ObjectContainer(title1=TITLE, title2="Register User Name")
+            oc = ObjectContainer(title1=TITLE, title2=L("Register User Name"))
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterUserName, parent_call=Callback(self.ManageUser, toke=toke),
-                         dktitle="Enter the user's name",
-                         message="Enter the user's name", toke=toke)
+                         dktitle=L(L("Enter the user's name")),
+                         message=L("Enter the user's name"), toke=toke)
             # return MessageContainer(header=TITLE, message="You must use a keyboard enabled client (Plex Web) to use this feature")
         else:
-            oc.add(InputDirectoryObject(key=Callback(self.RegisterUserName, toke=toke), title="Enter the user's name",
-                                        prompt="Enter the user's name"))
+            oc.add(InputDirectoryObject(key=Callback(self.RegisterUserName, toke=toke), title=L("Enter the user's name"),
+                                        prompt=L("Enter the user's name")))
         return oc
 
     def RegisterUserName(self, query="", toke=""):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if not query:
-            return self.RegisterUser(toke, message="You must enter a name. Try again.")
+            return self.RegisterUser(toke, message=L("You must enter a name. Try again."))
         Dict['register'][toke]['nickname'] = query
         Dict.Save()
-        return self.ManageUser(toke=toke, message="Username has been set")
+        return self.ManageUser(toke=toke, message=L("Username has been set"))
 
     def BlockUser(self, toke, setter):
         if setter == 'True':
             if toke in Dict['blocked']:
-                return self.ManageUser(toke=toke, message="User is already blocked.")
+                return self.ManageUser(toke=toke, message=L("User is already blocked."))
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
@@ -1425,14 +1423,14 @@ class Session:
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
             return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
-        oc = ObjectContainer(title1="Confirm Delete User?", title2=Dict['register'][toke]['nickname'])
+        oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'])
         if confirmed == 'False':
-            oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title="Yes"))
-            oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke), title="No"))
+            oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title=L("Yes")))
+            oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke), title=L("No")))
         elif confirmed == 'True':
             Dict['register'].pop(toke, None)
             Dict.Save()
-            return self.ManageUsers(message="User registration has been deleted.")
+            return self.ManageUsers(message=L("User registration has been deleted."))
         return oc
 
     def ResetDict(self, confirm='False'):
@@ -1441,11 +1439,12 @@ class Session:
         if confirm == 'False':
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE,
-                                     message="Are you sure you would like to clear all saved info? This will clear all requests and user information.")
+                                     message=L(
+                                         "Are you sure you would like to clear all saved info? This will clear all requests and user information."))
             else:
-                oc = ObjectContainer(title1="Reset Info", title2="Confirm")
-            oc.add(DirectoryObject(key=Callback(self.ResetDict, confirm='True'), title="Yes"))
-            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title="No"))
+                oc = ObjectContainer(title1=L("Reset Info"), title2=L("Confirm"))
+            oc.add(DirectoryObject(key=Callback(self.ResetDict, confirm='True'), title=L("Yes")))
+            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("No")))
             return oc
         elif confirm == 'True':
             Dict.Reset()
@@ -1457,12 +1456,12 @@ class Session:
             Dict['sonarr_users'] = []
             Dict['debug'] = False
             Dict.Save()
-            return self.ManageChannel(message="Dictionary has been reset!")
+            return self.ManageChannel(message=L("Dictionary has been reset!"))
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
     def Changelog(self):
-        oc = ObjectContainer(title1=TITLE, title2="Changelog")
+        oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
         clog = HTTP.Request(CHANGELOG_URL)
         changes = clog.content
         changes = changes.splitlines()
@@ -1472,7 +1471,7 @@ class Session:
             title = csplit[0].strip() + " - v" + csplit[1].strip()
             oc.add(DirectoryObject(key=Callback(self.ShowMessage, header=title, message=change), title=title, summary=csplit[2].strip(),
                                    thumb=R('plexrequestchannel.png')))
-        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title="Return to Manage Channel", thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel"), thumb=R('return.png')))
         return oc
 
     def ToggleDebug(self):
@@ -1484,22 +1483,22 @@ class Session:
         return MessageContainer(header=header, message=message)
 
     def ReportProblem(self):
-        oc = ObjectContainer(title1=TITLE, title2="Report Problem")
-        oc.add(DirectoryObject(key=Callback(self.NavigateMedia), title="Report Problem with Media"))
+        oc = ObjectContainer(title1=TITLE, title2=L("Report a Problem"))
+        oc.add(DirectoryObject(key=Callback(self.NavigateMedia), title=L("Report Problem with Media")))
         if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
             #     DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem, title="Report General Problem",
             #                                  message="What is the problem?"), title="Report General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ConfirmReportProblem, parent_call=Callback(self.ReportProblem),
-                         dktitle="Report General Problem",
-                         message="What is the problem?")
+                         dktitle=L("Report General Problem"),
+                         message=L("What is the problem?"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-            oc.add(DirectoryObject(key=Callback(self.ReportGeneralProblem), title="Report a General Problem"))
+            oc.add(DirectoryObject(key=Callback(self.ReportGeneralProblem), title=L("Report General Problem")))
         else:  # All other clients
             oc.add(
-                InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title="Report a General Problem",
-                                     prompt="What is the Problem?"))
+                InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title=L("Report General Problem"),
+                                     prompt=L("What is the problem?")))
         return oc
 
     def NavigateMedia(self, path=None):
@@ -1524,9 +1523,9 @@ class Session:
         title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
         if parent:
-            oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=parent), title="Go Up One", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=parent), title=L("Go Up One"), thumb=R('return.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Return to Main Menu", thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
@@ -1591,31 +1590,31 @@ class Session:
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
             #                        title="Report a General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ReportProblemMediaOther, parent_call=Callback(self.ReportProblem),
-                         dktitle="Other Problem",
-                         message="What is the problem?", report=report)
+                         dktitle=L("Other Problem"),
+                         message=L("What is the problem?"), report=report)
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-            oc.add(DirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem"))
+            oc.add(DirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title=L("Other Problem")))
         else:
             oc.add(
-                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
-                                     prompt="What is the problem?"))
+                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title=L("Other Problem"),
+                                     prompt=L("What is the problem?")))
 
         return oc
 
     def ReportProblemMediaOther(self, query="", report=""):
         if not query:
-            oc = ObjectContainer(title2="Report Problem with Media")
+            oc = ObjectContainer(title2=L("Report Problem with Media"))
             if Client.Product == "Plex Web":
-                oc.message = "Enter your problem in the search box."
+                oc.message = L("Enter your problem in the search box.")
             oc.add(
-                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title="Other Problem",
-                                     prompt="What is the problem?"))
+                InputDirectoryObject(key=Callback(self.ReportProblemMediaOther, report=report), title=L("Other Problem"),
+                                     prompt=L("What is the problem?")))
             return oc
         return self.ConfirmReportProblem(query=report + " - " + query, type='media')
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(header=TITLE, message="Please enter your problem in the search box and press enter.")
+            oc = ObjectContainer(header=TITLE, message=L("Enter your problem in the search box."))
         else:
             oc = ObjectContainer(title2=title)
         if isClient(DUMB_KEYBOARD_CLIENTS):
@@ -1623,20 +1622,20 @@ class Session:
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
             #                        title="Report a General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ConfirmReportProblem, parent_call=Callback(self.ReportProblem),
-                         dktitle="Report General Problem",
-                         message="What is the problem?")
+                         dktitle=L("Report General Problem"),
+                         message=L("What is the problem?"))
         else:
             oc.add(
-                InputDirectoryObject(key=Callback(self.ConfirmReportProblem, type='general'), title="Report a General Problem",
-                                     prompt="What is the problem?"))
+                InputDirectoryObject(key=Callback(self.ConfirmReportProblem, type='general'), title=L("Report a General Problem"),
+                                     prompt=L("What is the problem?")))
         return oc
 
     def ConfirmReportProblem(self, query="", type='general'):
         if type == 'general':
             query = "Issue: " + query
-        oc = ObjectContainer(title1="Confirm", title2=query)
-        oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title="Yes", thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="No", thumb=R('x-mark.png')))
+        oc = ObjectContainer(title1=L("Confirm"), title2=query)
+        oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title=L("Yes"), thumb=R('check.png')))
+        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
     def NotifyProblem(self, problem):
