@@ -4,6 +4,8 @@ from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 import re
 import traceback
 
+from LocalePatch import L, F
+
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
 
@@ -106,6 +108,7 @@ class Session:
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Language: " + str(Locale.CurrentLocale))
+        Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):

@@ -38,6 +38,9 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 
+from LocalePatch import SetAvailableLanguages
+
+LANGUAGES = ['en', 'fr']
 
 ########################################################
 #   Start Code
@@ -57,6 +60,8 @@ def Start():
     Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
 
     Log.Debug("Channel Version: " + VERSION)
+
+    SetAvailableLanguages(LANGUAGES)
 
     if 'tv' not in Dict:
         Dict['tv'] = {}
