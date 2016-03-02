@@ -18,6 +18,7 @@ def L(string):
 
 def F(string, *args):
     initialize_locale()
+    Log.Debug(len(args))
     local_string = Locale.LocalStringWithFormat(string, *args)
     # return (local_string % args)
     return local_string
