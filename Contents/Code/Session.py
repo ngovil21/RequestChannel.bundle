@@ -105,7 +105,7 @@ class Session:
         self.product = Client.Product
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
-        Log.Debug("Language:" + str(Locale.CurrentLocale))
+        Log.Debug("Language: " + str(Locale.CurrentLocale))
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):

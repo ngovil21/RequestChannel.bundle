@@ -126,5 +126,12 @@
   "Go Up One": "Go Up One",
   "Other Problem": "Other Problem",
   "Enter your problem in the search box.": "Enter your problem in the search box.",
-  "Confirm": "Confirm"
+  "Confirm": "Confirm",
+  "Submit": "Submit",
+  "Search History": "Search History",
+  "Space": "Space",
+  "Backspace": "Backspace",
+  "Shift": "Shift",
+  "Cancel": "Cancel",
+  "Clear History": "Clear History"
 }
