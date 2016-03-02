@@ -160,7 +160,7 @@ class Session:
         if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title=L("Manage Sonarr")))
         if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
-            oc.add(DirectoryObject(key=Callback(self.ManageSickbeard), title=F("managesickbeard", Prefs['sickbeard_fork'])))
+            oc.add(DirectoryObject(key=Callback(self.ManageSickbeard), title=F("managesickbeard", str(Prefs['sickbeard_fork']))))
         oc.add(DirectoryObject(key=Callback(self.ReportProblem), title=L("Report a Problem")))
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Manage Channel")))
