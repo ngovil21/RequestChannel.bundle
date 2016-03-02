@@ -37,8 +37,8 @@ def initialize_locale():
         if value:
             set_language_header(value)
             break
-    if not value:
-        Log('Locale Patch: language not detected. All request headers: %s' % str(Request.Headers))
+    # if not value:
+    #     Log('Locale Patch: language not detected. All request headers: %s' % str(Request.Headers))
     Request.Headers['Plex-Locale-Patch'] = 'y'
 
 
