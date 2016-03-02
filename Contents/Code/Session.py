@@ -137,7 +137,7 @@ class Session:
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Request a TV Sho"),
                          message=L("Enter the name of the TV Show"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
+            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=Locale.LocalString("Request a Movie")))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
         else:  # All other clients
             oc.add(
