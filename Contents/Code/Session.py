@@ -1339,7 +1339,7 @@ class Session:
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
-        user = userFromToken(self.token)
+        user = userFromToken(toke)
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
