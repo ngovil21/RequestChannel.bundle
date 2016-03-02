@@ -21,8 +21,7 @@ def F(string, *args):
     Log.Debug(len(args))
     Log.Debug(str(args))
     local_string = Locale.LocalStringWithFormat(string, *args)
-    # return (local_string % args)
-    return local_string
+    return str(local_string).decode()
 
 
 def SetAvailableLanguages(lang_list):
