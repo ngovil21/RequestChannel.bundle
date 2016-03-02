@@ -171,7 +171,9 @@ class Session:
 
         return oc
 
-    def Register(self, message=L("Unrecognized device. The admin would like you to register it.")):
+    def Register(self, message=None):
+        if message is None:
+            message = L("Unrecognized device. The admin would like you to register it.")
         if Client.Product == "Plex Web":
             message += L("Enter your name in the searchbox and press enter.")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -196,7 +198,9 @@ class Session:
         Dict.Save()
         return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"), title2=L("Registered"))
 
-    def AddNewMovie(self, title=L("Request a Movie")):
+    def AddNewMovie(self, title=None):
+        if title is None:
+            title = L("Request a Movie")
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title2="Enter Movie")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -376,7 +380,9 @@ class Session:
             return self.SMainMenu(message=L("Movie has been requested"), title1=L("Main Menu"), title2=L("Movie Requested"))
 
     # TVShow Functions
-    def AddNewTVShow(self, title=L("Request a TV Show")):
+    def AddNewTVShow(self, title=None):
+        if title is None:
+            title = L("Request a TV Show")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),

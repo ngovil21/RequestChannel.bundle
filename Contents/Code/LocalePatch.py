@@ -82,7 +82,7 @@ def parse_accept_language_value():
 def select_available_language(locales):
     global languages
     if not len(languages):
-        Log('Locale Patch: no known available languages, using "%s" as the %s choise. Call SetAvailableLanguages(list) function to improve this.' % (
+        Log('Locale Patch: no known available languages, using "%s" as the %s choice. Call SetAvailableLanguages(list) function to improve this.' % (
         locales[0], 'only' if len(languages) == 1 else 'first'))
         return locales[0]
     for item in locales:
