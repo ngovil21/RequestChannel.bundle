@@ -9,7 +9,7 @@ PREFIX = '/video/plexrequestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.6.8"
+from Session import VERSION
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
