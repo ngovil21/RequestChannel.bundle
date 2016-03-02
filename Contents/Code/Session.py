@@ -103,15 +103,15 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
+        Log.Debug("Platform: " + str(self.platform))
+        Log.Debug("Product: " + str(self.product))
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def MainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
-        Log.Debug("Platform: " + str(Client.Platform))
-        Log.Debug("Product: " + str(Client.Product))
-        try:
-            HTTP.Request("http://127.0.0.1:32400")  # Do a http request so header is set
-        except:
-            pass
+        # try:
+        #     HTTP.Request("http://127.0.0.1:32400")  # Do a http request so header is set
+        # except:
+        #     pass
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
 
         if isClient(MESSAGE_OVERLAY_CLIENTS):
