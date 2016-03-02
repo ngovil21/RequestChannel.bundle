@@ -17,7 +17,9 @@ def L(string):
 
 
 def F(string, *args):
-    return L(string % args)
+    initialize_locale()
+    local_string = Locale.LocalString(string)
+    return local_string % args
 
 
 def SetAvailableLanguages(lang_list):
