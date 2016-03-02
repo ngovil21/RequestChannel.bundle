@@ -136,7 +136,7 @@ class Session:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=L("Request a Movie"),
                          message=L("Enter the name of the Movie"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Request a TV Sho"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Request a TV Show"),
                          message=L("Enter the name of the TV Show"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=Locale.LocalString("Request a Movie")))
@@ -145,7 +145,7 @@ class Session:
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
             oc.add(
-                InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Sho"), prompt=L("Enter the name of the TV Show")))
+                InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"), prompt=L("Enter the name of the TV Show")))
         if Prefs['usersviewrequests'] or self.is_admin:
             if not self.locked or Prefs['password'] is None or Prefs['password'] == "":
                 if self.locked:
