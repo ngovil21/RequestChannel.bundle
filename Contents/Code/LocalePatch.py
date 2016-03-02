@@ -18,8 +18,6 @@ def L(string):
 
 def F(string, *args):
     initialize_locale()
-    Log.Debug(len(args))
-    Log.Debug(str(args))
     local_string = Locale.LocalStringWithFormat(string, *args)
     return str(local_string).decode()
 

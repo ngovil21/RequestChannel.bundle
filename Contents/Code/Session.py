@@ -107,7 +107,6 @@ class Session:
         self.product = Client.Product
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
-        Log.Debug("Language: " + str(Locale.CurrentLocale))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
