@@ -49,7 +49,7 @@ class Session:
             HTTP.Request("127.0.0.1:32400/library")
         except:
             pass
-        Route.Connect(PREFIX + '/%s/mainmenu' % session_id, self.MainMenu)
+        Route.Connect(PREFIX + '/%s/mainmenu' % session_id, self.SMainMenu)
         Route.Connect(PREFIX + '/%s/register' % session_id, self.Register)
         Route.Connect(PREFIX + '/%s/registername' % session_id, self.RegisterName)
         Route.Connect(PREFIX + '/%s/addnewmovie' % session_id, self.AddNewMovie)
@@ -107,7 +107,7 @@ class Session:
         Log.Debug("Product: " + str(self.product))
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
-    def MainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
+    def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
         # try:
         #     HTTP.Request("http://127.0.0.1:32400")  # Do a http request so header is set
         # except:
@@ -131,9 +131,9 @@ class Session:
             resetRegister()
         if isClient(DumbKeyboard.CLIENTS):  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Request a Movie"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=L("Request a Movie"),
                          message=L("Enter the name of the Movie"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Request a TV Sho"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Request a TV Sho"),
                          message=L("Enter the name of the TV Show"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
@@ -178,7 +178,7 @@ class Session:
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent_call=Callback(MainMenu,)), title="Enter your name or nickname"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.RegisterName, parent_call=Callback(self.MainMenu),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.RegisterName, parent_call=Callback(self.SMainMenu),
                          dktitle=L("Enter your name or nickname"))
         else:
             oc.add(InputDirectoryObject(key=Callback(self.RegisterName), title=L("Enter your name or nickname"),
@@ -190,7 +190,7 @@ class Session:
             return self.Register(message=L("You must enter a name. Try again."))
         Dict['register'][self.token] = {'nickname': query, 'requests': 0}
         Dict.Save()
-        return self.MainMenu(message=L("Your device has been registered."), title1=L("Main Menu"), title2=L("Registered"))
+        return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"), title2=L("Registered"))
 
     def AddNewMovie(self, title=L("Request a Movie")):
         Log.Debug("Client does support message overlays")
@@ -200,7 +200,7 @@ class Session:
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title=title, thumb=R('search.png')))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=title,
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=title,
                          message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
         else:
             oc.add(
@@ -213,10 +213,10 @@ class Session:
         query = String.Quote(query, usePlus=True)
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not self.is_admin:
             if Dict['register'].get(self.token, None) and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
-                return self.MainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
         if self.token in Dict['blocked']:
-            return self.MainMenu(message=L("Sorry you have been blocked."), title1=L("Main Menu"), title2=L("User Blocked"))
+            return self.SMainMenu(message=L("Sorry you have been blocked."), title1=L("Main Menu"), title2=L("User Blocked"))
         if Prefs['movie_db'] == "TheMovieDatabase":
             headers = {
                 'Accept': 'application/json'
@@ -256,12 +256,12 @@ class Session:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
                     # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
                     #                        thumb=R('search.png')))
-                    DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Search Again"),
+                    DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
                                  message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
                 else:
                     oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Search Again"),
                                                 prompt=L("Enter the name of the Movie:")))
-                oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
+                oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
                 return oc
         else:  # Use OMDB By Default
             request = JSON.ObjectFromURL(url=OMDB_API_URL + "?s=" + query + "&r=json")
@@ -291,23 +291,23 @@ class Session:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
                     # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
                     #                        thumb=R('search.png')))
-                    DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Search Again"),
+                    DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
                                  message="Enter the name of the Movie", dkthumb=R('search.png'))
                 else:
                     oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Search Again"), prompt=L("Enter the name of the Movie:"),
                                                 thumb=R('search.png')))
-                oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+                oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
                 return oc
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
             #                        thumb=R('search.png')))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.MainMenu), dktitle=L("Search Again"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
                          message="Enter the name of the Movie", dkthumb=R('search.png'))
         else:
             oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Search Again"),
                                         prompt=L("Enter the name of the Movie:"), thumb=R('search.png')))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         return oc
 
     def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
@@ -327,7 +327,7 @@ class Session:
                         summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
                             video.attrib['summary'] if video.attrib['summary'] else "")
                         oc.add(TVShowObject(
-                            key=Callback(self.MainMenu, message=L("Movie already in library."), title1=L("In Library"), title2=title),
+                            key=Callback(self.SMainMenu, message=L("Movie already in library."), title1=L("In Library"), title2=title),
                             rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary, thumb=video.attrib['thumb']))
                         found_match = True
                         break
@@ -347,14 +347,14 @@ class Session:
         oc.add(DirectoryObject(
             key=Callback(self.AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop,
                          summary=summary), title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("No"), thumb=R('x-mark.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
 
     def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
         if movie_id in Dict['movie']:
             Log.Debug("Movie is already requested")
-            return self.MainMenu(message=L("Movie has already been requested"), title1=title, title2=L("Already Requested"))
+            return self.SMainMenu(message=L("Movie has already been requested"), title1=title, title2=L("Already Requested"))
         else:
             user = ""
             if self.token in Dict['register']:
@@ -369,16 +369,16 @@ class Session:
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
             notifyRequest(req_id=movie_id, req_type='movie')
-            return self.MainMenu(message=L("Movie has been requested"), title1=L("Main Menu"), title2=L("Movie Requested"))
+            return self.SMainMenu(message=L("Movie has been requested"), title1=L("Main Menu"), title2=L("Movie Requested"))
 
     # TVShow Functions
     def AddNewTVShow(self, title=L("Request a TV Show")):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
-                return self.MainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
         if self.token in Dict['blocked']:
-            return self.MainMenu(message=L("Sorry you have been blocked."),
+            return self.SMainMenu(message=L("Sorry you have been blocked."),
                                  title1=L("Main Menu"), title2=L("User Blocked"))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=L("Please enter the name of the TV Show in the search box and press enter."))
@@ -388,7 +388,7 @@ class Session:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Request a TV Show",
             #                        thumb=R('search.png')))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Request a TV Show"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Request a TV Show"),
                          message=L("Enter the name of the TV Show"), dkthumb=R('search.png'))
         else:
             oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"), prompt=L("Enter the name of the TV Show"),
@@ -409,12 +409,12 @@ class Session:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Search Again",
                 #                        thumb=R('search.png')))
-                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Search Again"),
+                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
                              message=L("Enter the name of the TV Show"), dkthumb=R('search.png'))
             else:
                 oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Search Again"), prompt=L("Enter the name of the TV Show:"),
                                             thumb=R('search.png')))
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             return oc
         count = 0
         for serie in series:
@@ -468,12 +468,12 @@ class Session:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
             # DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Search Again", thumb=R('search.png')))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.MainMenu), dktitle=L("Search Again"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
                          message=L("Enter the name of the TV Show"), dkthumb=R('search.png'))
         else:
             oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Search Again"), prompt=L("Enter the name of the TV Show"),
                                         thumb=R('search.png')))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         return oc
 
     def ConfirmTVRequest(self, series_id, title, source="", year="", poster="", backdrop="", summary=""):
@@ -498,7 +498,7 @@ class Session:
                             video_attr['summary'] if video_attr['summary'] else "")
                         oc.add(
                             TVShowObject(
-                                key=Callback(self.MainMenu, message=L("TV Show already in library."), title1=L("In Library"), title2=title),
+                                key=Callback(self.SMainMenu, message=L("TV Show already in library."), title1=L("In Library"), title2=title),
                                 rating_key=video_attr['ratingKey'], title="+ " + title, summary=summary, thumb=video_attr['thumb']))
                         found_match = True
                         break
@@ -521,14 +521,14 @@ class Session:
             key=Callback(self.AddTVRequest, series_id=series_id, source=source, title=title, year=year, poster=poster, backdrop=backdrop,
                          summary=summary,
                          ), title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("No"), thumb=R('x-mark.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
 
     def AddTVRequest(self, series_id, title, source='', year="", poster="", backdrop="", summary=""):
         if series_id in Dict['tv']:
             Log.Debug("TV Show is already requested")
-            return self.MainMenu(message=L("TV Show has already been requested"), title1=title, title2=L("Already Requested"))
+            return self.SMainMenu(message=L("TV Show has already been requested"), title1=title, title2=L("Already Requested"))
         else:
             user = ""
             if self.token in Dict['register']:
@@ -539,12 +539,12 @@ class Session:
             Dict.Save()
             notifyRequest(req_id=series_id, req_type='tv')
             if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
-                return self.SendToSonarr(tvdbid=series_id, callback=Callback(self.MainMenu, message=L("TV Show has been requested"), title1=title,
+                return self.SendToSonarr(tvdbid=series_id, callback=Callback(self.SMainMenu, message=L("TV Show has been requested"), title1=title,
                                                                              title2=L("Requested")))
             if Prefs['sickbeard_autorequest'] and Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-                return self.SendToSickbeard(tvdbid=series_id, callback=Callback(self.MainMenu, message=L("TV Show has been requested"), title1=title,
+                return self.SendToSickbeard(tvdbid=series_id, callback=Callback(self.SMainMenu, message=L("TV Show has been requested"), title1=title,
                                                                                 title2=L("Requested")))
-            return self.MainMenu(message=L("TV Show has been requested"), title1=title, title2=L("Requested"))
+            return self.SMainMenu(message=L("TV Show has been requested"), title1=title, title2=L("Requested"))
 
     # Request Functions
     def ViewRequests(self, query="", token_hash=None, message=None):
@@ -560,14 +560,14 @@ class Session:
             else:
                 oc = ObjectContainer(title2="Password correct")
         elif not token_hash:
-            return self.MainMenu(message=L("Password incorrect"), title1=L("Main Menu"), title2=L("Password incorrect"))
+            return self.SMainMenu(message=L("Password incorrect"), title1=L("Main Menu"), title2=L("Password incorrect"))
         if not Dict['movie'] and not Dict['tv']:
             Log.Debug("There are no requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no requests.")
             else:
                 oc = ObjectContainer(title1=L("View Requests"), title2=L("No Requests"))
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             return oc
         else:
             requests = Dict['movie'].copy()
@@ -586,7 +586,7 @@ class Session:
                     summary = " (Requested by " + d['user'] + ")   " + summary
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash), rating_key=req_id,
                                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         if len(oc) > 1 and self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests), title=L("Clear All Requests"), thumb=R('trash.png')))
         return oc
@@ -596,7 +596,7 @@ class Session:
         if isClient(DUMB_KEYBOARD_CLIENTS):
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent_call=Callback(MainMenu,)), title="Enter password:"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ViewRequests, parent_call=Callback(self.MainMenu), dktitle=L("Enter Password"),
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ViewRequests, parent_call=Callback(self.SMainMenu), dktitle=L("Enter Password"),
                          message=L("Enter password"), dksecure=True)
         else:
             oc.add(InputDirectoryObject(key=Callback(self.ViewRequests), title=L("Enter password"), prompt=L("Enter password:")))
@@ -612,7 +612,7 @@ class Session:
 
     def ClearRequests(self):
         if not self.is_admin:
-            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         Dict['tv'] = {}
         Dict['movie'] = {}
         Dict.Save()
@@ -744,7 +744,7 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year),
                                    title=L("Delete Request")))
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     # Sonarr Methods
@@ -844,7 +844,7 @@ class Session:
             oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
         else:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests"), thumb=R('return.png')))
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('plexrequestchannel.png')))
+            oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('plexrequestchannel.png')))
         return oc
 
     def ManageSonarr(self):
@@ -877,7 +877,7 @@ class Session:
             oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId', 0),
                                 title=show['title'], thumb=poster, summary=show.get('overview', "")))
         oc.objects.sort(key=lambda obj: obj.title.lower())
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSonarrShow(self, series_id, title="", callback=None, message=None):
@@ -1097,7 +1097,7 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title),
                                    title=L("Delete Request")))
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSickbeard(self):
@@ -1126,7 +1126,7 @@ class Session:
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=F("sickbeardshowserror", Prefs['sickbeard_fork']))
         oc.objects.sort(key=lambda obj: obj.title.lower())
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSickbeardShow(self, series_id, title="", callback=None, message=None):
@@ -1299,7 +1299,7 @@ class Session:
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
         if not self.is_admin:
-            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if message and isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
@@ -1308,12 +1308,12 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "Off" if Dict['debug'] else "On")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu")))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageUsers(self, message=None):
         if not self.is_admin:
-            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
@@ -1329,7 +1329,7 @@ class Session:
 
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
-            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         user = userFromToken(self.token)
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
@@ -1358,7 +1358,7 @@ class Session:
 
     def RenameUser(self, toke, message=""):
         if not self.is_admin:
-            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if Client.Product == "Plex Web":
             message += (" " if message else "") + L("Enter the user name in the searchbox and press enter")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -1378,7 +1378,7 @@ class Session:
 
     def RegisterUserName(self, query="", toke=""):
         if not self.is_admin:
-            return self.MainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"), title2=L("Admin only"))
         if not query:
             return self.RegisterUser(toke, message=L("You must enter a name. Try again."))
         Dict['register'][toke]['nickname'] = query
@@ -1422,7 +1422,7 @@ class Session:
 
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'])
         if confirmed == 'False':
             oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title=L("Yes")))
@@ -1435,7 +1435,7 @@ class Session:
 
     def ResetDict(self, confirm='False'):
         if not self.is_admin:
-            return self.MainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
+            return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if confirm == 'False':
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE,
@@ -1525,7 +1525,7 @@ class Session:
         if parent:
             oc.add(DirectoryObject(key=Callback(self.NavigateMedia, path=parent), title=L("Go Up One"), thumb=R('return.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
@@ -1582,7 +1582,7 @@ class Session:
             oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=rating_key, title=title), rating_key=rating_key, title=title,
                                 thumb=thumb))
         report = name + " in Library: '" + libraryTitle + "'"
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title="Cancel"))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
             oc.add(DirectoryObject(key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, type='media'), title=problem))
         if isClient(DUMB_KEYBOARD_CLIENTS):
@@ -1635,7 +1635,7 @@ class Session:
             query = "Issue: " + query
         oc = ObjectContainer(title1=L("Confirm"), title2=query)
         oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title=L("Yes"), thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.MainMenu), title=L("No"), thumb=R('x-mark.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
     def NotifyProblem(self, problem):
@@ -1645,7 +1645,7 @@ class Session:
             user = Dict['register'][self.token]['nickname']
         body = user + " has reported a problem with the Plex Server. \n" + problem
         Notify(title=title, body=body, devices=Prefs['pushbullet_devices'])
-        return self.MainMenu(message="The admin has been notified", title1="Main Menu", title2="Admin notified of problem")
+        return self.SMainMenu(message="The admin has been notified", title1="Main Menu", title2="Admin notified of problem")
 
 
 def checkAdmin(toke):

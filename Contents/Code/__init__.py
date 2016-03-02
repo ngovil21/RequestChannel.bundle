@@ -91,7 +91,7 @@ from Session import Session
 @route(PREFIX + '/main')
 def MainMenu():
     sesh = Session(session_id=Hash.MD5(str(Datetime.Now())))
-    return sesh.MainMenu()
+    return sesh.SMainMenu()
 
 '''
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
