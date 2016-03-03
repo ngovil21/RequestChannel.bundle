@@ -590,9 +590,7 @@ class Session:
                 if d.get('automated', False):
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
-                summary = d.get('summary', "")
-                if d.get('user', None):
-                    summary = " (Requested by " + d['user'] + ")   " + summary
+                summary = "(Requested by " + d.get('user', 'Unknown') + ")   " + d.get('summary', "")
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash), rating_key=req_id,
                                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
@@ -1864,3 +1862,4 @@ def userFromToken(token):
             return Dict['register'][token]['nickname']
         else:
             return "guest_" + Hash.SHA1(token)[:10]
+    return ""
