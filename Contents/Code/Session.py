@@ -630,9 +630,7 @@ class Session:
         title_year = key['title']
         title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
             'title']  # If there is already a year in the title, just use title
-        summary = key.get('summary', "")
-        if key.get('user'):
-            summary = " (Requested by " + key['user'] + ")   " + summary
+        summary = " (Requested by " + key.get('user', 'Unknown') + ")   " + key.get('summary', "")
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
