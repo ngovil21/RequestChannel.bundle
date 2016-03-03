@@ -221,7 +221,7 @@ class Session:
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not self.is_admin:
             if Dict['register'].get(self.token, None) and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
-                                     title1=L("Main Menu"), title2=L("Weekly Limit"))
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
         if self.token in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."), title1=L("Main Menu"), title2=L("User Blocked"))
         if Prefs['movie_db'] == "TheMovieDatabase":
@@ -385,10 +385,10 @@ class Session:
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
-                                     title1=L("Main Menu"), title2=L("Weekly Limit"))
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
         if self.token in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
-                                 title1=L("Main Menu"), title2=L("User Blocked"))
+                                  title1=L("Main Menu"), title2=L("User Blocked"))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=L("Please enter the name of the TV Show in the search box and press enter."))
         else:
@@ -591,7 +591,7 @@ class Session:
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
-                d.get('summary', "") if d.get("summary") else "")
+                    d.get('summary', "") if d.get("summary") else "")
                 oc.add(TVShowObject(key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash), rating_key=req_id,
                                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
@@ -632,7 +632,7 @@ class Session:
         title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
             'title']  # If there is already a year in the title, just use title
         summary = " (Requested by " + (key.get('user') if key.get('user') else 'Unknown') + ")   " + (
-        key.get('summary', "") if key.get('summary') else "")
+            key.get('summary', "") if key.get('summary') else "")
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
