@@ -202,6 +202,10 @@ class Session:
             title = L("Request a Movie")
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title2="Enter Movie")
+        if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
+            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
         if isClient(DUMB_KEYBOARD_CLIENTS):
