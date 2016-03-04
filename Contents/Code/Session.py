@@ -409,6 +409,10 @@ class Session:
         return oc
 
     def SearchTV(self, query):
+        if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
+            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
         xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
