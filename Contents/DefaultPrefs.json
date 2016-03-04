@@ -7,6 +7,18 @@
     "default": "OpenMovieDatabase"
   },
   {
+    "id": "search_language",
+    "label": "Search Languauge (titles and descriptions will be returned from database)",
+    "type": "enum",
+    "values": [
+      "English",
+      "French",
+      "Spanish",
+      "Dutch"
+    ],
+    "default": "English"
+  },
+  {
     "id": "usersviewrequests",
     "label": "Allow users to see requests page?",
     "type": "bool",

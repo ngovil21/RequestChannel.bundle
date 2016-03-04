@@ -1666,7 +1666,8 @@ def checkAdmin(toke):
                 Log.Debug(str(resp.read()))
             return True
     except:
-        pass
+        if Dict['debug']:
+            Log.Debug(str(traceback.format_exc()))  # raise e
     return False
 
 
