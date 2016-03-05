@@ -5,6 +5,7 @@ from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 import re
 import traceback
 
+# Override L, F functions
 from LocalePatch import L, F
 
 TITLE = 'Plex Request Channel'
@@ -151,7 +152,7 @@ class Session:
         if self.is_admin:
             if self.token in Dict['register']:  # Do not save admin token in the register
                 del Dict['register'][self.token]
-        elif Prefs['register'] and (self.token not in Dict['register'] or not Dict['register'][self.token]['nickname']):
+        elif Dict['register'] and (self.token not in Dict['register'] or not Dict['register'][self.token]['nickname']):
             return self.Register()
         elif self.token not in Dict['register']:
             Dict['register'][self.token] = {'nickname': "", 'requests': 0}
