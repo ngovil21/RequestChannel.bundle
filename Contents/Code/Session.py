@@ -48,7 +48,7 @@ COMMON_MEDIA_PROBLEMS = ["Subtitles Missing", "Audio Problems", "Media Would Not
 LANGUAGE_ABBREVIATIONS = {
     "English": "en",
     "Espanol": "es",
-    "Franc\ais": "fr",
+    "Francais": "fr",
     "Deutsch": "de",
     "Italiano": "it",
     "Chinese": "zh",
