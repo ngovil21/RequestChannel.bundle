@@ -14,7 +14,7 @@ PREFIX = '/video/plexrequestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.7.1"
+VERSION = "0.7.2"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -48,7 +48,7 @@ COMMON_MEDIA_PROBLEMS = ["Subtitles Missing", "Audio Problems", "Media Would Not
 LANGUAGE_ABBREVIATIONS = {
     "English": "en",
     "Espanol": "es",
-    "Francais": "fr",
+    "Franc\ais": "fr",
     "Deutsch": "de",
     "Italiano": "it",
     "Chinese": "zh",
