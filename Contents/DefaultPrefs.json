@@ -8,13 +8,33 @@
   },
   {
     "id": "search_language",
-    "label": "Search Languauge (titles and descriptions will be returned from database)",
+    "label": "Search Language (titles and descriptions will be returned from database)",
     "type": "enum",
     "values": [
       "English",
-      "French",
-      "Spanish",
-      "Dutch"
+      "Español",
+      "Français",
+      "Deutsch",
+      "Italiano",
+      "Chinese",
+      "Nederlands",
+      "Svenska",
+      "Norsk",
+      "Dansk",
+      "Suomeksi",
+      "Polski",
+      "Magyar",
+      "Greek",
+      "Turkish",
+      "Russian",
+      "Hebrew",
+      "Japanese",
+      "Portuguese",
+      "Czech",
+      "Slovenian",
+      "Croatian",
+      "Korean"
+
     ],
     "default": "English"
   },

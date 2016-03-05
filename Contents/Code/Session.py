@@ -1,3 +1,4 @@
+# coding=utf-8
 # from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, MESSAGE_OVERLAY_CLIENTS
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
@@ -42,6 +43,32 @@ PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 
 COMMON_MEDIA_PROBLEMS = ["Subtitles Missing", "Audio Problems", "Media Would Not Start", "File Not Available"]
+
+LANGUAGE_ABBREVIATIONS = {
+    "English": "en",
+    "Español": "es",
+    "Français": "fr",
+    "Deutsch": "de",
+    "Italiano": "it",
+    "Chinese": "zh",
+    "Nederlands": "nl",
+    "Svenska": "sv",
+    "Norsk": "no",
+    "Dansk": "da",
+    "Suomeksi": "fi",
+    "Polski": "pl",
+    "Magyar": "hu",
+    "Greek": "el",
+    "Turkish": "tr",
+    "Russian": "ru",
+    "Hebrew": "he",
+    "Japanese": "ja",
+    "Portuguese": "pt",
+    "Czech": "cs",
+    "Slovenian": "sl",
+    "Croatian": "hr",
+    "Korean": "ko"
+}
 
 
 class Session:
@@ -232,7 +259,10 @@ class Session:
             headers = {
                 'Accept': 'application/json'
             }
-            request = JSON.ObjectFromURL(url=TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&query=" + query, headers=headers)
+            request = JSON.ObjectFromURL(
+                url=TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(Prefs["search_language"],
+                                                                                                                      "en") + "&query=" + query,
+                headers=headers)
             if 'results' in request:
                 results = request['results']
                 for key in results:
@@ -415,7 +445,8 @@ class Session:
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
-        xml = XML.ElementFromURL(TVDB_API_URL + "GetSeries.php?seriesname=" + query)
+        xml = XML.ElementFromURL(
+            TVDB_API_URL + "GetSeries.php?seriesname=" + query + "&language=" + LANGUAGE_ABBREVIATIONS.get(Prefs["search_language"], "en"))
         series = xml.xpath("//Series")
         if len(series) == 0:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
