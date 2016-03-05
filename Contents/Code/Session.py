@@ -398,7 +398,7 @@ class Session:
             Log.Debug("Movie is already requested")
             return self.SMainMenu(message=L("Movie has already been requested"), title1=title, title2=L("Already Requested"))
         else:
-            user = ""
+            user = "Admin" if self.is_admin else ""
             if self.token in Dict['register']:
                 Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
                 user = userFromToken(self.token)
@@ -579,7 +579,7 @@ class Session:
             Log.Debug("TV Show is already requested")
             return self.SMainMenu(message=L("TV Show has already been requested"), title1=title, title2=L("Already Requested"))
         else:
-            user = ""
+            user = "Admin" if self.is_admin else ""
             if self.token in Dict['register']:
                 Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
                 user = userFromToken(self.token)
