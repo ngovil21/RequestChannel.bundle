@@ -12,8 +12,8 @@
     "type": "enum",
     "values": [
       "English",
-      "Español",
-      "Français",
+      "Espanol",
+      "Francais",
       "Deutsch",
       "Italiano",
       "Chinese",
@@ -34,7 +34,6 @@
       "Slovenian",
       "Croatian",
       "Korean"
-
     ],
     "default": "English"
   },
