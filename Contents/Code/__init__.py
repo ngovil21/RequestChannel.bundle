@@ -40,7 +40,7 @@ TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 
 from LocalePatch import SetAvailableLanguages
 
-LANGUAGES = ['en', 'fr']
+LANGUAGES = ['en', 'fr', 'nl']
 
 ########################################################
 #   Start Code
