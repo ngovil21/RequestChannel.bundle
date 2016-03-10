@@ -806,7 +806,6 @@ class Session:
             couchpotato_url += "/"
         try:
             movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list", values=dict(status="active"))
-            Log.Debug(str(movie_list))
         except Exception as e:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
@@ -823,6 +822,7 @@ class Session:
                 year = movie_info.get('year')
                 imdb_id = movie_info.get('imdb', "0")
                 poster = movie_info.get('images', {}).get('poster')
+                Log.Debug(poster)
                 summary = movie_info.get('plot')
                 title_year += " (" + str(year) + ")" if year else ""
                 oc.add(TVShowObject(key="empty", rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
@@ -1745,7 +1745,8 @@ def checkAdmin(toke):
         html = HTTP.Request(url, headers={'X-Plex-Token': toke})
         if html.content:
             if Dict['debug']:
-                Log.Debug(str(html.content))
+                # Log.Debug(str(html.content))
+                pass
             return True
     except:
         if Dict['debug']:
