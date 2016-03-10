@@ -805,7 +805,8 @@ class Session:
         if not couchpotato_url.endswith("/"):
             couchpotato_url += "/"
         try:
-            movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list/", values=dict(status="active"))
+            movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list", values=dict(status="active"))
+            Log.Debug(str(movie_list))
         except Exception as e:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
@@ -824,7 +825,7 @@ class Session:
                 poster = movie_info.get('images', {}).get('poster')
                 summary = movie_info.get('plot')
                 title_year += " (" + str(year) + ")" if year else ""
-                oc.add(TVShowObject(key=Callback(self.ManageCouchpotato()), rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
+                oc.add(TVShowObject(key="empty", rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
