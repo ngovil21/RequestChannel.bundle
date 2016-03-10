@@ -798,6 +798,12 @@ class Session:
         return oc
 
     def ManageCouchpotato(self):
+        if not Prefs['couchpotato_url'].startswith("http"):
+            couchpotato_url = "http://" + Prefs['couchpotato_url']
+        else:
+            couchpotato_url = Prefs['couchpotato_url']
+        if not couchpotato_url.endswith("/"):
+            couchpotato_url += "/"
         try:
             movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list/", values=dict(status="active"))
         except Exception as e:
