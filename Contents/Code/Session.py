@@ -822,6 +822,8 @@ class Session:
                 year = movie_info.get('year')
                 imdb_id = movie_info.get('imdb', "0")
                 poster = movie_info.get('images', {}).get('poster')
+                if poster:
+                    poster = poster[0]
                 Log.Debug(poster)
                 summary = movie_info.get('plot')
                 title_year += " (" + str(year) + ")" if year else ""
