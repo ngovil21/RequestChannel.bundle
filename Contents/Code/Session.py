@@ -824,7 +824,7 @@ class Session:
                 poster = movie_info.get('images', {}).get('poster')
                 summary = movie_info.get('plot')
                 title_year += " (" + str(year) + ")" if year else ""
-                oc.add(TVShowObject(key=Callback(self.ManageCouchpotato()), rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
+                oc.add(TVShowObject(key="", rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
 
