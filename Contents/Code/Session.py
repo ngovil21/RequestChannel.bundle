@@ -98,6 +98,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
         Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
         Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
+        Route.Connect(PREFIX + '/%s/managecouchpotato' % session_id, self.ManageCouchpotato)
         Route.Connect(PREFIX + '/%s/sendtosonarr' % session_id, self.SendToSonarr)
         Route.Connect(PREFIX + '/%s/managesonarr' % session_id, self.ManageSonarr)
         Route.Connect(PREFIX + '/%s/managesonarrshow' % session_id, self.ManageSonarrShow)
@@ -184,8 +185,10 @@ class Session:
                                        title="View Requests"))  # Set View Requests to locked and ask for password
         else:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=Hash.SHA1(self.token)), title=L("View My Requests")))
+        if Prefs['couchpotato_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+            oc.add(DirectoryObject(key=Callback(self.ManageCouchpotato), title=F("managesickbeard", "Couchpotato")))
         if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
-            oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title=L("Manage Sonarr")))
+            oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title=F("managesickbeard", "Sonarr")))
         if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSickbeard), title=F("managesickbeard", str(Prefs['sickbeard_fork']))))
         oc.add(DirectoryObject(key=Callback(self.ReportProblem), title=L("Report a Problem")))
@@ -793,6 +796,35 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
+
+    def ManageCouchpotato(self):
+        try:
+            movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list/", values=dict(status="active"))
+        except Exception as e:
+            if Dict['debug']:
+                Log.Debug(str(traceback.format_exc()))  # raise e
+            Log.Debug(e.message)
+            return MessageContainer("Error loading CouchPotato")
+
+        oc = ObjectContainer(title2="Manage Couchpotato")
+
+        if movie_list['success'] and not movie_list['empty']:
+            for movie in movie_list['movies']:
+                title = movie.get('title')
+                title_year = title
+                movie_info = movie.get('info', {})
+                year = movie_info.get('year')
+                imdb_id = movie_info.get('imdb', "0")
+                poster = movie_info.get('images', {}).get('poster')
+                summary = movie_info.get('plot')
+                title_year += " (" + str(year) + ")" if year else ""
+                oc.add(TVShowObject(key=Callback(self.ManageCouchpotato()), rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
+
+
+
+
+
 
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
