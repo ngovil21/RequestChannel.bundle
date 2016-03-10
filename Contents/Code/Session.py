@@ -804,7 +804,7 @@ class Session:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer("Error loading CouchPotato")
+            return MessageContainer(header=TITLE, message="Error loading CouchPotato")
 
         oc = ObjectContainer(title2="Manage Couchpotato")
 
