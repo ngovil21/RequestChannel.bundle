@@ -836,7 +836,7 @@ class Session:
         return oc
 
     def ManageCouchPotatoMovie(self, movie_id, title=""):
-        oc = ObjectContainer(title1="Manage Couchpotato", title2=title)
+        oc = ObjectContainer(title1=L("Manage Couchpotato"), title2=title)
         oc.add(
             DirectoryObject(key=Callback(self.DeleteCouchPotatoMovie, movie_id=movie_id), title=L("Delete from Couchpotato"), thumb=R('trash.png')))
         oc.add(DirectoryObject(key=Callback(self.ManageCouchpotato), title=L("Return to Manage Couchpotato"), thumb=R('return.png')))
