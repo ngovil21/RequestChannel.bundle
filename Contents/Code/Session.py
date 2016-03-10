@@ -827,6 +827,8 @@ class Session:
                 oc.add(TVShowObject(key="", rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
+        return oc
+
 
 
 
