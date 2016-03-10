@@ -99,6 +99,8 @@ class Session:
         Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
         Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
         Route.Connect(PREFIX + '/%s/managecouchpotato' % session_id, self.ManageCouchpotato)
+        Route.Connect(PREFIX + '/%s/managecouchpotatomovie' % session_id, self.ManageCouchPotatoMovie)
+        Route.Connect(PREFIX + '/%s/deletecouchpotatomovie' % session_id, self.DeleteCouchPotatoMovie)
         Route.Connect(PREFIX + '/%s/sendtosonarr' % session_id, self.SendToSonarr)
         Route.Connect(PREFIX + '/%s/managesonarr' % session_id, self.ManageSonarr)
         Route.Connect(PREFIX + '/%s/managesonarrshow' % session_id, self.ManageSonarrShow)
@@ -810,13 +812,14 @@ class Session:
             if Dict['debug']:
                 Log.Debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message="Error loading CouchPotato")
+            return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
 
         oc = ObjectContainer(title2="Manage Couchpotato")
 
         if movie_list['success'] and not movie_list['empty']:
             for movie in movie_list['movies']:
                 title = movie.get('title')
+                movie_id = movie.get('_id')
                 title_year = title
                 movie_info = movie.get('info', {})
                 year = movie_info.get('year')
@@ -824,16 +827,42 @@ class Session:
                 poster = movie_info.get('images', {}).get('poster')
                 if poster:
                     poster = poster[0]
-                Log.Debug(poster)
                 summary = movie_info.get('plot')
                 title_year += " (" + str(year) + ")" if year else ""
-                oc.add(TVShowObject(key="empty", rating_key=imdb_id, title=title_year, thumb=poster, summary=summary))
+                oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title), rating_key=imdb_id, title=title_year,
+                                    thumb=poster, summary=summary))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
 
+    def ManageCouchPotatoMovie(self, movie_id, title=""):
+        oc = ObjectContainer(title1="Manage Couchpotato", title2=title)
+        oc.add(
+            DirectoryObject(key=Callback(self.DeleteCouchPotatoMovie, movie_id=movie_id), title=L("Delete from Couchpotato"), thumb=R('trash.png')))
+        oc.add(DirectoryObject(key=Callback(self.ManageCouchpotato), title=L("Return to Manage Couchpotato"), thumb=R('return.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+        return oc
 
+    def DeleteCouchPotatoMovie(self, movie_id):
+        if not Prefs['couchpotato_url'].startswith("http"):
+            couchpotato_url = "http://" + Prefs['couchpotato_url']
+        else:
+            couchpotato_url = Prefs['couchpotato_url']
+        if not couchpotato_url.endswith("/"):
+            couchpotato_url += "/"
+        try:
+            movie_delete = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.delete",
+                                              values=dict(id=movie_id, delete_from="wanted"))
+        except Exception as e:
+            if Dict['debug']:
+                Log.Debug(str(traceback.format_exc()))  # raise e
+            Log.Debug(e.message)
+            return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
 
+        if movie_delete['success']:
+            return self.ManageCouchpotato()
+        else:
+            return MessageContainer(header=TITLE, message=L("Could not delete movie from Couchpotato"))
 
 
 
