@@ -1458,10 +1458,10 @@ class Session:
                                title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
         oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
         tv_auto = ""
-        if Prefs['sonarr_api']:
-            tv_auto = "Sonarr"
-        elif Prefs['sickbeard_api']:
-            tv_auto = Prefs['sickbeard_fork']
+        # if Prefs['sonarr_api']:
+        #     tv_auto = "Sonarr"
+        # elif Prefs['sickbeard_api']:
+        #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='False'), title=F("removetvmanage", tv_auto)))
         elif tv_auto:
