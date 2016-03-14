@@ -1,5 +1,7 @@
 # coding=utf-8
 # from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, MESSAGE_OVERLAY_CLIENTS
+
+
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
 import re
@@ -1519,7 +1521,7 @@ class Session:
                 return self.ManageUser(toke=toke, message="User has been unblocked.")
         return self.ManageUser(toke=toke)
 
-    def SonarrUser(self, toke, setter):
+    def SonarrUser(self, toke, set):
         tv_auto = ""
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
