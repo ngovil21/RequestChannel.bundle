@@ -1527,14 +1527,14 @@ class Session:
             tv_auto = "Sonarr"
         elif Prefs['sickbeard_api']:
             tv_auto = "Sickbeard"
-        if setter == 'True':
+        if set == 'True':
             if toke in Dict['sonarr_users']:
                 return self.ManageUser(toke=toke, message="User already in " + tv_auto + " list")
             else:
                 Dict['sonarr_users'].append(toke)
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
-        elif setter == 'False':
+        elif set == 'False':
             if toke in Dict['blocked']:
                 Dict['sonarr_users'].remove(toke)
                 Dict.Save()
