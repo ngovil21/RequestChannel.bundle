@@ -441,7 +441,7 @@ class Session:
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
             oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
-            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
+            oc.add(DirectoryObject(key=Callback(self.AddNewTVShow, title=title),
                                    title=L("Please enter the movie name in the searchbox and press enter.")))
         else:
             oc = ObjectContainer(title2=title)
