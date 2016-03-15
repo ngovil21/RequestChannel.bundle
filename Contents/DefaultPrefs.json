@@ -45,9 +45,9 @@
   },
   {
     "id": "plextv",
-    "label": "Authenticate admin user through Plex.tv (Use if you do not have Plex Home enabled)",
+    "label": "Authenticate admin user through Plex.tv (Disable if you would like to check locally [Plex Home only])",
     "type": "bool",
-    "default": false
+    "default": true
   },
   {
     "id": "password",

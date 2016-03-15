@@ -137,7 +137,7 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
-        self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
+        self.use_dumb_keyboard = isClient(self.use_dumb_keyboard)
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
@@ -247,8 +247,10 @@ class Session:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if isClient(MESSAGE_OVERLAY_CLIENTS):
+        if Client.Product == "Plex Web":
             oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
+            oc.addObject(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
+                                         title=L("Please enter the movie name in the searchbox and press enter.")))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title=title, thumb=R('search.png')))
@@ -437,8 +439,10 @@ class Session:
         if self.token in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
-        if isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(header=TITLE, message=L("Please enter the name of the TV Show in the search box and press enter."))
+        if Client.Product == "Plex Web":
+            oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
+            oc.addObject(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
+                                         title=L("Please enter the movie name in the searchbox and press enter.")))
         else:
             oc = ObjectContainer(title2=title)
         if self.use_dumb_keyboard:
