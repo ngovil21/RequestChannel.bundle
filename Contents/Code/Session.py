@@ -1,13 +1,11 @@
 # coding=utf-8
-# from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, MESSAGE_OVERLAY_CLIENTS
-
 
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
 import re
 import traceback
 
-# Override L, F functions
+# Override Plex L, F functions
 from LocalePatch import L, F
 
 TITLE = 'Plex Request Channel'
@@ -83,6 +81,7 @@ class Session:
             pass
         Route.Connect(PREFIX + '/%s/mainmenu' % session_id, self.SMainMenu)
         Route.Connect(PREFIX + '/%s/register' % session_id, self.Register)
+        Route.Connect(PREFIX + '/%s/switchkeyboard' % session_id, self.SwitchKeyboard)
         Route.Connect(PREFIX + '/%s/registername' % session_id, self.RegisterName)
         Route.Connect(PREFIX + '/%s/addnewmovie' % session_id, self.AddNewMovie)
         Route.Connect(PREFIX + '/%s/searchmovie' % session_id, self.SearchMovie)
@@ -138,6 +137,7 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
+        self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
@@ -165,7 +165,7 @@ class Session:
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
             resetRegister()
-        if isClient(DumbKeyboard.CLIENTS):  # Clients in this list do not support InputDirectoryObjects
+        if self.use_dumb_keyboard:  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=L("Request a Movie"),
                          message=L("Enter the name of the Movie"))
@@ -202,6 +202,8 @@ class Session:
             oc.add(DirectoryObject(
                 key=Callback(self.Register, message=L("Entering your name will let the admin know who you are when making requests.")),
                 title=L("Register Device")))
+        oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
+                               title=L('Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
 
         return oc
 
@@ -215,7 +217,7 @@ class Session:
         else:
             Log.Debug("Client does support message overlays")
             oc = ObjectContainer(title1=L("Unrecognized Device"), title2=L("Please register"))
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent_call=Callback(MainMenu,)), title="Enter your name or nickname"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.RegisterName, parent_call=Callback(self.SMainMenu),
@@ -232,6 +234,10 @@ class Session:
         Dict.Save()
         return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"), title2=L("Registered"))
 
+    def SwitchKeyboard(self):
+        self.use_dumb_keyboard = not self.use_dumb_keyboard
+        return self.SMainMenu("Keyboard has been changed")
+
     def AddNewMovie(self, title=None):
         if title is None:
             title = L("Request a Movie")
@@ -243,7 +249,7 @@ class Session:
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title=title, thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu), dktitle=title,
@@ -301,7 +307,7 @@ class Session:
                 else:
                     oc = ObjectContainer(title2=L("No results"))
                 Log.Debug("No Results Found")
-                if isClient(DUMB_KEYBOARD_CLIENTS):
+                if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
                     # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
                     #                        thumb=R('search.png')))
@@ -336,7 +342,7 @@ class Session:
                     oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
                 else:
                     oc = ObjectContainer(title2="No results")
-                if isClient(DUMB_KEYBOARD_CLIENTS):
+                if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
                     # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
                     #                        thumb=R('search.png')))
@@ -347,7 +353,7 @@ class Session:
                                                 thumb=R('search.png')))
                 oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
                 return oc
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
             #                        thumb=R('search.png')))
@@ -435,7 +441,7 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=L("Please enter the name of the TV Show in the search box and press enter."))
         else:
             oc = ObjectContainer(title2=title)
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Request a TV Show",
             #                        thumb=R('search.png')))
@@ -461,7 +467,7 @@ class Session:
                 oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
             else:
                 oc = ObjectContainer(title2=L("No results"))
-            if isClient(DUMB_KEYBOARD_CLIENTS):
+            if self.use_dumb_keyboard:
                 Log.Debug("Client does not support Input. Using DumbKeyboard")
                 # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Search Again",
                 #                        thumb=R('search.png')))
@@ -520,7 +526,7 @@ class Session:
                     key=Callback(self.ConfirmTVRequest, series_id=series_id, source='TVDB', title=title, year=year, poster=poster, summary=summary,
                                  ),
                     rating_key=series_id, title=title_year, summary=summary, thumb=thumb))
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
             # DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Search Again", thumb=R('search.png')))
@@ -648,7 +654,7 @@ class Session:
 
     def ViewRequestsPassword(self):
         oc = ObjectContainer(header=TITLE, message=L("Please enter the password in the searchbox"))
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=ViewRequests, parent_call=Callback(MainMenu,)), title="Enter password:"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ViewRequests, parent_call=Callback(self.SMainMenu), dktitle=L("Enter Password"),
@@ -1486,7 +1492,7 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message)
         else:
             oc = ObjectContainer(title1=TITLE, title2=L("Register User Name"))
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterUserName, parent_call=Callback(self.ManageUser, toke=toke),
                          dktitle=L(L("Enter the user's name")),
@@ -1606,7 +1612,7 @@ class Session:
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Report a Problem"))
         oc.add(DirectoryObject(key=Callback(self.NavigateMedia), title=L("Report Problem with Media")))
-        if isClient(DUMB_KEYBOARD_CLIENTS):  # Clients in this list do not support InputDirectoryObjects
+        if self.use_dumb_keyboard:  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
             #     DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem, title="Report General Problem",
@@ -1706,7 +1712,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
             oc.add(DirectoryObject(key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, type='media'), title=problem))
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
             #                        title="Report a General Problem"))
@@ -1738,7 +1744,7 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=L("Enter your problem in the search box."))
         else:
             oc = ObjectContainer(title2=title)
-        if isClient(DUMB_KEYBOARD_CLIENTS):
+        if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
             #                        title="Report a General Problem"))

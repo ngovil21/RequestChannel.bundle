@@ -133,5 +133,7 @@
   "Backspace": "Backspace",
   "Shift": "Shift",
   "Cancel": "Cancel",
-  "Clear History": "Clear History"
+  "Clear History": "Clear History",
+  "Switch to Device Keyboard": "Switch to Device Keyboard",
+  "Switch to Alternate Keyboard": "Switch to Alternate Keyboard"
 }
