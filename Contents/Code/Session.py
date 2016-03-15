@@ -249,8 +249,8 @@ class Session:
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
         if Client.Product == "Plex Web":
             oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
-            oc.addObject(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
-                                         title=L("Please enter the movie name in the searchbox and press enter.")))
+            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
+                                   title=L("Please enter the movie name in the searchbox and press enter.")))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title=title, thumb=R('search.png')))
@@ -441,8 +441,8 @@ class Session:
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
             oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
-            oc.addObject(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
-                                         title=L("Please enter the movie name in the searchbox and press enter.")))
+            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=title),
+                                   title=L("Please enter the movie name in the searchbox and press enter.")))
         else:
             oc = ObjectContainer(title2=title)
         if self.use_dumb_keyboard:
@@ -875,8 +875,6 @@ class Session:
             return self.ManageCouchpotato()
         else:
             return MessageContainer(header=TITLE, message=L("Could not delete movie from Couchpotato"))
-
-
 
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
