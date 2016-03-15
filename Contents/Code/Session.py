@@ -137,7 +137,7 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
-        self.use_dumb_keyboard = isClient(self.use_dumb_keyboard)
+        self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
