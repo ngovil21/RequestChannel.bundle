@@ -1948,6 +1948,8 @@ def sendPushBullet(title, body, device_iden=""):
 
 def sendPushover(title, message):
     data = {'token': Prefs['pushover_api'], 'user': Prefs['pushover_user'], 'title': title, 'message': message}
+    if Prefs['pushover_channel']:
+        data['channel_tag'] = Prefs['pushover_channel']
     return HTTP.Request(PUSHOVER_API_URL, values=data)
 
 

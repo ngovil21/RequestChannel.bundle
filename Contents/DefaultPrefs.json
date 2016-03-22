@@ -224,6 +224,12 @@
     "default": ""
   },
   {
+    "id": "pushover_channel",
+    "label": "Pushover Channel (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
     "id": "email_from",
     "label": "Email to send from",
     "type": "text",
