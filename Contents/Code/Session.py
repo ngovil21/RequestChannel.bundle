@@ -1942,14 +1942,14 @@ def sendPushBullet(title, body, device_iden=""):
     data = {'type': 'note', 'title': title, 'body': body}
     if device_iden:
         data['device_iden'] = device_iden
+    if Prefs['pushbullet_channel']:
+        data['channel_tag'] = Prefs['pushbullet_channel']
     values = JSON.StringFromObject(data)
     return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
 
 
 def sendPushover(title, message):
     data = {'token': Prefs['pushover_api'], 'user': Prefs['pushover_user'], 'title': title, 'message': message}
-    if Prefs['pushover_channel']:
-        data['channel_tag'] = Prefs['pushover_channel']
     return HTTP.Request(PUSHOVER_API_URL, values=data)
 
 
