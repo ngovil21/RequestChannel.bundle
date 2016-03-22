@@ -212,6 +212,12 @@
     "default": ""
   },
   {
+    "id": "pushbullet_channel",
+    "label": "Pushover Channel (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
     "id": "pushover_api",
     "label": "Pushover API Key",
     "type": "text",
