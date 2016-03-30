@@ -208,6 +208,15 @@ class Session:
         return oc
 
     def Register(self, message=None):
+        url = "https://plex.tv"
+        try:
+            xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': self.token})
+            plexTVUser = xml.get("myPlexUsername")
+            Log.Debug("PlexTV Username: " + plexTVUser)
+            self.RegisterName(query=plexTVUser)
+            return self.SMainMenu(message=L("Your username has been registered."), title1=L("Main Menu"), title2=L("Registered"))
+        except:
+            Log.Debug("PlexTV Username: N/A")
         if message is None:
             message = L("Unrecognized device. The admin would like you to register it.")
         if Client.Product == "Plex Web":
@@ -440,9 +449,9 @@ class Session:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
-            oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
+            oc = ObjectContainer(header=TITLE, message=L("Please enter the tv show in the searchbox and press enter."))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow, title=title),
-                                   title=L("Please enter the movie name in the searchbox and press enter.")))
+                                   title=L("Please enter the tv show in the searchbox and press enter.")))
         else:
             oc = ObjectContainer(title2=title)
         if self.use_dumb_keyboard:
@@ -611,6 +620,97 @@ class Session:
                 return self.SendToSickbeard(tvdbid=series_id, callback=Callback(self.SMainMenu, message=L("TV Show has been requested"), title1=title,
                                                                                 title2=L("Requested")))
             return self.SMainMenu(message=L("TV Show has been requested"), title1=title, title2=L("Requested"))
+
+            # TVShow Functions
+
+    def AddNewMusic(self, title=None):
+        if title is None:
+            title = L("Request Music")
+        if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
+            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
+        if self.token in Dict['blocked']:
+            return self.SMainMenu(message=L("Sorry you have been blocked."),
+                                  title1=L("Main Menu"), title2=L("User Blocked"))
+        oc = ObjectContainer()
+        if Client.Product == "Plex Web":
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="artist"), title=L("Search Artist")))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release"), title=L("Search Album")))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="recording"), title=L("Search Song")))
+        elif self.use_dumb_keyboard:
+            Log.Debug("Client does not support Input. Using DumbKeyboard")
+            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Request a TV Show",
+            #                        thumb=R('search.png')))
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Search Artist"),
+                         message=L("Enter the name of the Artist"), dkthumb=R('search.png'), searchtype="artist")
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Search Album"),
+                         message=L("Enter the name of the Album"), dkthumb=R('search.png'), searchtype="release")
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Search Song"),
+                         message=L("Enter the name of the Song"), dkthumb=R('search.png'), searchtype="recording")
+        else:
+            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="artist", searchstr="Artist"), title=L("Search Artist"),
+                                        prompt=L("Enter the name of the artist"),
+                                        thumb=R('search.png')))
+            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="release", searchstr="Album"), title=L("Search Album"),
+                                        prompt=L("Enter the name of the album"),
+                                        thumb=R('search.png')))
+            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="recording", searchstr="Song"), title=L("Search Song"),
+                                        prompt=L("Enter the name of the song"),
+                                        thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+        return oc
+
+    def NewMusicSearch(self, searchtype, searchstr):
+        if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
+            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
+        if self.token in Dict['blocked']:
+            return self.SMainMenu(message=L("Sorry you have been blocked."),
+                                  title1=L("Main Menu"), title2=L("User Blocked"))
+        if Client.Product == "Plex Web":
+            oc = ObjectContainer(header=TITLE, message=F("Please enter the name of the %s in the searchbox and press enter.", searchstr))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, title=title),
+                                   title=F("Please enter the %s in the searchbox and press enter.", searchstr)))
+        else:
+            oc = ObjectContainer(title2=title)
+        if self.use_dumb_keyboard:
+            Log.Debug("Client does not support Input. Using DumbKeyboard")
+            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Request a TV Show",
+            #                        thumb=R('search.png')))
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Request Music"),
+                         message=L("Enter the name of the " + searchstr), dkthumb=R('search.png'), searchtype=searchtype)
+        else:
+            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype=searchtype), title=L("Request Music"),
+                                        prompt=L("Enter the name of the " + searchstr),
+                                        thumb=R('search.png')))
+        return oc
+
+    def SearchMusic(self, query, searchtype):
+        if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
+            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
+                return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
+                                      title1=L("Main Menu"), title2=L("Weekly Limit"))
+        oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
+        query = String.Quote(query, usePlus=True)
+        url = " http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
+        results = XML.ElementFromURL(url)
+        if searchtype == "artist":
+            artists = results.xpath("/metadata/artist-list/artist")
+            for i in range(0, len(artists)):
+                pass
+        if self.use_dumb_keyboard:
+            Log.Debug("Client does not support Input. Using DumbKeyboard")
+            # oc.add(
+            # DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Search Again", thumb=R('search.png')))
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
+                         message=L("Enter the name of the song or album"), dkthumb=R('search.png'))
+        else:
+            oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Search Again"), prompt=L("Enter the name of the song or album"),
+                                        thumb=R('search.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
+        return oc
 
     # Request Functions
     def ViewRequests(self, query="", token_hash=None, message=None):
