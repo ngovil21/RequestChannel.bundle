@@ -1573,13 +1573,13 @@ class Session:
         # elif Prefs['sickbeard_api']:
         #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, s=0), title=F("removetvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'), title=F("removetvmanage", tv_auto)))
         elif Prefs['sonarr_api'] or Prefs['sickbeard_api'] or Prefs['couchpotato_api']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, s=1), title=F("allowtvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='True'), title=F("allowtvmanage", tv_auto)))
         if toke in Dict['blocked']:
-            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='False'), title=L("Unblock User")))
+            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, setter='False'), title=L("Unblock User")))
         else:
-            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='True'), title=L("Block User")))
+            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, setter='True'), title=L("Block User")))
         oc.add(PopupDirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='False'), title=L("Delete User")))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
 
@@ -1629,14 +1629,13 @@ class Session:
                 return self.ManageUser(toke=toke, message="User has been unblocked.")
         return self.ManageUser(toke=toke)
 
-    def SonarrUser(self, toke, s):
-        setter = bool(s)
+    def SonarrUser(self, toke, setter):
         tv_auto = ""
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
         elif Prefs['sickbeard_api']:
             tv_auto = "Sickbeard"
-        if setter:
+        if setter == 'True':
             if toke in Dict['sonarr_users']:
                 return self.ManageUser(toke=toke, message="User already in " + tv_auto + " list")
             else:
@@ -1644,7 +1643,7 @@ class Session:
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
         else:
-            if toke in Dict['blocked']:
+            if toke in Dict['sonarr_users']:
                 del Dict['sonarr_users'][Dict['sonarr_users'].index(toke)]
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
