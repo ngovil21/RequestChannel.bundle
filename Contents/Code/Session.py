@@ -1573,9 +1573,9 @@ class Session:
         # elif Prefs['sickbeard_api']:
         #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='False'), title=F("removetvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set=0), title=F("removetvmanage", tv_auto)))
         elif Prefs['sonarr_api'] or Prefs['sickbeard_api'] or Prefs['couchpotato_api']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='True'), title=F("allowtvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set=1), title=F("allowtvmanage", tv_auto)))
         if toke in Dict['blocked']:
             oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='False'), title=L("Unblock User")))
         else:
@@ -1629,14 +1629,14 @@ class Session:
                 return self.ManageUser(toke=toke, message="User has been unblocked.")
         return self.ManageUser(toke=toke)
 
-    def SonarrUser(self, toke, set):
-        set = bool(set)
+    def SonarrUser(self, toke, s):
+        setter = bool(s)
         tv_auto = ""
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
         elif Prefs['sickbeard_api']:
             tv_auto = "Sickbeard"
-        if set:
+        if setter:
             if toke in Dict['sonarr_users']:
                 return self.ManageUser(toke=toke, message="User already in " + tv_auto + " list")
             else:
