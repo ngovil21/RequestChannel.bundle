@@ -1630,19 +1630,20 @@ class Session:
         return self.ManageUser(toke=toke)
 
     def SonarrUser(self, toke, set):
+        set = bool(set)
         tv_auto = ""
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
         elif Prefs['sickbeard_api']:
             tv_auto = "Sickbeard"
-        if set == 'True':
+        if set:
             if toke in Dict['sonarr_users']:
                 return self.ManageUser(toke=toke, message="User already in " + tv_auto + " list")
             else:
                 Dict['sonarr_users'].append(toke)
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
-        elif set == 'False':
+        else:
             if toke in Dict['blocked']:
                 Dict['sonarr_users'].remove(toke)
                 Dict.Save()
