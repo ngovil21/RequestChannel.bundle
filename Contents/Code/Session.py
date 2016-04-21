@@ -1529,21 +1529,21 @@ class Session:
                 return self.ManageUser(toke=toke, message="User has been unblocked.")
         return self.ManageUser(toke=toke)
 
-    def SonarrUser(self, toke, set):
+    def SonarrUser(self, toke, setter):
         tv_auto = ""
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
         elif Prefs['sickbeard_api']:
             tv_auto = "Sickbeard"
-        if set == 'True':
+        if setter == 'True':
             if toke in Dict['sonarr_users']:
                 return self.ManageUser(toke=toke, message="User already in " + tv_auto + " list")
             else:
                 Dict['sonarr_users'].append(toke)
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
-        elif set == 'False':
-            if toke in Dict['blocked']:
+        else:
+            if toke in Dict['sonarr_users']:
                 Dict['sonarr_users'].remove(toke)
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
