@@ -1573,9 +1573,9 @@ class Session:
         # elif Prefs['sickbeard_api']:
         #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set=0), title=F("removetvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, s=0), title=F("removetvmanage", tv_auto)))
         elif Prefs['sonarr_api'] or Prefs['sickbeard_api'] or Prefs['couchpotato_api']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set=1), title=F("allowtvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, s=1), title=F("allowtvmanage", tv_auto)))
         if toke in Dict['blocked']:
             oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='False'), title=L("Unblock User")))
         else:
