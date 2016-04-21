@@ -208,6 +208,15 @@ class Session:
         return oc
 
     def Register(self, message=None):
+        url = "https://plex.tv"        
+        try:
+            xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': self.token})
+            plexTVUser = xml.get("myPlexUsername")
+            Log.Debug("PlexTV Username: " + plexTVUser)
+            self.RegisterName(query=plexTVUser)
+            return self.SMainMenu(message=L("Your username has been registered."), title1=L("Main Menu"), title2=L("Registered"))
+        except:
+            Log.Debug("PlexTV Username: N/A")
         if message is None:
             message = L("Unrecognized device. The admin would like you to register it.")
         if Client.Product == "Plex Web":
