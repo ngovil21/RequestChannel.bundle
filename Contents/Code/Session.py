@@ -1644,7 +1644,8 @@ class Session:
                 return self.ManageUser(toke=toke, message="User is now allowed to manage " + tv_auto)
         else:
             if toke in Dict['sonarr_users']:
-                del Dict['sonarr_users'][Dict['sonarr_users'].index(toke)]
+                Dict['sonarr_users'].remove(toke)
+                # del Dict['sonarr_users'][Dict['sonarr_users'].index(toke)]
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
         return self.ManageUser(toke=toke)
