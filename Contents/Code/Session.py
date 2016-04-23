@@ -1482,13 +1482,13 @@ class Session:
         # elif Prefs['sickbeard_api']:
         #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='False'), title=F("removetvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'), title=F("removetvmanage", tv_auto)))
         elif Prefs['sonarr_api'] or Prefs['sickbeard_api'] or Prefs['couchpotato_api']:
-            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, set='True'), title=F("allowtvmanage", tv_auto)))
+            oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='True'), title=F("allowtvmanage", tv_auto)))
         if toke in Dict['blocked']:
-            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='False'), title=L("Unblock User")))
+            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, setter='False'), title=L("Unblock User")))
         else:
-            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, set='True'), title=L("Block User")))
+            oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, setter='True'), title=L("Block User")))
         oc.add(PopupDirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='False'), title=L("Delete User")))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
 
