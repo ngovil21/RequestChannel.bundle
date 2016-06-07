@@ -186,7 +186,7 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("View Requests")))  # No password needed this session
             else:
                 oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword),
-                                       title="View Requests"))  # Set View Requests to locked and ask for password
+                                       title=L("View Requests")))  # Set View Requests to locked and ask for password
         else:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=Hash.SHA1(self.token)), title=L("View My Requests")))
         if Prefs['couchpotato_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
