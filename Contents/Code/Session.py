@@ -449,9 +449,9 @@ class Session:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
-            oc = ObjectContainer(header=TITLE, message=L("Please enter the movie name in the searchbox and press enter."))
+            oc = ObjectContainer(header=TITLE, message=L("Please enter the name of the TV Show in the search box and press enter."))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow, title=title),
-                                   title=L("Please enter the movie name in the searchbox and press enter.")))
+                                   title=L("Please enter the name of the TV Show in the search box and press enter.")))
         else:
             oc = ObjectContainer(title2=title)
         if self.use_dumb_keyboard:
