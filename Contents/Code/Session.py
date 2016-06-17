@@ -707,11 +707,12 @@ class Session:
                     a_id = e.get('id')
                     if not a_id:
                         continue
-                    a_name = e.name.text
-                    Log(a_name)
-                    Log(a_id)
-                    a_score = e.get('ext:score',"0")
-                    oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=a_id, title=a_name + " (" + a_score + ")"))
+                    try:
+                        a_name = e.name.text
+                    except:
+                        continue
+                    Log(str(e.attrib))
+                    oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=a_id, title=a_name,))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
