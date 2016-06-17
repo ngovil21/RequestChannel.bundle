@@ -711,6 +711,7 @@ class Session:
                 a_name = e.xpath("./name/text()")[0]
                 Log(a_name)
                 a_id = e.get('id')
+                Log(a_id)
                 a_score = e.get('ext:score')
                 oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=str(i), title=a_name + " (" + a_score + ")"))
         if self.use_dumb_keyboard:
