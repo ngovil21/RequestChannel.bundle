@@ -641,9 +641,9 @@ class Session:
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         oc = ObjectContainer()
         if Client.Product == "Plex Web":
-            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="artist"), title=L("Search Artist")))
-            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release"), title=L("Search Album")))
-            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="recording"), title=L("Search Song")))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="artist", searchstr="Artist"), title=L("Search Artist")))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release", searchstr="Album"), title=L("Search Album")))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="recording", searchstr="Song"), title=L("Search Song")))
         elif self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Request a TV Show",
@@ -684,10 +684,10 @@ class Session:
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Request Music"),
-                         message=L("Enter the name of the " + searchstr), dkthumb=R('search.png'), searchtype=searchtype)
+                         message=L("Enter the name of the " + searchtype), dkthumb=R('search.png'), searchtype=searchtype)
         else:
             oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype=searchtype), title=L("Request Music"),
-                                        prompt=L("Enter the name of the " + searchstr),
+                                        prompt=L("Enter the name of the " + searchtype),
                                         thumb=R('search.png')))
         return oc
 
