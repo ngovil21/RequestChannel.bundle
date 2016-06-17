@@ -700,7 +700,7 @@ class Session:
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ObjectFromURL(url)
-        Log(XML.StringFromObject(results))
+        Log(results.tag)
         if searchtype == "artist":
             artists = results.findall("//artist")
             Log(str(len(artists)))
