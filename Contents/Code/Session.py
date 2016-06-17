@@ -701,9 +701,11 @@ class Session:
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ElementFromURL(url)
         if searchtype == "artist":
-            artists = results.xpath("/metadata/artist-list/artist")
+            artists = results.xpath("*//metadata/artist-list/artist")
+            Log(str(len(artists)))
             for i in range(0, len(artists)):
                 a_name = artists(i).xpath("./name/text")[0]
+                Log(a_name)
                 a_id = artists(i).get('id')
                 a_score = artists(i).get('ext:score')
                 oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=str(i), title=a_name + " (" + a_score + ")"))
