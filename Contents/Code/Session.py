@@ -708,7 +708,7 @@ class Session:
             artists = results.iter("artist")
             Log(str(len(artists)))
             for e in artists:
-                a_name = e.xpath("./name/text")[0]
+                a_name = e.xpath("./name/text()")[0]
                 Log(a_name)
                 a_id = e.get('id')
                 a_score = e.get('ext:score')
