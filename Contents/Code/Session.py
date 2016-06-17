@@ -91,6 +91,11 @@ class Session:
         Route.Connect(PREFIX + '/%s/searchTV' % session_id, self.SearchTV)
         Route.Connect(PREFIX + '/%s/confirmtvrequest' % session_id, self.ConfirmTVRequest)
         Route.Connect(PREFIX + '/%s/addtvrequest' % session_id, self.AddTVRequest)
+        Route.Connect(PREFIX + '/%s/addnewmusic' % session_id, self.AddNewMusic)
+        Route.Connect(PREFIX + '/%s/newmusicsearch' % session_id, self.NewMusicSearch)
+        Route.Connect(PREFIX + '/%s/searchmusic' % session_id, self.SearchMusic)
+        Route.Connect(PREFIX + '/%s/confirmrequestartist' % session_id, self.ConfirmArtistRequest)
+
         Route.Connect(PREFIX + '/%s/viewrequests' % session_id, self.ViewRequests)
         Route.Connect(PREFIX + '/%s/viewrequestspassword' % session_id, self.ViewRequestsPassword)
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
@@ -179,6 +184,7 @@ class Session:
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"), prompt=L("Enter the name of the TV Show")))
+        oc.add(DirectoryObject(key=Callback(self.AddNewMusic()), title=L("Request Music")))
         if Prefs['usersviewrequests'] or self.is_admin:
             if not self.locked or Prefs['password'] is None or Prefs['password'] == "":
                 if self.locked:
@@ -694,12 +700,15 @@ class Session:
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
-        url = " http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
+        url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ElementFromURL(url)
         if searchtype == "artist":
             artists = results.xpath("/metadata/artist-list/artist")
             for i in range(0, len(artists)):
-                pass
+                a_name = artists(i).xpath("./name/text")[0]
+                a_id = artists(i).get('id')
+                a_score = artists(i).get('ext:score')
+                oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating+key=str(i), title=a_name + " (" + a_score + ")"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
@@ -711,6 +720,9 @@ class Session:
                                         thumb=R('search.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         return oc
+
+    def ConfirmArtistRequest(self,artist_name, artist_id):
+        return
 
     # Request Functions
     def ViewRequests(self, query="", token_hash=None, message=None):
