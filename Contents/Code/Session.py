@@ -707,11 +707,7 @@ class Session:
                     a_id = e.get('id')
                     if not a_id:
                         continue
-                    a_name = e.find("name")
-                    if a_name:
-                        a_name = a_name.text
-                    else:
-                        a_name = "Failed"
+                    a_name = e.name.text
                     Log(a_name)
                     Log(a_id)
                     a_score = e.get('ext:score',"0")
