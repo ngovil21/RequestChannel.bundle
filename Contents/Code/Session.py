@@ -701,7 +701,7 @@ class Session:
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ObjectFromURL(url)
         if searchtype == "artist":
-            artist_list = results.iter("artist-list")
+            artist_list = results[0]
             Log(artist_list.tag)
             artists = artist_list.findall("artist")
             Log(str(len(artists)))
