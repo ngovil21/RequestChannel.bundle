@@ -703,7 +703,11 @@ class Session:
         if searchtype == "artist":
             for e in results.iter():
                 if "artist" in e.tag:
-                    a_name = e.xpath("./name/text()")[0]
+                    a_name = e.xpath("./name/text()")
+                    if a_name:
+                        a_name = a_name[0]
+                    else:
+                        a_name = "Failed"
                     Log(a_name)
                     a_id = e.get('id')
                     Log(a_id)
