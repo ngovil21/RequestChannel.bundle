@@ -703,6 +703,7 @@ class Session:
         if searchtype == "artist":
             for e in results.iter():
                 if "artist" in e.tag:
+                    Log(e.tag)
                     a_id = e.get('id')
                     if not a_id:
                         continue
