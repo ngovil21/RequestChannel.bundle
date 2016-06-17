@@ -184,7 +184,7 @@ class Session:
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"), prompt=L("Enter the name of the TV Show")))
-        oc.add(DirectoryObject(key=Callback(self.AddNewMusic()), title=L("Request Music")))
+        oc.add(DirectoryObject(key=Callback(self.AddNewMusic), title=L("Request Music")))
         if Prefs['usersviewrequests'] or self.is_admin:
             if not self.locked or Prefs['password'] is None or Prefs['password'] == "":
                 if self.locked:
