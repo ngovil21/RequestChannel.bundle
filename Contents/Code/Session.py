@@ -700,9 +700,10 @@ class Session:
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ObjectFromURL(url)
-        Log(results.tag)
         if searchtype == "artist":
-            artists = results.findall("//artist")
+            artist_list = results.find("/metadata/artist-list")
+            Log(artist_list.tag)
+            artists = results.findall("artist")
             Log(str(len(artists)))
             for i in range(0, len(artists)):
                 a_name = artists(i).xpath("./name/text")[0]
