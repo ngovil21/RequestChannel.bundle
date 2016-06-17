@@ -700,6 +700,7 @@ class Session:
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ElementFromURL(url)
+        Log(XML.StringFromElement(results))
         if searchtype == "artist":
             artists = results.xpath("//artist")
             Log(str(len(artists)))
