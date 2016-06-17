@@ -699,7 +699,7 @@ class Session:
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
-        results = XML.ObjectFromURL(url)
+        results = XML.ElementFromURL(url)
         if searchtype == "artist":
             for e in results.iter():
                 if "artist" in e.tag:
@@ -714,7 +714,7 @@ class Session:
                     Log(a_name)
                     Log(a_id)
                     a_score = e.get('ext:score',"0")
-                    oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key="25", title=a_name + " (" + a_score + ")"))
+                    oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=a_id, title=a_name + " (" + a_score + ")"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
