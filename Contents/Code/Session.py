@@ -701,19 +701,14 @@ class Session:
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ObjectFromURL(url)
         if searchtype == "artist":
-            # for e in results.iter():
-            #     Log(e.tag)
-            # artist_list = results[0]
-            # Log(artist_list.tag)
-            artists = results.iter("artist")
-            #Log(str(len(artists)))
-            for e in artists:
-                a_name = e.xpath("./name/text()")[0]
-                Log(a_name)
-                a_id = e.get('id')
-                Log(a_id)
-                a_score = e.get('ext:score')
-                oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key="25", title=a_name + " (" + a_score + ")"))
+            for e in results.iter():
+                if "artist" in e.tag:
+                    a_name = e.xpath("./name/text()")[0]
+                    Log(a_name)
+                    a_id = e.get('id')
+                    Log(a_id)
+                    a_score = e.get('ext:score')
+                    oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key="25", title=a_name + " (" + a_score + ")"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
