@@ -703,13 +703,15 @@ class Session:
         if searchtype == "artist":
             for e in results.iter():
                 if "artist" in e.tag:
-                    a_name = e.xpath("./name/text")
+                    a_id = e.get('id')
+                    if not a_id:
+                        continue
+                    a_name = e.find("name")
                     if a_name:
-                        a_name = a_name[0]
+                        a_name = a_name.text
                     else:
                         a_name = "Failed"
                     Log(a_name)
-                    a_id = e.get('id')
                     Log(a_id)
                     a_score = e.get('ext:score',"0")
                     oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key="25", title=a_name + " (" + a_score + ")"))
