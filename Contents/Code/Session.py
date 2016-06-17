@@ -677,10 +677,10 @@ class Session:
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
             oc = ObjectContainer(header=TITLE, message=F("Please enter the name of the %s in the searchbox and press enter.", searchstr))
-            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, title=title),
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype=searchtype, searchstr=searchstr),
                                    title=F("Please enter the %s in the searchbox and press enter.", searchstr)))
         else:
-            oc = ObjectContainer(title2=title)
+            oc = ObjectContainer(title2=searchstr)
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Request Music"),
