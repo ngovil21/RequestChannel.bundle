@@ -683,8 +683,6 @@ class Session:
             oc = ObjectContainer(title2=title)
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Request a TV Show",
-            #                        thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Request Music"),
                          message=L("Enter the name of the " + searchstr), dkthumb=R('search.png'), searchtype=searchtype)
         else:
@@ -708,7 +706,7 @@ class Session:
                 a_name = artists(i).xpath("./name/text")[0]
                 a_id = artists(i).get('id')
                 a_score = artists(i).get('ext:score')
-                oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating+key=str(i), title=a_name + " (" + a_score + ")"))
+                oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=str(i), title=a_name + " (" + a_score + ")"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
