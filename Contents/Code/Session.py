@@ -702,7 +702,7 @@ class Session:
         results = XML.ObjectFromURL(url)
         Log(XML.StringFromObject(results))
         if searchtype == "artist":
-            artists = results.xpath("//artist")
+            artists = results.findall("//artist")
             Log(str(len(artists)))
             for i in range(0, len(artists)):
                 a_name = artists(i).xpath("./name/text")[0]
