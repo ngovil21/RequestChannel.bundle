@@ -701,7 +701,7 @@ class Session:
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
         results = XML.ElementFromURL(url)
         if searchtype == "artist":
-            artists = results.xpath("*//metadata/artist-list/artist")
+            artists = results.xpath("//artist")
             Log(str(len(artists)))
             for i in range(0, len(artists)):
                 a_name = artists(i).xpath("./name/text")[0]
