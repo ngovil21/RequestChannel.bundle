@@ -699,7 +699,7 @@ class Session:
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
-        results = XML.ElementFromURL(url)
+        results = XML.ObjectFromURL(url)
         if searchtype == "artist":
             for e in results.iter():
                 if "artist" in e.tag:
