@@ -7,6 +7,7 @@ import traceback
 
 # Override Plex L, F functions
 from LocalePatch import L, F
+from bs4.builder import XML
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
@@ -75,10 +76,14 @@ LANGUAGE_ABBREVIATIONS = {
 class Session:
     def __init__(self, session_id):
         self.locked = True
+        # Do an HTTP request to set Request Headers to get Token
         try:
             HTTP.Request("127.0.0.1:32400/library")
         except:
             pass
+        self.token = Request.Headers.get("X-Plex-Token", "")
+        if self.token:
+            session_id = Hash.SHA1(self.token)
         Route.Connect(PREFIX + '/%s/mainmenu' % session_id, self.SMainMenu)
         Route.Connect(PREFIX + '/%s/register' % session_id, self.Register)
         Route.Connect(PREFIX + '/%s/switchkeyboard' % session_id, self.SwitchKeyboard)
@@ -88,14 +93,14 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmmovierequest' % session_id, self.ConfirmMovieRequest)
         Route.Connect(PREFIX + '/%s/addmovierequest' % session_id, self.AddMovieRequest)
         Route.Connect(PREFIX + '/%s/addnewtvshow' % session_id, self.AddNewTVShow)
-        Route.Connect(PREFIX + '/%s/searchTV' % session_id, self.SearchTV)
+        Route.Connect(PREFIX + '/%s/searchtv' % session_id, self.SearchTV)
         Route.Connect(PREFIX + '/%s/confirmtvrequest' % session_id, self.ConfirmTVRequest)
         Route.Connect(PREFIX + '/%s/addtvrequest' % session_id, self.AddTVRequest)
         Route.Connect(PREFIX + '/%s/addnewmusic' % session_id, self.AddNewMusic)
         Route.Connect(PREFIX + '/%s/newmusicsearch' % session_id, self.NewMusicSearch)
         Route.Connect(PREFIX + '/%s/searchmusic' % session_id, self.SearchMusic)
-        Route.Connect(PREFIX + '/%s/confirmrequestartist' % session_id, self.ConfirmArtistRequest)
-
+        Route.Connect(PREFIX + '/%s/confirmmusicrequest' % session_id, self.ConfirmMusicRequest)
+        Route.Connect(PREFIX + '/%s/addmusicrequest' % session_id, self.AddMusicRequest)
         Route.Connect(PREFIX + '/%s/viewrequests' % session_id, self.ViewRequests)
         Route.Connect(PREFIX + '/%s/viewrequestspassword' % session_id, self.ViewRequestsPassword)
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
@@ -698,35 +703,87 @@ class Session:
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
-        url = "http://musicbrainz.org/ws/2/%s/?query=%s" % (searchtype, query)
-        results = XML.ObjectFromURL(url)
-        if searchtype == "artist":
-            for e in results.iter():
-                if "artist" in e.tag:
-                    Log(e.tag)
-                    a_id = e.get('id')
-                    if not a_id:
-                        continue
-                    try:
-                        a_name = e.name.text
-                    except:
-                        continue
-                    score = e.get("score","0")
-                    oc.add(ArtistObject(key=Callback(self.ConfirmArtistRequest,a_name,a_id), rating_key=a_id, title=a_name + " (" + score + ")"))
+        url = "http://musicbrainz.org/ws/2/%s/?query=%s&fmt=json" % (searchtype, query)
+        results = JSON.ElementFromURL(url)
+        count = 0
+        for e in results[searchtype+'s']:
+            if 'id' not in e:
+                continue
+            e_id = e.get('id')
+            e_score = "+" + e.get('score', "0")
+            if 'title' in e:
+                e_name = e.get('title', None)
+            else:
+                e_name = e.get('name', "")
+            e_date = e.get('date', None)
+            e_image = None
+            # ToDo: Get image for first 10 results
+            title = e_name
+            if e_date:
+                title += " (" + e_date + ")"
+            title += " +" + e_score
+            if searchtype == "artist":
+                if count < 10:
+                    properties_page = JSON.ElementFromURL("http://musicbrainz.org/ws/2/%s/%s?inc=url-rels&fmt=json" % (searchtype, e_id))
+                    if 'relations' in properties_page:
+                        for r in properties_page['relations']:
+                            if r.get('type') == "image":
+                                e_image = r.get('url', {}).get('resource', None)
+                oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_pic))
+            elif searchtype == "release":
+                e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
+                oc.add(AlbumObject(
+                    key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
+                    rating_key=e_id, title=title, thumb=e_image))
+            elif searchtype == "recording":
+                oc.add(SongObject(
+                    key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
+                    rating_key=e_id, title=title, thumb=e_image))
+            count += 1
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
             # DirectoryObject(key=Callback(Keyboard, callback=SearchTV, parent_call=Callback(MainMenu,)), title="Search Again", thumb=R('search.png')))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
-                         message=L("Enter the name of the song or album"), dkthumb=R('search.png'))
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Search Again"),
+                         message=L("Enter the name of the " + searchtype), dkthumb=R('search.png'), searchtype=searchtype)
         else:
-            oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Search Again"), prompt=L("Enter the name of the song or album"),
+            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype=searchtype), title=L("Search Again"), prompt=L("Enter the name of the " + searchtype),
                                         thumb=R('search.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         return oc
 
-    def ConfirmArtistRequest(self,artist_name, artist_id):
-        return
+    def ConfirmMusicRequest(self, searchtype, music_id, music_name, music_date=None, music_image=None):
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc = ObjectContainer(title1="Confirm Music Request", title2=F("confirmmusicrequest", music_name),
+                                 header=TITLE, message=F("requestmusic", music_name))
+        else:
+            oc = ObjectContainer(title1=L("Confirm Movie Request"), title2=music_name + "?")
+
+        oc.add(DirectoryObject(
+            key=Callback(self.AddMusicRequest, searchtype=searchtype, music_id=music_id, music_name=music_name, music_date=music_date, music_image=music_image), title= L("Yes"), thumb=R('check.png')))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
+
+        return oc
+
+    def AddMusicRequest(self, searchtype, music_id, music_name, music_date=None, music_image=None):
+        title = music_name
+        if music_date:
+            title += " (" + music_date + ")"
+        if music_id in Dict['music']:
+            Log.Debug("Music has already been requested")
+            return self.SMainMenu(message=L("Music has already been requested"), title1=music_name, title2=L("Already Requested"))
+        else:
+            user = "Admin" if self.is_admin else ""
+            if self.token in Dict['register']:
+                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
+                user = userFromToken(self.token)
+        Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'name': music_name, 'date': music_date, 'image': music_image,
+                                  'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False}
+        Dict.Save()
+
+        notifyRequest(req_id=music_id, req_type='music')
+
+        return self.SMainMenu(message=L("Music has been requested"), title1=title, title2=L("Requested"))
 
     # Request Functions
     def ViewRequests(self, query="", token_hash=None, message=None):
