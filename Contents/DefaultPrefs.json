@@ -213,7 +213,7 @@
   },
   {
     "id": "pushbullet_channel",
-    "label": "Pushover Channel (optional)",
+    "label": "Pushbullet Channel (optional) (Don't use #)",
     "type": "text",
     "default": ""
   },
