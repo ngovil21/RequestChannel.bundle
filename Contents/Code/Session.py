@@ -745,7 +745,7 @@ class Session:
             #         except:
             #             pass
             #     oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
-        #elif searchtype == "release":
+            #elif searchtype == "release":
             e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
             oc.add(AlbumObject(
                 key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
