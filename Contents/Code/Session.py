@@ -732,7 +732,7 @@ class Session:
                         for r in properties_page['relations']:
                             if r.get('type') == "image":
                                 e_image = r.get('url', {}).get('resource', None)
-                oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_pic))
+                oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
             elif searchtype == "release":
                 e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
                 oc.add(AlbumObject(
