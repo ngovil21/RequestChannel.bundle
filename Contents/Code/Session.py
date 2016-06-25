@@ -183,9 +183,9 @@ class Session:
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Request an Album"),
                          message=L("Enter the name of the Album"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=Locale.LocalString("Request a Movie")))
+            oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
-            oc.add(DirectoryObject(key=Callback(self.AddNewMusic), title=L("Request Music")))
+            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release", searchstr="Album"), title=L("Request an Album")))
         else:  # All other clients
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
