@@ -180,15 +180,21 @@ class Session:
                          message=L("Enter the name of the Movie"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu), dktitle=L("Request a TV Show"),
                          message=L("Enter the name of the TV Show"))
+            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu), dktitle=L("Request an Album"),
+                         message=L("Enter the name of the Album"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=Locale.LocalString("Request a Movie")))
             oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
+            oc.add(DirectoryObject(key=Callback(self.AddNewMusic), title=L("Request Music")))
         else:  # All other clients
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"), prompt=L("Enter the name of the Movie")))
             oc.add(
                 InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"), prompt=L("Enter the name of the TV Show")))
-        oc.add(DirectoryObject(key=Callback(self.AddNewMusic), title=L("Request Music")))
+            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="release", searchstr="Album"), title=L("Request an Album"),
+                                        prompt=L("Enter the name of the Album"),
+                                        thumb=R('search.png')))
+
         if Prefs['usersviewrequests'] or self.is_admin:
             if not self.locked or Prefs['password'] is None or Prefs['password'] == "":
                 if self.locked:
@@ -724,7 +730,7 @@ class Session:
             title = e_name
             if e_date:
                 title += " (" + e_date + ")"
-            title += " +" + e_score
+            title += " " + e_score
             if searchtype == "artist":
                 if count < 10:
                     try:
