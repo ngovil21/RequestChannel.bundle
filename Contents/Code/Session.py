@@ -697,7 +697,7 @@ class Session:
                          message=L("Enter the name of the " + searchtype), dkthumb=R('search.png'), searchtype=searchtype)
         else:
             oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype=searchtype), title=L("Request Music"),
-                                        prompt=L("Enter the name of the " + searchtype),
+                                        prompt=L("Enter the name of the " + searchstr),
                                         thumb=R('search.png')))
         return oc
 
@@ -715,10 +715,10 @@ class Session:
             Log.Debug(str(traceback.format_exc()))
             return oc
         count = 0
-        for e in results.get(searchtype+'s'):
-            if 'id' not in e:
-                continue
+        for e in results.get(searchtype + 's'):
             e_id = e.get('id')
+            if not e_id:
+                continue
             e_score = "+" + e.get('score', "0")
             if 'title' in e:
                 e_name = e.get('title', None)
