@@ -714,6 +714,7 @@ class Session:
         except:
             Log.Debug(str(traceback.format_exc()))
             return oc
+        Log(str(len(results)))
         count = 0
         for e in results.get(searchtype + 's'):
             e_id = e.get('id')
