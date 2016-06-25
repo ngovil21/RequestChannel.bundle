@@ -714,9 +714,10 @@ class Session:
         except:
             Log.Debug(str(traceback.format_exc()))
             return oc
-        Log(str(len(results)))
+        searches = results.get(searchtype + "s")
+        Log(str(len(searches)))
         count = 0
-        for e in results.get(searchtype + 's'):
+        for e in searches:
             e_id = e.get('id')
             if not e_id:
                 continue
