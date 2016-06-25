@@ -701,7 +701,7 @@ class Session:
                                         thumb=R('search.png')))
         return oc
 
-    def SearchMusic(self, query, searchtype):
+    def SearchMusic(self, query, searchtype, searchstr):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
@@ -718,6 +718,7 @@ class Session:
         Log(str(len(searches)))
         count = 0
         for e in searches:
+            Log(str(e))
             e_id = e.get('id')
             if not e_id:
                 continue
@@ -744,16 +745,17 @@ class Session:
                     except:
                         pass
                 oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
-            elif searchtype == "release":
-                e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
-                oc.add(AlbumObject(
-                    key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
-                    rating_key=e_id, title=title, thumb=e_image))
+        #elif searchtype == "release":
+            e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
+            oc.add(AlbumObject(
+                key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
+                rating_key=e_id, title=title, thumb=e_image))
             elif searchtype == "recording":
                 oc.add(SongObject(
                     key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
                     rating_key=e_id, title=title, thumb=e_image))
             count += 1
+            break;
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
