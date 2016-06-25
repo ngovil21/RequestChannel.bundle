@@ -703,7 +703,7 @@ class Session:
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s&fmt=json" % (searchtype, query)
-        results = JSON.ElementFromURL(url)
+        results = JSON.ObjectFromURL(url)
         count = 0
         for e in results[searchtype+'s']:
             if 'id' not in e:
@@ -723,7 +723,7 @@ class Session:
             title += " +" + e_score
             if searchtype == "artist":
                 if count < 10:
-                    properties_page = JSON.ElementFromURL("http://musicbrainz.org/ws/2/%s/%s?inc=url-rels&fmt=json" % (searchtype, e_id))
+                    properties_page = JSON.ObjectFromURL("http://musicbrainz.org/ws/2/%s/%s?inc=url-rels&fmt=json" % (searchtype, e_id))
                     if 'relations' in properties_page:
                         for r in properties_page['relations']:
                             if r.get('type') == "image":
