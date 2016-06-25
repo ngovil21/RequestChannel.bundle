@@ -7,7 +7,6 @@ import traceback
 
 # Override Plex L, F functions
 from LocalePatch import L, F
-from bs4.builder import XML
 
 TITLE = 'Plex Request Channel'
 PREFIX = '/video/plexrequestchannel'
