@@ -714,7 +714,7 @@ class Session:
         except:
             Log.Debug(str(traceback.format_exc()))
             return oc
-        searches = results.get(searchtype + "s")
+        searches = results.get("releases")
         Log(str(len(searches)))
         count = 0
         for e in searches:
