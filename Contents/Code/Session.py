@@ -703,9 +703,13 @@ class Session:
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows, view_group="Details")
         query = String.Quote(query, usePlus=True)
         url = "http://musicbrainz.org/ws/2/%s/?query=%s&fmt=json" % (searchtype, query)
-        results = JSON.ObjectFromURL(url)
+        try:
+            results = JSON.ObjectFromURL(url)
+        except:
+            Log.Debug(str(traceback.format_exc()))
+            return oc
         count = 0
-        for e in results[searchtype+'s']:
+        for e in results.get(searchtype+'s'):
             if 'id' not in e:
                 continue
             e_id = e.get('id')
