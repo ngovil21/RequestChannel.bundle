@@ -734,28 +734,28 @@ class Session:
             if e_date:
                 title += " (" + e_date + ")"
             title += " " + e_score
-            if searchtype == "artist":
-                if count < 10:
-                    try:
-                        properties_page = JSON.ObjectFromURL("http://musicbrainz.org/ws/2/%s/%s?inc=url-rels&fmt=json" % (searchtype, e_id))
-                        if 'relations' in properties_page:
-                            for r in properties_page['relations']:
-                                if r.get('type') == "image":
-                                    e_image = r.get('url', {}).get('resource', None)
-                    except:
-                        pass
-                oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
+            # if searchtype == "artist":
+            #     if count < 10:
+            #         try:
+            #             properties_page = JSON.ObjectFromURL("http://musicbrainz.org/ws/2/%s/%s?inc=url-rels&fmt=json" % (searchtype, e_id))
+            #             if 'relations' in properties_page:
+            #                 for r in properties_page['relations']:
+            #                     if r.get('type') == "image":
+            #                         e_image = r.get('url', {}).get('resource', None)
+            #         except:
+            #             pass
+            #     oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
         #elif searchtype == "release":
             e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
             oc.add(AlbumObject(
                 key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
                 rating_key=e_id, title=title, thumb=e_image))
-            elif searchtype == "recording":
-                oc.add(SongObject(
-                    key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
-                    rating_key=e_id, title=title, thumb=e_image))
+            # elif searchtype == "recording":
+            #     oc.add(SongObject(
+            #         key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
+            #         rating_key=e_id, title=title, thumb=e_image))
             count += 1
-            break;
+            break
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
