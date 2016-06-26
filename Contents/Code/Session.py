@@ -723,7 +723,7 @@ class Session:
             if not e_id:
                 Log("No id - Skipped")
                 continue
-            e_score = "+" + e.get('score', "0")
+            e_score = e.get('score', "0")
             if 'title' in e:
                 e_name = e.get('title', None)
             else:
@@ -734,7 +734,7 @@ class Session:
             title = e_name
             if e_date:
                 title += " (" + e_date + ")"
-            title += " " + e_score
+            title += " Score:" + e_score
             # if searchtype == "artist":
             #     if count < 10:
             #         try:
@@ -749,7 +749,7 @@ class Session:
             #elif searchtype == "release":
             Log(title)
             e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
-            oc.add(AlbumObject(
+            oc.add(ArtistObject(
                 key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
                 rating_key=e_id, title=title, thumb=e_image))
             # elif searchtype == "recording":
