@@ -701,7 +701,7 @@ class Session:
                                         thumb=R('search.png')))
         return oc
 
-    def SearchMusic(self, query, searchtype, searchstr):
+    def SearchMusic(self, query, searchtype="release", searchstr="Album"):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
             if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
