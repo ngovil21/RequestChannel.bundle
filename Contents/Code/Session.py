@@ -721,6 +721,7 @@ class Session:
             Log(str(e))
             e_id = e.get('id')
             if not e_id:
+                Log("No id - Skipped")
                 continue
             e_score = "+" + e.get('score', "0")
             if 'title' in e:
@@ -746,6 +747,7 @@ class Session:
             #             pass
             #     oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
             #elif searchtype == "release":
+            Log(title)
             e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
             oc.add(AlbumObject(
                 key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
