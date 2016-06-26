@@ -757,7 +757,6 @@ class Session:
             #         key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
             #         rating_key=e_id, title=title, thumb=e_image))
             count += 1
-            break
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
