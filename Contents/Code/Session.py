@@ -733,7 +733,7 @@ class Session:
             # ToDo: Get image for first 10 results
             title = e_name
             if e_date:
-                title += " (" + e_date + ")"
+                title += " (" + e_date[:4] + ")"
             title += " Score:" + e_score
             # if searchtype == "artist":
             #     if count < 10:
