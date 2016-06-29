@@ -715,10 +715,7 @@ class Session:
             Log.Debug(str(traceback.format_exc()))
             return oc
         searches = results.get("releases")
-        Log(str(len(searches)))
-        count = 0
         for e in searches:
-            Log(str(e))
             e_id = e.get('id')
             if not e_id:
                 Log("No id - Skipped")
@@ -747,7 +744,6 @@ class Session:
             #             pass
             #     oc.add(ArtistObject(key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_image=e_image), rating_key=e_id, title=title, thumb=e_image))
             #elif searchtype == "release":
-            Log(title)
             e_image = "http://coverartarchive.org/%s/%s/front-500" % (searchtype, e_id)
             oc.add(ArtistObject(
                 key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
@@ -756,7 +752,6 @@ class Session:
             #     oc.add(SongObject(
             #         key=Callback(self.ConfirmMusicRequest, searchtype=searchtype, music_id=e_id, music_name=e_name, music_date=e_date, music_image=e_image),
             #         rating_key=e_id, title=title, thumb=e_image))
-            count += 1
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(
