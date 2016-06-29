@@ -1055,6 +1055,9 @@ class Session:
         api_header = {
             'X-Api-Key': Prefs['sonarr_api']
         }
+
+        episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
+
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage Season"), title2=L("Season ") + str(season), header=TITLE if message else None, message=message)
         else:
@@ -1063,9 +1066,9 @@ class Session:
             oc.add(DirectoryObject(key=callback, title=L("Return")))
         oc.add(DirectoryObject(key=Callback(self.ManageSonarrShow, series_id=series_id, callback=callback), title=L("Return to Seasons")))
         oc.add(DirectoryObject(key=Callback(self.SonarrMonitorShow, series_id=series_id, seasons=str(season), callback=callback),
-                               title=L("Get All Episodes"), thumb=None))
+                               title=L("Monitor and Search for Episodes"), thumb=None))
         # data = JSON.StringFromObject({'seriesId': series_id})
-        episodes = JSON.ObjectFromURL(sonarr_url + "/api/Episode/?seriesId=" + str(series_id), headers=api_header)
+
         # Log.Debug(JSON.StringFromObject(episodes))
         for episode in episodes:
             if not episode['seasonNumber'] == int(season):
