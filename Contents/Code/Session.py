@@ -1066,7 +1066,7 @@ class Session:
             oc.add(DirectoryObject(key=callback, title=L("Return")))
         oc.add(DirectoryObject(key=Callback(self.ManageSonarrShow, series_id=series_id, callback=callback), title=L("Return to Seasons")))
         oc.add(DirectoryObject(key=Callback(self.SonarrMonitorShow, series_id=series_id, seasons=str(season), callback=callback),
-                               title=L("Monitor Season and Search for Episodes"), thumb=None))
+                               title=L("Monitor Season and Search"), thumb=None))
         # data = JSON.StringFromObject({'seriesId': series_id})
 
         # Log.Debug(JSON.StringFromObject(episodes))
