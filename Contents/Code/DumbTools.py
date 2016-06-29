@@ -6,7 +6,7 @@ import urllib2
 #NO_MESSAGE_CONTAINER_CLIENTS is now deprecated, using known clients that work with message overlays instead
 NO_MESSAGE_CONTAINER_CLIENTS = ['Plex for iOS', 'tvOS', 'Plex for Apple TV', 'Plex for Xbox One', 'iOS', 'Mystery 4', 'Samsung',
                                 'Plex for Samsung']
-MESSAGE_OVERLAY_CLIENTS = ['Android', 'Roku', 'Konvergo', 'Plex Web', 'Plex Home Theater']
+MESSAGE_OVERLAY_CLIENTS = ['Android', 'Roku', 'Konvergo', 'Plex Web']
 
 
 class DumbKeyboard:
