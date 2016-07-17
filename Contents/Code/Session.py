@@ -39,6 +39,7 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
+PUSHALOT_API_URL = "https://pushalot.com/api/sendmessage"
 ########################################################
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
@@ -1879,6 +1880,33 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if Dict['debug']:
                 Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
+                if Prefs['pushalot_api']:
+        try:
+            if req_type == 'movie':
+                movie = Dict['movie'][req_id]
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
+                title = "Plex Request Channel - New Movie Request"
+                message = user + " has requested a new movie.\n" + title_year + "\n" + \
+                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
+            elif req_type == 'tv':
+                tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
+                title = "Plex Request Channel - New TV Show Request"
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
+                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
+            else:
+                return
+            response = sendPushalot(title, message)
+            if response:
+                Log.Debug("Pushalot notification sent for :" + req_id)
+        except Exception as e:
+            if Dict['debug']:
+                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Pushalot failed: " + e.message)
     if Prefs['email_to']:
         try:
             if req_type == 'movie':
@@ -1963,6 +1991,10 @@ def sendPushBullet(title, body, device_iden=""):
 def sendPushover(title, message):
     data = {'token': Prefs['pushover_api'], 'user': Prefs['pushover_user'], 'title': title, 'message': message}
     return HTTP.Request(PUSHOVER_API_URL, values=data)
+    
+def sendPushalot(title, message):
+    data = {'AuthorizationToken': Prefs['pushalot_api'], 'Title': title, 'Body': message, 'IsImportant': 'false', 'IsSilent': 'false'}
+    return HTTP.Request(PUSHALOT_API_URL, values=data)
 
 
 # noinspection PyUnresolvedReferences

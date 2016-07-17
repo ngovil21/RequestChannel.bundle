@@ -228,6 +228,12 @@
     "label": "Pushover User Key",
     "type": "text",
     "default": ""
+  },  
+  {
+    "id": "pushalot_api",
+    "label": "Pushalot API Key",
+    "type": "text",
+    "default": ""
   },
   {
     "id": "email_from",
