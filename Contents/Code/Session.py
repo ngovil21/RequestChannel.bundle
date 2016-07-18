@@ -1880,7 +1880,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if Dict['debug']:
                 Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
-                if Prefs['pushalot_api']:
+    if Prefs['pushalot_api']:
         try:
             if req_type == 'movie':
                 movie = Dict['movie'][req_id]
