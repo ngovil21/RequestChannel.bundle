@@ -10,7 +10,7 @@ MESSAGE_OVERLAY_CLIENTS = ['Android', 'Roku', 'Konvergo', 'Plex Web']
 
 
 class DumbKeyboard:
-    CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex Home Theater', 'OpenPHT', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
+    CLIENTS = ['Plex for iOS', 'Plex Media Player', 'Plex for Roku', 'iOS', 'Roku', 'tvOS' 'Konvergo',
                'Plex for Apple TV', 'Plex for Xbox 360', 'Plex for Xbox One', 'Xbox One', 'Mystery 4', 'Plex for Vizio', 'Plex TV']
 
     KEYS = list('abcdefghijklmnopqrstuvwxyz1234567890-=;[]\\\',./')
