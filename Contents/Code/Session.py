@@ -150,7 +150,6 @@ class Session:
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
-        Dict['music'] = {}
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
@@ -893,7 +892,7 @@ class Session:
                 Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
                 user = userFromToken(self.token)
         Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'title': music_name,
-                                   'date': music_date, 'poster': music_image,
+                                   'date': music_date, 'year': music_date[:4], 'poster': music_image,
                                    'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False}
         Dict.Save()
 
@@ -1031,7 +1030,7 @@ class Session:
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
                 title_year = d['title']
-                title_year += (" (" + d['date'][:4] + ")" if d.get('date', None) else "")
+                title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
@@ -1068,7 +1067,7 @@ class Session:
     def ViewRequest(self, req_id, req_type, token_hash=None):
         key = Dict[req_type][req_id]
         title_year = key['title']
-        title_year += " (" + key['year'] + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
+        title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
             'title']  # If there is already a year in the title, just use title
         summary = " (Requested by " + (key.get('user') if key.get('user') else 'Unknown') + ")   " + (
             key.get('summary', "") if key.get('summary') else "")
@@ -1102,9 +1101,15 @@ class Session:
                                                                       token_hash=token_hash)),
                                        title=F("sendto", Prefs['sickbeard_fork']),
                                        thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
-        oc.add(
-            DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title=L("Return to View Requests"),
-                            thumb=R('return.png')))
+        if req_type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
+                                   title=L("Return to Movie Requests"), thumb=R('return.png')))
+        elif req_type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
+                                   title=L("Return to TV Requests"), thumb=R('return.png')))
+        elif req_type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
+                                   title=L("Return to Music Requests"), thumb=R('return.png')))
         return oc
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
