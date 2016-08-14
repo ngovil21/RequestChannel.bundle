@@ -912,7 +912,8 @@ class Session:
         elif not token_hash:
             return self.SMainMenu(message=L("Password incorrect"), title1=L("Main Menu"),
                                   title2=L("Password incorrect"))
-        oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash), title=L("View Movie Requests")))
+        oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
+                               title=L("View Movie Requests")))
         oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
                                title=L("View TV Requests")))
         oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
@@ -963,7 +964,8 @@ class Session:
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests,type='movie'), title=L("Clear All Movie Requests"),
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='movie'),
+                                       title=L("Clear All Movie Requests"),
                                        thumb=R('trash.png')))
             return oc
 
@@ -997,8 +999,8 @@ class Session:
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests,type='tv', title=L("Clear All TV Requests"),
-                                       thumb=R('trash.png')))
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='tv'),
+                                       title=L("Clear All TV Requests"), thumb=R('trash.png')))
             return oc
 
     def ViewMusicRequests(self, token_hash):
@@ -1030,7 +1032,8 @@ class Session:
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='music'), title=L("Clear All Music Requests"),
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='music'),
+                                       title=L("Clear All Music Requests"),
                                        thumb=R('trash.png')))
             return oc
 
@@ -1689,14 +1692,14 @@ class Session:
                 Log.Debug(JSON.StringFromObject(resp))
                 return MessageContainer(header=TITLE,
                                         message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (
-                                        title if title else str(series_id)))
+                                            title if title else str(series_id)))
         except Exception as e:
             if Dict['debug']:
                 Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (
-                                    title if title else str(series_id)))
+                                        title if title else str(series_id)))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title,
                                  header=TITLE if message else None,
