@@ -150,6 +150,7 @@ class Session:
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
+        Dict['music'] = {}
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
@@ -233,6 +234,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
+
 
         return oc
 
@@ -965,6 +967,8 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests,token_hash=token_hash), title=L("Return to Requests Menu"),
+                                   thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='movie'),
@@ -1000,6 +1004,9 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
+                                   title=L("Return to Requests Menu"),
+                                   thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='tv'),
@@ -1033,6 +1040,9 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
+                                   title=L("Return to Requests Menu"),
+                                   thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='music'),
