@@ -916,7 +916,8 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
                                title=L("View TV Requests")))
         oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
-                               title=L("View Muisc Requests")))
+                               title=L("View Music Requests")))
+        oc.add(DirectoryObkect(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R("return.png")))
         return oc
 
     def ViewRequestsPassword(self):
