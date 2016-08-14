@@ -1033,24 +1033,22 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='music'),
-                                       title=L("Clear All Music Requests"),
-                                       thumb=R('trash.png')))
+                                       title=L("Clear All Music Requests"), thumb=R('trash.png')))
             return oc
 
     def ConfirmDeleteRequests(self, type):
         oc = ObjectContainer(title2=L("Are you sure you would like to clear all requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.ClearRequests), title=L("Yes"), thumb=R('check.png')))
+        oc.add(DirectoryObject(key=Callback(self.ClearRequests, type=type), title=L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
-    def ClearRequests(self):
+    def ClearRequests(self, type):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
-        Dict['tv'] = {}
-        Dict['movie'] = {}
+        Dict[type] = {}
         Dict.Save()
         return self.ViewRequests(message=L("All requests have been cleared"))
 
