@@ -213,7 +213,7 @@
   },
   {
     "id": "pushbullet_channel",
-    "label": "Pushover Channel (optional)",
+    "label": "Pushbullet Channel (optional) (Don't use #)",
     "type": "text",
     "default": ""
   },
@@ -226,6 +226,12 @@
   {
     "id": "pushover_user",
     "label": "Pushover User Key",
+    "type": "text",
+    "default": ""
+  },  
+  {
+    "id": "pushalot_api",
+    "label": "Pushalot API Key",
     "type": "text",
     "default": ""
   },
