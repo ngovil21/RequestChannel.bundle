@@ -1062,7 +1062,7 @@ class Session:
                                   title2=L("Admin only"))
         Dict[type] = {}
         Dict.Save()
-        return self.ViewRequests(message=L("All requests have been cleared"))
+        return self.ViewRequests(message=L("All " + type + " have been cleared"))
 
     def ViewRequest(self, req_id, req_type, token_hash=None):
         key = Dict[req_type][req_id]
@@ -1107,7 +1107,7 @@ class Session:
         elif req_type == 'tv':
             oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
                                    title=L("Return to TV Requests"), thumb=R('return.png')))
-        elif req_type == 'tv':
+        elif req_type == 'music':
             oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
                                    title=L("Return to Music Requests"), thumb=R('return.png')))
         return oc
