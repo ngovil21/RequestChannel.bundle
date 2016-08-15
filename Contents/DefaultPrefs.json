@@ -200,6 +200,24 @@
     "default": ""
   },
   {
+    "id": "headphones_url",
+    "label": "Headphones URL",
+    "type": "text",
+    "default": "http://127.0.0.1:8181/"
+  },
+  {
+    "id": "headphones_api",
+    "label": "Headphones Api Key",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "headphones_autorequest",
+    "label": "Automatically add request to Headphones?",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "pushbullet_api",
     "label": "Pushbullet API",
     "type": "text",

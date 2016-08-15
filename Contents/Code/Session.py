@@ -123,6 +123,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/managesickbeardseason' % session_id, self.ManageSickbeardSeason)
         Route.Connect(PREFIX + '/%s/sickbeardmonitorshow' % session_id, self.SickbeardMonitorShow)
         Route.Connect(PREFIX + '/%s/sickbeardshowexists' % session_id, self.SickbeardShowExists)
+        Route.Connect(PREFIX + '/%s/sendtoheadphones' % session_id, self.SendToHeadphones)
         Route.Connect(PREFIX + '/%s/managechannel' % session_id, self.ManageChannel)
         Route.Connect(PREFIX + '/%s/manageusers' % session_id, self.ManageUsers)
         Route.Connect(PREFIX + '/%s/manageuser' % session_id, self.ManageUser)
@@ -1101,6 +1102,11 @@ class Session:
                                                                       token_hash=token_hash)),
                                        title=F("sendto", Prefs['sickbeard_fork']),
                                        thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+        if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
+            if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
+                oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
+                                       title=F("sendto", "Headphones"),
+                                       thumb=R('headphones.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
                                    title=L("Return to Movie Requests"), thumb=R('return.png')))
@@ -1653,7 +1659,7 @@ class Session:
                 count += 1
         if self.is_admin:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title),
+                DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=tvdbid, type='tv', title_year=title),
                                 title=L("Delete Request")))
         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
@@ -1875,6 +1881,37 @@ class Session:
                 Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
         Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
+        return False
+
+    def SendToHeadphones(self, music_id):
+        if not Prefs['headphones_url'].startswith("http"):
+            headphones_url = "http://" + Prefs['headphones_url']
+        else:
+            headphones_url = Prefs['headphones_url']
+        if not headphones.endswith("/"):
+            headphones_url += "/"
+        try:
+            resp =JSON.ObjectFromURL(headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Album was added to Headphones"))
+            else:
+                oc = ObjectContainer(title1=Headphones, title2=L("Success"))
+            Dict['music'][music_id]['automated'] = True
+            Dict.Save()
+        except Exception as e:
+            Log.Error(str(traceback.format_exc()))  #raise e
+            Log.Debug(e.message)
+            Log.Debug("Could not add " + str(music_id) + " to Headphones")
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Album was not added to Headphones"))
+            else:
+                oc = ObjectContainer(title1=Headphones, title2=L("Failure"))
+        title = Dict['music']['title']
+        if self.is_admin:
+            oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, type='music',
+                                                title_year=title), title=L("Delete Request"),))
+        oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("Return to Music Requests")))
+        oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return False
 
     # ManageChannel Functions
