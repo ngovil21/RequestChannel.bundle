@@ -135,5 +135,7 @@
   "Cancel": "Cancel",
   "Clear History": "Clear History",
   "Switch to Device Keyboard": "Switch to Device Keyboard",
-  "Switch to Alternate Keyboard": "Switch to Alternate Keyboard"
+  "Switch to Alternate Keyboard": "Switch to Alternate Keyboard",
+  "confirmmusicrequest": "Are you sure you would like to request %s?",
+  "requestmusic": "Request %s?"
 }
