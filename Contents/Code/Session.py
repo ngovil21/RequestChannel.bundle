@@ -183,19 +183,22 @@ class Session:
                          dktitle=L("Request an Album"),
                          message=L("Enter the name of the Album"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-            oc.add(
-                DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
-            oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
-            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release", searchstr="Album"),
+            if Prefs['movierequests']:
+                oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
+            if Prefs['tvrequests']:
+                oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
+            if Prefs['musicrequests']:
+                oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release", searchstr="Album"),
                                    title=L("Request an Album")))
         else:  # All other clients
-            oc.add(
-                InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"),
+            if Prefs['movierequests']:
+                oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"),
                                      prompt=L("Enter the name of the Movie")))
-            oc.add(
-                InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"),
+            if Prefs['tvrequests']:
+                oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"),
                                      prompt=L("Enter the name of the TV Show")))
-            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="release", searchstr="Album"),
+            if Prefs['musicrequests']:
+                oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="release", searchstr="Album"),
                                         title=L("Request an Album"),
                                         prompt=L("Enter the name of the Album"),
                                         thumb=R('search.png')))
