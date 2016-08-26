@@ -2189,6 +2189,13 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Plex Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
             else:
                 return
             if Prefs['pushbullet_devices']:
@@ -2222,6 +2229,13 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Plex Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
             else:
                 return
             response = sendPushover(title, message)
@@ -2248,6 +2262,13 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Plex Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
             else:
                 return
             response = sendPushalot(title, message)
@@ -2278,6 +2299,14 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 summary = ""
                 if tv['summary']:
                     summary = tv['summary'] + "<br>\n"
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                title = music.get('title')
+                user = music.get('user', "A user")
+                id_type = music.get('source', "musicbrainz")
+                poster = music['poster']
+                subject = "Plex Request Channel - New Album Request"
+                summary = ""
             else:
                 return
             message = user + " has made a new request! <br><br>\n" + \
