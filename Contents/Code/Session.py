@@ -235,7 +235,6 @@ class Session:
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
 
-
         return oc
 
     def Register(self, message=None):
@@ -449,8 +448,7 @@ class Session:
             if local_search:
                 videos = local_search.xpath("//Video")
                 for video in videos:
-                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib[
-                        'type'] == 'movie':
+                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                         Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
                         summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
                             video.attrib['summary'] if video.attrib['summary'] else "")
@@ -967,7 +965,8 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests,token_hash=token_hash), title=L("Return to Requests Menu"),
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
+                                   title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
@@ -1068,7 +1067,8 @@ class Session:
     def ViewRequest(self, req_id, req_type, token_hash=None):
         key = Dict[req_type][req_id]
         title_year = key['title']
-        title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else key[
+        title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else \
+        key[
             'title']  # If there is already a year in the title, just use title
         summary = " (Requested by " + (key.get('user') if key.get('user') else 'Unknown') + ")   " + (
             key.get('summary', "") if key.get('summary') else "")
@@ -1891,7 +1891,8 @@ class Session:
         if not headphones.endswith("/"):
             headphones_url += "/"
         try:
-            resp =JSON.ObjectFromURL(headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
+            resp = JSON.ObjectFromURL(
+                headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Album was added to Headphones"))
             else:
@@ -1899,7 +1900,7 @@ class Session:
             Dict['music'][music_id]['automated'] = True
             Dict.Save()
         except Exception as e:
-            Log.Error(str(traceback.format_exc()))  #raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             Log.Debug("Could not add " + str(music_id) + " to Headphones")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -1909,7 +1910,7 @@ class Session:
         title = Dict['music']['title']
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, type='music',
-                                                title_year=title), title=L("Delete Request"),))
+                                                title_year=title), title=L("Delete Request"), ))
         oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("Return to Music Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return False
