@@ -1884,6 +1884,7 @@ class Session:
                 oc = ObjectContainer(header=TITLE, message=L("Album was added to Headphones"))
             else:
                 oc = ObjectContainer(title1=Headphones, title2=L("Success"))
+            Log.Debug(JSON.StringFromObject(resp))
             Dict['music'][music_id]['automated'] = True
             Dict.Save()
         except Exception as e:
