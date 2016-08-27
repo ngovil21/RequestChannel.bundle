@@ -1341,8 +1341,7 @@ class Session:
                 if image['coverType'] == 'poster':
                     try:
                         poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):] + "?apikey=" + Prefs['sonarr_api']
-                        if Dict['debug']:
-                            Log.Debug(poster)
+                        Log.Debug(poster)
                     except Exception:
                         Log.Error(str(traceback.format_exc()))  # raise e
             oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId', 0),
