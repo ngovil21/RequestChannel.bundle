@@ -1903,7 +1903,7 @@ class Session:
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, type='music',
                                                 title_year=title), title=L("Delete Request"), ))
-        oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("Return to Music Requests")))
+        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
