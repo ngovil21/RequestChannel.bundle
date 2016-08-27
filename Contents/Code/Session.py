@@ -1069,6 +1069,7 @@ class Session:
                                 rating_key=req_id,
                                 thumb=key.get('poster', None),
                                 summary=summary, title=title_year))
+
         Log.Debug("Req Type: " + req_type + "  Key Type: " + key['type'] + "  Req ID: " + req_id)
         if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
             oc.add(DirectoryObject(
