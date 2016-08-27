@@ -1878,8 +1878,7 @@ class Session:
         if not headphones_url.endswith("/"):
             headphones_url += "/"
         try:
-            resp = JSON.ObjectFromURL(
-                headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
+            resp = JSON.ObjectFromURL(headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Album was added to Headphones"))
             else:
