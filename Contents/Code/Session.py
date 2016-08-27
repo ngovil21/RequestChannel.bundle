@@ -1977,7 +1977,10 @@ class Session:
         return oc
 
     def ToggleDebug(self):
-        Dict['debug'] = not Dict['debug']
+        if Dict['debug']:
+            Dict['debug'] = False
+        else:
+            Dict['debug'] = True
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
