@@ -1875,7 +1875,7 @@ class Session:
             headphones_url = "http://" + Prefs['headphones_url']
         else:
             headphones_url = Prefs['headphones_url']
-        if not headphones.endswith("/"):
+        if not headphones_url.endswith("/"):
             headphones_url += "/"
         try:
             resp = JSON.ObjectFromURL(
