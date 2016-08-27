@@ -1895,7 +1895,7 @@ class Session:
                 oc = ObjectContainer(header=TITLE, message=L("Album was not added to Headphones"))
             else:
                 oc = ObjectContainer(title1=Headphones, title2=L("Failure"))
-        title = Dict['music']['music_id'].get('title')
+        title = Dict['music'][music_id].get('title')
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, type='music',
                                                 title_year=title), title=L("Delete Request"), ))
