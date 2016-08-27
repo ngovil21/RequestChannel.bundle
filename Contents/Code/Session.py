@@ -1340,7 +1340,7 @@ class Session:
             for image in show['images']:
                 if image['coverType'] == 'poster':
                     try:
-                        poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):] + "?apikey=" + Prefs['sonarr_api']
+                        poster = sonarr_url + "/api" + image['url'][image['url'].find('/MediaCover/'):] + "&apikey=" + Prefs['sonarr_api']
                         Log.Debug(poster)
                     except Exception:
                         Log.Error(str(traceback.format_exc()))  # raise e
