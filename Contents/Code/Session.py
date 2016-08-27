@@ -927,7 +927,7 @@ class Session:
                                         prompt=L("Enter password:")))
         return oc
 
-    def ViewMovieRequests(self, token_hash):
+    def ViewMovieRequests(self, token_hash=None):
         oc = ObjectContainer()
         if not Dict['movie']:
             Log.Debug("There are no Movie requests")
@@ -965,7 +965,7 @@ class Session:
                                        thumb=R('trash.png')))
             return oc
 
-    def ViewTVRequests(self, token_hash):
+    def ViewTVRequests(self, token_hash=None):
         oc = ObjectContainer()
         if not Dict['movie']:
             Log.Debug("There are no tv requests")
@@ -1002,7 +1002,7 @@ class Session:
                                        title=L("Clear All TV Requests"), thumb=R('trash.png')))
             return oc
 
-    def ViewMusicRequests(self, token_hash):
+    def ViewMusicRequests(self, token_hash=None):
         oc = ObjectContainer()
         if not Dict['movie']:
             Log.Debug("There are no music requests")
@@ -1205,7 +1205,7 @@ class Session:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year),
                 title=L("Delete Request")))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+        oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("Return to Movie Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
@@ -1377,7 +1377,7 @@ class Session:
         if callback:
             oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests"),
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("Return to TV Requests"),
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
                                    thumb=R('plexrequestchannel.png')))
@@ -1652,7 +1652,7 @@ class Session:
             oc.add(
                 DirectoryObject(key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, type='tv', title_year=title),
                                 title=L("Delete Request")))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+        oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("Return to TV Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
@@ -1903,7 +1903,7 @@ class Session:
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, type='music',
                                                 title_year=title), title=L("Delete Request"), ))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+        oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("Return to Music Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
