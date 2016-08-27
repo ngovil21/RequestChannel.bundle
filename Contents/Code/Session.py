@@ -1706,13 +1706,13 @@ class Session:
                 Log.Debug(JSON.StringFromObject(resp))
                 return MessageContainer(header=TITLE,
                                         message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (
-                                        title if title else str(series_id)))
+                                            title if title else str(series_id)))
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (
-                                    title if title else str(series_id)))
+                                        title if title else str(series_id)))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1="Manage " + Prefs['sickbeard_fork'] + " Show", title2=title,
                                  header=TITLE if message else None,
@@ -1878,7 +1878,12 @@ class Session:
         if not headphones_url.endswith("/"):
             headphones_url += "/"
         try:
-            resp = JSON.ObjectFromURL(headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
+            data = {'apikey': Prefs['headphones_api'],
+                    'cmd': 'addAlbum',
+                    'id': str(music_id)
+                    }
+            resp = HTTP.Request(
+                headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Album was added to Headphones"))
             else:
