@@ -609,7 +609,6 @@ class Session:
                         break
         except:
             pass
-
         if found_match:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("TV Show appears to already exist in the library. Are you sure you would still like to request it?")
@@ -1341,7 +1340,7 @@ class Session:
             for image in show['images']:
                 if image['coverType'] == 'poster':
                     try:
-                        poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):]
+                        poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):] + "?apikey=" + Prefs['sonarr_api']
                     except Exception:
                         Log.Error(str(traceback.format_exc()))  # raise e
             oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']), rating_key=show.get('tvdbId', 0),
