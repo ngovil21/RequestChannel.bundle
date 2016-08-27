@@ -1905,7 +1905,7 @@ class Session:
                                                 title_year=title), title=L("Delete Request"), ))
         oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("Return to Music Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
-        return False
+        return oc
 
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
