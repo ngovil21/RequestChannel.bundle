@@ -1350,6 +1350,7 @@ class Session:
         options['addOptions'] = add_options
         values = JSON.StringFromObject(options)
         try:
+            Log.Debug("Options: " + str(options))
             resp = HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Show has been sent to Sonarr"))
@@ -1360,7 +1361,7 @@ class Session:
             Dict.Save()
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
-            Log("Options: " + str(options))
+            Log.Debug("Options: " + str(options))
             Log.Debug(e.message)
             Log.Debug("Response Status: " + str(Response.Status))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
