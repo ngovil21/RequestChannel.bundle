@@ -16,6 +16,7 @@ ICON = 'plexrequestchannel.png'
 
 VERSION = "0.8.0"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
+BRANCH = "DEVELOPMENT"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
