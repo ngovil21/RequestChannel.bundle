@@ -1318,6 +1318,8 @@ class Session:
             if root:
                 rootFolderPath = root[0]['path']
 
+        Log.Debug(str(found_show))
+
         Log.Debug("Profile id: " + str(profile_id))
         options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'qualityProfileId': int(profile_id),
                    'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath,
