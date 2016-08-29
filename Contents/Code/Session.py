@@ -1322,14 +1322,15 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
         options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'tvRageId': found_show['tvRageId'],
-                   'cleanTitle': found_show['cleanTitle'], 'images': found_show['images'], 'qualityProfileId': int(profile_id),
-                   'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath,
+                   'imdbId': found_show['imdbId'], 'cleanTitle': found_show['cleanTitle'], 'images': found_show['images'],
+                   'qualityProfileId': int(profile_id), 'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath,
                    'seasons': found_show['seasons'], 'monitored': True, 'seasonFolder': Prefs['sonarr_seasonfolder']}
 
         add_options = {'ignoreEpisodesWithFiles': False,
                        'ignoreEpisodesWithoutFiles': False,
                        'searchForMissingEpisodes': True
                        }
+
         if Prefs['sonarr_monitor'] == 'manual':
             add_options['ignoreEpisodesWithFiles'] = True
             add_options['ignoreEpisodesWithoutFiles'] = True
