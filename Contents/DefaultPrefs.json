@@ -38,6 +38,24 @@
     "default": "English"
   },
   {
+    "id": "movierequests",
+    "label": "Allow users to see requests Movies?",
+    "type": "bool",
+    "default": true
+  },
+  {
+    "id": "tvrequests",
+    "label": "Allow users to request TV Shows?",
+    "type": "bool",
+    "default": true
+  },
+  {
+    "id": "musicrequests",
+    "label": "Allow users to request Music Albums?",
+    "type": "bool",
+    "default": true
+  },
+  {
     "id": "usersviewrequests",
     "label": "Allow users to see requests page?",
     "type": "bool",
@@ -198,6 +216,24 @@
     "label": "Sickbeard Archive Qualities separated with | (optional)",
     "type": "text",
     "default": ""
+  },
+  {
+    "id": "headphones_url",
+    "label": "Headphones URL",
+    "type": "text",
+    "default": "http://127.0.0.1:8181/"
+  },
+  {
+    "id": "headphones_api",
+    "label": "Headphones Api Key",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "headphones_autorequest",
+    "label": "Automatically add request to Headphones?",
+    "type": "bool",
+    "default": false
   },
   {
     "id": "pushbullet_api",
