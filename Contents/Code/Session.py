@@ -1371,9 +1371,11 @@ class Session:
                 oc = ObjectContainer(header=TITLE, message=L("Could not send show to Sonarr!"))
             else:
                 oc = ObjectContainer(title1="Sonarr", title2=L("Send Failed"))
-        series_id = self.SonarrShowExists(tvdbid)
-        if Prefs['sonarr_monitor'] == "manual" and series_id:
-            return self.ManageSonarrShow(series_id, title=title, callback=callback)
+        if Prefs['sonarr_monitor'] == "manual":
+            Thread.Sleep(1)
+            series_id = self.SonarrShowExists(tvdbid)
+            if series_id:
+                return self.ManageSonarrShow(series_id, title=title, callback=callback)
         if self.is_admin:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title),
