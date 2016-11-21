@@ -968,7 +968,7 @@ class Session:
 
     def ViewTVRequests(self, token_hash=None):
         oc = ObjectContainer()
-        if not Dict['movie']:
+        if not Dict['tv']:
             Log.Debug("There are no tv requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no TV requests.")
@@ -1005,7 +1005,7 @@ class Session:
 
     def ViewMusicRequests(self, token_hash=None):
         oc = ObjectContainer()
-        if not Dict['movie']:
+        if not Dict['music']:
             Log.Debug("There are no music requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no Music requests.")
@@ -1318,7 +1318,7 @@ class Session:
             if root:
                 rootFolderPath = root[0]['path']
 
-        Log.Debug(str(found_show))
+        #Log.Debug(str(found_show))
 
         Log.Debug("Profile id: " + str(profile_id))
         options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'tvRageId': found_show['tvRageId'],
@@ -1353,8 +1353,8 @@ class Session:
         options['addOptions'] = add_options
         values = JSON.StringFromObject(options)
         try:
-            Log.Debug("Options: " + str(options))
-            resp = HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
+            #Log.Debug("Options: " + str(options))
+            HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Show has been sent to Sonarr"))
             else:
@@ -2563,3 +2563,4 @@ def userFromToken(token):
         else:
             return "guest_" + Hash.SHA1(token)[:10]
     return ""
+
