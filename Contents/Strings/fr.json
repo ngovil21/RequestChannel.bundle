@@ -126,5 +126,16 @@
   "Go Up One": "Go Up One",
   "Other Problem": "Autre problème",
   "Enter your problem in the search box.": "Entre votre problème dans le champ.",
-  "Confirm": "Confirmer"
+  "Confirm": "Confirmer",
+  "Submit": "Envoyer",
+  "Search History": "Historique des recherches",
+  "Space": "Espace",
+  "Backspace": "Retour",
+  "Shift": "Shift",
+  "Cancel": "Annuler",
+  "Clear History": "Effacer l'historique",
+  "Switch to Device Keyboard": "Basculer vers le clavier de l'appareil",
+  "Switch to Alternate Keyboard": "Basculer vers le clavier alternatif",
+  "confirmmusicrequest": "Êtes-vous sûr de vouloir demander %s?",
+  "requestmusic": "Demander %s?"
 }
