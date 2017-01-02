@@ -1,9 +1,9 @@
 # coding=utf-8
 
-from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
-
-import re
+import re,urllib2,ssl
 import traceback
+
+from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
 # Override Plex L, F functions
 from LocalePatch import L, F
@@ -41,6 +41,7 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 PUSHALOT_API_URL = "https://pushalot.com/api/sendmessage"
+SLACK_API_URL = "https://slack.com/api/"
 ########################################################
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
@@ -103,10 +104,12 @@ class Session:
         Route.Connect(PREFIX + '/%s/viewtvrequests' % session_id, self.ViewTVRequests)
         Route.Connect(PREFIX + '/%s/viewmusicrequests' % session_id, self.ViewMusicRequests)
         Route.Connect(PREFIX + '/%s/viewrequestspassword' % session_id, self.ViewRequestsPassword)
+        Route.Connect(PREFIX + '/%s/addallrequests' % session_id, self.AddAllRequests)
+        Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
         Route.Connect(PREFIX + '/%s/clearrequests' % session_id, self.ClearRequests)
         Route.Connect(PREFIX + '/%s/viewrequest' % session_id, self.ViewRequest)
-        Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
+        Route.Connect(PREFIX + '/%s/confirmallrequests' % session_id, self.ConfirmAllRequests)
         Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
         Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
         Route.Connect(PREFIX + '/%s/managecouchpotato' % session_id, self.ManageCouchpotato)
@@ -928,8 +931,11 @@ class Session:
                                         prompt=L("Enter password:")))
         return oc
 
-    def ViewMovieRequests(self, token_hash=None):
-        oc = ObjectContainer()
+    def ViewMovieRequests(self, token_hash=None, message=None):
+        oc = ObjectContainer(title2=message)
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
         if not Dict['movie']:
             Log.Debug("There are no Movie requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -961,14 +967,21 @@ class Session:
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
+                oc.add(DirectoryObject(key=Callback(self.ConfirmAllRequests, type='movie'),
+                                       title=L("Add All Movie Requests"),
+                                       thumb=R('plus.png')))
+            if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='movie'),
                                        title=L("Clear All Movie Requests"),
                                        thumb=R('trash.png')))
             return oc
 
-    def ViewTVRequests(self, token_hash=None):
-        oc = ObjectContainer()
-        if not Dict['movie']:
+    def ViewTVRequests(self, token_hash=None, message=None):
+        oc = ObjectContainer(title2=message)
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
+        if not Dict['tv']:
             Log.Debug("There are no tv requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no TV requests.")
@@ -1003,9 +1016,12 @@ class Session:
                                        title=L("Clear All TV Requests"), thumb=R('trash.png')))
             return oc
 
-    def ViewMusicRequests(self, token_hash=None):
-        oc = ObjectContainer()
-        if not Dict['movie']:
+    def ViewMusicRequests(self, token_hash=None, message=None):
+        oc = ObjectContainer(title2=message)
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
+        if not Dict['music']:
             Log.Debug("There are no music requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no Music requests.")
@@ -1039,12 +1055,63 @@ class Session:
                                        title=L("Clear All Music Requests"), thumb=R('trash.png')))
             return oc
 
-    def ConfirmDeleteRequests(self, type):
-        oc = ObjectContainer(title2=L("Are you sure you would like to clear all requests?"))
+    def ConfirmAllRequests(self, type):
+        oc = ObjectContainer(title2=L("Are you sure you would like to add all " + type + " requests?"))
+        if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
+            oc.add(DirectoryObject(key=None, title=""))
+        oc.add(DirectoryObject(key=Callback(self.AddAllRequests, type=type), title=L("Yes"), thumb=R('check.png')))
+        if type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
+        return oc
+
+    def AddAllRequests(self, type):
+        for id in Dict[type]:
+            if type == 'movie':
+                if not (Prefs['couchpotato_url'] and Prefs['couchpotato_api']):
+                    return self.ViewMovieRequests(L("CouchPotato not setup, unable to add movies!"))
+                self.SendToCouchpotato(id)
+            elif type == 'tv':
+                hasSonarr = Prefs['sonarr_url'] and Prefs['sonarr_api']
+                hasSickbeard = Prefs['sickbeard_url'] and Prefs['sickbeard_api']
+                if not hasSonarr and not hasSickbeard:
+                    return self.ViewTVRequests(L("TV Service not setup, unable to add TV shows!"))
+                if hasSonarr:
+                    self.SendToSonarr(id)
+                elif hasSickbeard:
+                    self.SendToSickbeard(id)
+            elif type == 'music':
+                if not (Prefs['headphones_url'] and Prefs['headphones_api']):
+                    return self.ViewMusicRequests(L("Headphones not setup, unable to add albums!"))
+                self.SendToHeadphones(id)
+        if type == 'movie':
+            return self.ViewMovieRequests(message=L("All " + type + " have been added"))
+        elif type == 'tv':
+            return self.ViewTVRequests(message=L("All " + type + " have been added"))
+        elif type == 'music':
+            return self.ViewMusicRequests(message=L("All " + type + " have been added"))
+        else:
+            return self.ViewRequests(message=L("All " + type + " have been added"))
+
+
+    def ConfirmDeleteRequests(self, type, parent=None):
+        oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + type + "  requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         oc.add(DirectoryObject(key=Callback(self.ClearRequests, type=type), title=L("Yes"), thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
+        if type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
     def ClearRequests(self, type):
@@ -1053,7 +1120,14 @@ class Session:
                                   title2=L("Admin only"))
         Dict[type] = {}
         Dict.Save()
-        return self.ViewRequests(message=L("All " + type + " have been cleared"))
+        if type == 'movie':
+            return self.ViewMovieRequests(message=L("All " + type + " have been cleared"))
+        elif type == 'tv':
+            return self.ViewTVRequests(message=L("All " + type + " have been cleared"))
+        elif type == 'music':
+            return self.ViewMusicRequests(message=L("All " + type + " have been cleared"))
+        else:
+            return self.ViewRequests(message=L("All " + type + " have been cleared"))
 
     def ViewRequest(self, req_id, req_type, token_hash=None):
         key = Dict[req_type][req_id]
@@ -2501,6 +2575,7 @@ def Notify(title, body, devices=None):
 
 
 def sendPushBullet(title, body, device_iden=""):
+    # api_header = {'Access-Token': + Prefs['pushbullet_api'],
     api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
                   }
@@ -2510,7 +2585,9 @@ def sendPushBullet(title, body, device_iden=""):
     if Prefs['pushbullet_channel']:
         data['channel_tag'] = Prefs['pushbullet_channel']
     values = JSON.StringFromObject(data)
-    return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    pushbulletrequest = urllib2.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+    return urllib2.urlopen(pushbulletrequest, context=ctx)
 
 
 def sendPushover(title, message):
@@ -2522,6 +2599,16 @@ def sendPushalot(title, message):
     data = {'AuthorizationToken': Prefs['pushalot_api'], 'Title': title, 'Body': message, 'IsImportant': 'false',
             'IsSilent': 'false'}
     return HTTP.Request(PUSHALOT_API_URL, values=data)
+
+def sendSlack(text):
+    header = {'Content-type': 'application/json'}
+    data = {"token": Prefs['slack_api']}
+    if Prefs['slack_user']:
+        data['user'] = Prefs['slack_user']
+    if Prefs['slack_channel']:
+        data['channel'] = Prefs['slack_channel']
+    data['text'] = text
+    HTTP.Request(SLACK_API_URL + "chat.postMessage", values=data, headers=header)
 
 
 # noinspection PyUnresolvedReferences
@@ -2561,3 +2648,23 @@ def userFromToken(token):
         else:
             return "guest_" + Hash.SHA1(token)[:10]
     return ""
+
+def checkRequests():
+    for req_type in ['movie', 'tv', 'music']:
+        for req_id in Dict[req_type]:
+            if Dict[req_type][req_id]['completed']:
+                continue
+            try:
+                title = Dict[req_type][req_id]['title']
+                year = Dict[req_type][req_id]['year']
+                local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title),
+                                                  headers=Request.Headers)
+                if local_search:
+                    videos = local_search.xpath("//Directory")
+                    for video in videos:
+                        video_attr = video.attrib
+                        if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'movie':
+                            Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
+                            Dict['movie'][req_id]['completed'] = True
+            except:
+                pass

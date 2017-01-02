@@ -272,6 +272,24 @@
     "default": ""
   },
   {
+    "id": "slack_api",
+    "label": "Slack Access Token",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "slack_user",
+    "label": "Slack User (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "slack_channel",
+    "label": "Slack Channel (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
     "id": "email_from",
     "label": "Email to send from",
     "type": "text",
