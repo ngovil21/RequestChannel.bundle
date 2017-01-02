@@ -1,6 +1,6 @@
 # coding=utf-8
 
-import re,urllib2,ssl
+import re, urllib2, ssl
 import traceback
 
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
@@ -1098,7 +1098,6 @@ class Session:
         else:
             return self.ViewRequests(message=L("All " + type + " have been added"))
 
-
     def ConfirmDeleteRequests(self, type, parent=None):
         oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + type + "  requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
@@ -1396,8 +1395,10 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
         options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'tvRageId': found_show['tvRageId'],
-                   'imdbId': found_show['imdbId'], 'cleanTitle': found_show['cleanTitle'], 'images': found_show['images'],
-                   'qualityProfileId': int(profile_id), 'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath,
+                   'imdbId': found_show['imdbId'], 'cleanTitle': found_show['cleanTitle'],
+                   'images': found_show['images'],
+                   'qualityProfileId': int(profile_id), 'titleSlug': found_show['titleSlug'],
+                   'rootFolderPath': rootFolderPath,
                    'seasons': found_show['seasons'], 'monitored': True, 'seasonFolder': Prefs['sonarr_seasonfolder']}
 
         add_options = {'ignoreEpisodesWithFiles': False,
@@ -2575,10 +2576,12 @@ def Notify(title, body, devices=None):
 
 
 def sendPushBullet(title, body, device_iden=""):
-    # api_header = {'Access-Token': + Prefs['pushbullet_api'],
-    api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
+    api_header = {'Access-Token': + Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
                   }
+    # api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
+    #             'Content-Type': 'application/json'
+    #            }
     data = {'type': 'note', 'title': title, 'body': body}
     if device_iden:
         data['device_iden'] = device_iden
@@ -2599,6 +2602,7 @@ def sendPushalot(title, message):
     data = {'AuthorizationToken': Prefs['pushalot_api'], 'Title': title, 'Body': message, 'IsImportant': 'false',
             'IsSilent': 'false'}
     return HTTP.Request(PUSHALOT_API_URL, values=data)
+
 
 def sendSlack(text):
     header = {'Content-type': 'application/json'}
@@ -2649,6 +2653,7 @@ def userFromToken(token):
             return "guest_" + Hash.SHA1(token)[:10]
     return ""
 
+
 def checkRequests():
     for req_type in ['movie', 'tv', 'music']:
         for req_id in Dict[req_type]:
@@ -2657,13 +2662,15 @@ def checkRequests():
             try:
                 title = Dict[req_type][req_id]['title']
                 year = Dict[req_type][req_id]['year']
-                local_search = XML.ElementFromURL(url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title),
-                                                  headers=Request.Headers)
+                local_search = XML.ElementFromURL(
+                    url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title),
+                    headers=Request.Headers)
                 if local_search:
                     videos = local_search.xpath("//Directory")
                     for video in videos:
                         video_attr = video.attrib
-                        if video_attr['title'] == title and video_attr['year'] == year and video_attr['type'] == 'movie':
+                        if video_attr['title'] == title and video_attr['year'] == year and video_attr[
+                            'type'] == 'movie':
                             Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
                             Dict['movie'][req_id]['completed'] = True
             except:
