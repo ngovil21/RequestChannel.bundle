@@ -2576,7 +2576,7 @@ def Notify(title, body, devices=None):
 
 
 def sendPushBullet(title, body, device_iden=""):
-    api_header = {'Access-Token': + Prefs['pushbullet_api'],
+    api_header = {'Access-Token': Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
                   }
     # api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
