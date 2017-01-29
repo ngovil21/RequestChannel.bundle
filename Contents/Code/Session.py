@@ -495,7 +495,7 @@ class Session:
                                        'title_year': title_year,
                                        'poster': poster, 'backdrop': backdrop, 'summary': summary, 'user': user,
                                        'token_hash': Hash.SHA1(self.token),
-                                       'automated': False,
+                                       'automated': False, 'completed': False,
                                        'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
                                        }
             Dict.Save()
@@ -699,6 +699,7 @@ class Session:
                                      'poster': poster,
                                      'backdrop': backdrop, 'summary': summary, 'user': user,
                                      'token_hash': Hash.SHA1(self.token), 'automated': False,
+                                     'completed': False,
                                      'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
                                      }
             Dict.Save()
@@ -893,6 +894,7 @@ class Session:
         Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'title': music_name,
                                    'date': music_date, 'year': music_date[:4], 'poster': music_image,
                                    'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False,
+                                   'completed': False,
                                    'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
                                    }
         Dict.Save()
@@ -1117,7 +1119,7 @@ class Session:
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         for req_id in Dict[type]:
-            if Dict[type][req_id]['completed']:
+            if Dict[type][req_id].get('completed', False):
                 request = Dict[type][req_id]
                 oc.add(TVShowObject(
                     key=Callback(self.ConfirmDeleteCompletedRequests, type=type, parent=None),
@@ -1142,7 +1144,7 @@ class Session:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         for req_id in Dict[type]:
-            if Dict[type][req_id]['completed']:
+            if Dict[type][req_id].get('completed', False):
                 del Dict[type][req_id]
         Dict.Save()
         if type == 'movie':
@@ -2760,7 +2762,7 @@ def checkCompletedMovieRequests():
         movie_list = JSON.ObjectFromURL(
             Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
     for req_id in Dict['movie']:
-        if Dict['movie'][req_id]['completed']:
+        if Dict['movie'][req_id].get('completed', False):
             continue
         for movie in movie_list:
             if (movie['imdb'] == req_id or movie['tmdb'] == req_id) and movie['status'] == "done":
