@@ -14,9 +14,9 @@ PREFIX = '/video/plexrequestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.8.0"
+VERSION = "0.8.1"
 BRANCH = "DEVELOPMENT"
-CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
+CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -105,6 +105,8 @@ class Session:
         Route.Connect(PREFIX + '/%s/viewmusicrequests' % session_id, self.ViewMusicRequests)
         Route.Connect(PREFIX + '/%s/viewrequestspassword' % session_id, self.ViewRequestsPassword)
         Route.Connect(PREFIX + '/%s/addallrequests' % session_id, self.AddAllRequests)
+        Route.Connect(PREFIX + '/%s/confirmdeletecompletedrequests' % session_id, self.ConfirmDeleteCompletedRequests)
+        Route.Connect(PREFIX + '/%s/clearcompletedrequests' % session_id, self.ClearCompletedRequests)
         Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
         Route.Connect(PREFIX + '/%s/clearrequests' % session_id, self.ClearRequests)
@@ -493,7 +495,9 @@ class Session:
                                        'title_year': title_year,
                                        'poster': poster, 'backdrop': backdrop, 'summary': summary, 'user': user,
                                        'token_hash': Hash.SHA1(self.token),
-                                       'automated': False}
+                                       'automated': False,
+                                       'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
+                                       }
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
@@ -694,7 +698,9 @@ class Session:
             Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year,
                                      'poster': poster,
                                      'backdrop': backdrop, 'summary': summary, 'user': user,
-                                     'token_hash': Hash.SHA1(self.token), 'automated': False}
+                                     'token_hash': Hash.SHA1(self.token), 'automated': False,
+                                     'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
+                                     }
             Dict.Save()
             notifyRequest(req_id=series_id, req_type='tv')
             if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
@@ -886,7 +892,9 @@ class Session:
                 user = userFromToken(self.token)
         Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'title': music_name,
                                    'date': music_date, 'year': music_date[:4], 'poster': music_image,
-                                   'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False}
+                                   'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False,
+                                   'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
+                                   }
         Dict.Save()
 
         notifyRequest(req_id=music_id, req_type='music')
@@ -970,6 +978,10 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmAllRequests, type='movie'),
                                        title=L("Add All Movie Requests"),
                                        thumb=R('plus.png')))
+            if len(oc) > 1 and self.is_admin:
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, type='movie'),
+                                       title=L("Clear All Completed Requests"),
+                                       thumb=R('trash.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='movie'),
                                        title=L("Clear All Movie Requests"),
@@ -1097,6 +1109,50 @@ class Session:
             return self.ViewMusicRequests(message=L("All " + type + " have been added"))
         else:
             return self.ViewRequests(message=L("All " + type + " have been added"))
+
+    def ConfirmDeleteCompletedRequests(self, type, parent=None):
+        oc = ObjectContainer(title2=L("These completed" + type + " requests will be deleted"))
+        if type == 'movie':
+            checkCompletedMovieRequests()
+        if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
+            oc.add(DirectoryObject(key=None, title=""))
+        for req_id in Dict[type]:
+            if Dict[type][req_id]['completed']:
+                request = Dict[type][req_id]
+                oc.add(TVShowObject(
+                    key=Callback(self.ConfirmDeleteCompletedRequests, type=type, parent=None),
+                    rating_key=req_id,
+                    title=request.get('title'), thumb=request.get('thumb'), summary=request.get('summary'),
+                    art=request.get('backdrop')))
+        oc.add(
+            DirectoryObject(key=Callback(self.ClearCompletedRequests, type=type), title=L("Yes"), thumb=R('check.png')))
+        if type == 'movie':
+            checkCompletedMovieRequests()
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
+        return oc
+
+    def ClearCompletedRequests(self, type):
+        if not self.is_admin:
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
+                                  title2=L("Admin only"))
+        for req_id in Dict[type]:
+            if Dict[type][req_id]['completed']:
+                del Dict[type][req_id]
+        Dict.Save()
+        if type == 'movie':
+            return self.ViewMovieRequests(message=L("All completed " + type + " requests have been cleared"))
+        elif type == 'tv':
+            return self.ViewTVRequests(message=L("All completed " + type + " requests have been cleared"))
+        elif type == 'music':
+            return self.ViewMusicRequests(message=L("All completed " + type + " requests have been cleared"))
+        else:
+            return self.ViewRequests(message=L("All completed " + type + "requests have been cleared"))
 
     def ConfirmDeleteRequests(self, type, parent=None):
         oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + type + "  requests?"))
@@ -2530,7 +2586,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                           music['poster']
             else:
                 return
-            response = sendSlack(message)
+            response = sendSlack(title + "\n" + message)
             if response:
                 Log.Debug("Slack notification sent for :" + req_id)
         except Exception as e:
@@ -2614,6 +2670,7 @@ def Notify(title, body, devices=None):
             Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Slack failed: " + e.message)
 
+
 def sendPushBullet(title, body, device_iden=""):
     api_header = {'Access-Token': Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
@@ -2644,7 +2701,7 @@ def sendPushalot(title, message):
 
 
 def sendSlack(text, icon=None):
-    #header = {'Content-type': 'application/json'}
+    # header = {'Content-type': 'application/json'}
     data = {"token": Prefs['slack_api']}
     if Prefs['slack_user']:
         data['username'] = Prefs['slack_user']
@@ -2654,7 +2711,6 @@ def sendSlack(text, icon=None):
         data['icon_url'] = icon
     data['text'] = text
     reply = JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
-    Log.Debug(str(reply))
     return reply
 
 
@@ -2697,24 +2753,15 @@ def userFromToken(token):
     return ""
 
 
-def checkRequests():
-    for req_type in ['movie', 'tv', 'music']:
-        for req_id in Dict[req_type]:
-            if Dict[req_type][req_id]['completed']:
-                continue
-            try:
-                title = Dict[req_type][req_id]['title']
-                year = Dict[req_type][req_id]['year']
-                local_search = XML.ElementFromURL(
-                    url="http://127.0.0.1:32400/search?local=1&query=" + String.Quote(title),
-                    headers=Request.Headers)
-                if local_search:
-                    videos = local_search.xpath("//Directory")
-                    for video in videos:
-                        video_attr = video.attrib
-                        if video_attr['title'] == title and video_attr['year'] == year and video_attr[
-                            'type'] == 'movie':
-                            Log.Debug("Possible match found: " + str(video_attr['ratingKey']))
-                            Dict['movie'][req_id]['completed'] = True
-            except:
-                pass
+# Check if movies are marked as done in CouchPotato
+def checkCompletedMovieRequests():
+    movie_list = {}
+    if Prefs["couchpotato_api"]:
+        movie_list = JSON.ObjectFromURL(
+            couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
+    for req_id in Dict[req_type]:
+        if Dict[req_type][req_id]['completed']:
+            continue
+        for movie in movie_list:
+            if (movie['imdb'] == req_id or movie['tmdb'] == req_id) and movie['status'] == "done":
+                Dict[req_type][req_id]['completed'] = True
