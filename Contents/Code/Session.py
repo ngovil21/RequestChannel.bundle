@@ -2644,10 +2644,10 @@ def sendPushalot(title, message):
 
 
 def sendSlack(text, icon=None):
-    header = {'Content-type': 'application/json'}
+    #header = {'Content-type': 'application/json'}
     data = {"token": Prefs['slack_api']}
     if Prefs['slack_user']:
-        data['user'] = Prefs['slack_user']
+        data['username'] = Prefs['slack_user']
     if Prefs['slack_channel']:
         data['channel'] = Prefs['slack_channel']
     if icon:
