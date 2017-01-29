@@ -2653,7 +2653,7 @@ def sendSlack(text, icon=None):
     if icon:
         data['icon_url'] = icon
     data['text'] = text
-    reply = JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data, headers=header)
+    reply = JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
     Log.Debug(str(reply))
     return reply
 
