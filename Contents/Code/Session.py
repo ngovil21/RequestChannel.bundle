@@ -2767,3 +2767,4 @@ def checkCompletedMovieRequests():
         for movie in movie_list['movies']:
             if (movie.get('imdb') == req_id or movie.get('tmdb') == req_id) and movie.get('status') == "done":
                 Dict['movie'][req_id]['completed'] = True
+    Dict.Save()
