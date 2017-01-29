@@ -2503,6 +2503,39 @@ def notifyRequest(req_id, req_type, title="", message=""):
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushalot failed: " + e.message)
+    if Prefs['slack_api']:
+        try:
+            if req_type == 'movie':
+                movie = Dict['movie'][req_id]
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
+                title = "Plex Request Channel - New Movie Request"
+                message = user + " has requested a new movie.\n" + title_year + "\n" + \
+                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
+            elif req_type == 'tv':
+                tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
+                title = "Plex Request Channel - New TV Show Request"
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
+                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Plex Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
+            else:
+                return
+            response = sendSlack(message)
+            if response:
+                Log.Debug("Slack notification sent for :" + req_id)
+        except Exception as e:
+            Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Slack failed: " + e.message)
     if Prefs['email_to']:
         try:
             if req_type == 'movie':
