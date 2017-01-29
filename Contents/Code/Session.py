@@ -2756,12 +2756,12 @@ def userFromToken(token):
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
     movie_list = {}
-    if Prefs["couchpotato_api"]:
+    if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
         movie_list = JSON.ObjectFromURL(
-            couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
-    for req_id in Dict[req_type]:
-        if Dict[req_type][req_id]['completed']:
+            Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
+    for req_id in Dict['movie']:
+        if Dict['movie'][req_id]['completed']:
             continue
         for movie in movie_list:
             if (movie['imdb'] == req_id or movie['tmdb'] == req_id) and movie['status'] == "done":
-                Dict[req_type][req_id]['completed'] = True
+                Dict['movie'][req_id]['completed'] = True
