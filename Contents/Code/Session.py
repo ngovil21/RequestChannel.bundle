@@ -2573,7 +2573,13 @@ def Notify(title, body, devices=None):
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
-
+    if Prefs['slack_api']:
+        try:
+            if sendSlack(body):
+                Log.Debug("Slack notification sent")
+        except Exception as e:
+            Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Slack failed: " + e.message)
 
 def sendPushBullet(title, body, device_iden=""):
     api_header = {'Access-Token': Prefs['pushbullet_api'],
@@ -2604,15 +2610,17 @@ def sendPushalot(title, message):
     return HTTP.Request(PUSHALOT_API_URL, values=data)
 
 
-def sendSlack(text):
+def sendSlack(text, icon=None):
     header = {'Content-type': 'application/json'}
     data = {"token": Prefs['slack_api']}
     if Prefs['slack_user']:
         data['user'] = Prefs['slack_user']
     if Prefs['slack_channel']:
         data['channel'] = Prefs['slack_channel']
+    if icon:
+        data['icon_url'] = icon
     data['text'] = text
-    HTTP.Request(SLACK_API_URL + "chat.postMessage", values=data, headers=header)
+    return HTTP.Request(SLACK_API_URL + "chat.postMessage", values=data, headers=header)
 
 
 # noinspection PyUnresolvedReferences
