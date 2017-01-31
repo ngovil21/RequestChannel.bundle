@@ -2764,10 +2764,11 @@ def checkCompletedMovieRequests():
             Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
+            Log.Debug("Skipped " + str(req_id))
             continue
+        Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
         for movie in movie_list['movies']:
-            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
-            if (movie.get('imdb') == req_id or movie.get('tmdb_id') == req_id) and movie.get('status') == "done":
+            if (movie.get('imdb') == str(req_id) or movie.get('tmdb_id') == str(req_id)):
                 Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ") marked as done in movie watcher")
                 Dict['movie'][req_id]['completed'] = True
     Dict.Save()
