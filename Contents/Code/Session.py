@@ -2778,7 +2778,7 @@ def checkCompletedMovieRequests():
     Dict.Save()
 
 def alt(stringy, default=None):
-    if stringy == None or stringy == "":
+    if stringy is None or stringy == "":
         return default
     else:
         return stringy
