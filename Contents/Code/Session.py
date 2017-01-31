@@ -492,12 +492,14 @@ class Session:
             title_year = title
             title_year += (" (" + year + ")" if year else "")
             Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year,
+                                       'imdb': "", 'tmdb':"",
                                        'title_year': title_year,
                                        'poster': poster, 'backdrop': backdrop, 'summary': summary, 'user': user,
                                        'token_hash': Hash.SHA1(self.token),
                                        'automated': False, 'completed': False,
                                        'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
                                        }
+            Dict['movie'][movie_id][source.lower()] = movie_id
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
@@ -1273,8 +1275,10 @@ class Session:
             # we need to convert tmdb id to imdb
             json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
                                       headers={'Accept': 'application/json'})
-            if 'imdb_id' in json and json['imdb_id']:
+            if json.get('imdb_id'):
                 imdb_id = json['imdb_id']
+                Dict['movie'][movie_id]['imdb'] = imdb_id
+                Dict.Save()
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
@@ -2758,18 +2762,16 @@ def userFromToken(token):
 
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
-    movie_list = {}
     if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
         movie_list = JSON.ObjectFromURL(
             Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
-    for req_id in Dict['movie']:
-        if Dict['movie'][req_id].get('completed', False):
-            Log.Debug("Skipped " + str(req_id))
-            continue
-        Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
-        for movie in movie_list['movies']:
-            Log.Debug(str(movie))
-            if (movie.get('imdb') == str(req_id) or movie.get('tmdb_id') == str(req_id)):
-                Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ") marked as done in movie watcher")
-                Dict['movie'][req_id]['completed'] = True
+        for req_id in Dict['movie']:
+            if Dict['movie'][req_id].get('completed', False):
+                Log.Debug("Skipped " + str(req_id))
+                continue
+            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
+            for movie in movie_list['movies']:
+                if movie.get('imdb') == Dict['movie'][req_id].get('imdb', req_id) or movie.get('tmdb_id') == Dict['movie'][req_id].get('tmdb', req_id):
+                    Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ") marked as done in movie watcher")
+                    Dict['movie'][req_id]['completed'] = True
     Dict.Save()
