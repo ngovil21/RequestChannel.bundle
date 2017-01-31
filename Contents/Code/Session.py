@@ -1145,6 +1145,7 @@ class Session:
                                   title2=L("Admin only"))
         for req_id in Dict[type]:
             if Dict[type][req_id].get('completed', False):
+                Log.Debug("Deleting " + req_id)
                 del Dict[type][req_id]
         Dict.Save()
         if type == 'movie':
@@ -2765,6 +2766,8 @@ def checkCompletedMovieRequests():
         if Dict['movie'][req_id].get('completed', False):
             continue
         for movie in movie_list['movies']:
+            Log.Debug(movie['title'] + " (" + movie['id'] + ")")
             if (movie.get('imdb') == req_id or movie.get('tmdb') == req_id) and movie.get('status') == "done":
+                Log.Debug(movie['title'] + " (" + movie['id'] + ") marked as done in movie watcher")
                 Dict['movie'][req_id]['completed'] = True
     Dict.Save()
