@@ -492,7 +492,6 @@ class Session:
             title_year = title
             title_year += (" (" + year + ")" if year else "")
             Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year,
-                                       'imdb': None, 'tmdb': None,
                                        'title_year': title_year,
                                        'poster': poster, 'backdrop': backdrop, 'summary': summary, 'user': user,
                                        'token_hash': Hash.SHA1(self.token),
@@ -2771,9 +2770,15 @@ def checkCompletedMovieRequests():
                 continue
             Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
             for movie in movie_list['movies']:
-                Log.Debug(movie.get('imdb') + " ?= " + Dict['movie'][req_id].get('imdb', req_id))
-                Log.Debug(movie.get('tmdb_id') + " ?= " + Dict['movie'][req_id].get('tmdb', req_id))
-                if movie.get('imdb') == Dict['movie'][req_id].get('imdb', req_id) or movie.get('tmdb_id') == Dict['movie'][req_id].get('tmdb', req_id):
+                Log.Debug(movie.get('imdb') + " ?= " + alt(Dict['movie'][req_id].get('imdb'), req_id))
+                Log.Debug(movie.get('tmdb_id') + " ?= " + alt(Dict['movie'][req_id].get('tmdb'), req_id))
+                if movie.get('imdb') == alt(Dict['movie'][req_id].get('imdb'), req_id) or movie.get('tmdb_id') == alt(Dict['movie'][req_id].get('tmdb'), req_id):
                     Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ") marked as done in movie watcher")
                     Dict['movie'][req_id]['completed'] = True
     Dict.Save()
+
+def alt(stringy, default=None):
+    if stringy == None or stringy == "":
+        return default
+    else:
+        return stringy
