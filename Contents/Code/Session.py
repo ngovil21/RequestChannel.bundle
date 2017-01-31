@@ -2766,8 +2766,8 @@ def checkCompletedMovieRequests():
         if Dict['movie'][req_id].get('completed', False):
             continue
         for movie in movie_list['movies']:
-            Log.Debug(movie['title'] + " (" + movie['id'] + ")")
+            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
             if (movie.get('imdb') == req_id or movie.get('tmdb') == req_id) and movie.get('status') == "done":
-                Log.Debug(movie['title'] + " (" + movie['id'] + ") marked as done in movie watcher")
+                Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ") marked as done in movie watcher")
                 Dict['movie'][req_id]['completed'] = True
     Dict.Save()
