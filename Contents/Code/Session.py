@@ -1150,7 +1150,7 @@ class Session:
         for req_id in Dict[type]:
             if Dict[type][req_id].get('completed', False):
                 Log.Debug("Deleting " + req_id)
-                del Dict[type][req_id]
+                Dict[type].pop(req_id)
         Dict.Save()
         if type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + type + " requests have been cleared"))
