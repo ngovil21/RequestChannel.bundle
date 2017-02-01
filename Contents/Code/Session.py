@@ -952,7 +952,7 @@ class Session:
             oc.header = TITLE
             oc.message = message
         if not Dict['movie']:
-            Log.Debug("There are no Movie requests")
+            Log.Debug("There are no movie requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no movie requests.")
             else:
@@ -1118,7 +1118,7 @@ class Session:
             return self.ViewRequests(message=L("All " + type + " have been added"))
 
     def ConfirmDeleteCompletedRequests(self, type, parent=None):
-        oc = ObjectContainer(title2=L("These completed" + type + " requests will be deleted"))
+        oc = ObjectContainer(title2=L("These completed " + type + " requests will be deleted"))
         if type == 'movie':
             checkCompletedMovieRequests()
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
@@ -1144,30 +1144,24 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
-    def ClearCompletedRequests(self, type):
+    def ClearCompletedRequests(self, req_type):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         try:
-            # holder = {}
-            # for req_id in Dict[type]:
-            #     if not Dict[type][req_id].get('completed', False):
-            #         holder[req_id] = Dict[type][req_id]
-            # Dict[type] = holder
-            # Dict.Save()
-            for req_id in Dict[type]:
-                if Dict[type][req_id].get('completed', False):
-                    self.DeleteRequest(req_id,type)
+            for req_id in Dict[req_type]:
+                if Dict[req_type][req_id].get('completed', False):
+                    self.DeleteRequest(req_id, req_type)
         except Exception as e:
             Log.Debug(e.message)
-        if type == 'movie':
-            return self.ViewMovieRequests(message=L("All completed " + type + " requests have been cleared"))
-        elif type == 'tv':
-            return self.ViewTVRequests(message=L("All completed " + type + " requests have been cleared"))
-        elif type == 'music':
-            return self.ViewMusicRequests(message=L("All completed " + type + " requests have been cleared"))
+        if req_type == 'movie':
+            return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
+        elif req_type == 'tv':
+            return self.ViewTVRequests(message=L("All completed " + req_type + " requests have been cleared"))
+        elif req_type == 'music':
+            return self.ViewMusicRequests(message=L("All completed " + req_type + " requests have been cleared"))
         else:
-            return self.ViewRequests(message=L("All completed " + type + "requests have been cleared"))
+            return self.ViewRequests(message=L("All completed " + req_type + "requests have been cleared"))
 
     def ConfirmDeleteRequests(self, type, parent=None):
         oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + type + "  requests?"))
@@ -1184,20 +1178,20 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
-    def ClearRequests(self, type):
+    def ClearRequests(self, req_type):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
-        Dict[type] = {}
+        Dict[req_type] = {}
         Dict.Save()
-        if type == 'movie':
-            return self.ViewMovieRequests(message=L("All " + type + " have been cleared"))
-        elif type == 'tv':
-            return self.ViewTVRequests(message=L("All " + type + " have been cleared"))
-        elif type == 'music':
-            return self.ViewMusicRequests(message=L("All " + type + " have been cleared"))
+        if req_type == 'movie':
+            return self.ViewMovieRequests(message=L("All " + req_type + " have been cleared"))
+        elif req_type == 'tv':
+            return self.ViewTVRequests(message=L("All " + req_type + " have been cleared"))
+        elif req_type == 'music':
+            return self.ViewMusicRequests(message=L("All " + req_type + " have been cleared"))
         else:
-            return self.ViewRequests(message=L("All " + type + " have been cleared"))
+            return self.ViewRequests(message=L("All " + req_type + " have been cleared"))
 
     def ViewRequest(self, req_id, req_type, token_hash=None):
         key = Dict[req_type][req_id]
@@ -1269,12 +1263,19 @@ class Session:
 
     def DeleteRequest(self, req_id, req_type, token_hash=None):
         if req_id in Dict[req_type]:
-            message = L("Request was deleted")
             del Dict[req_type][req_id]
             Dict.Save()
+            message = L("Request was deleted")
         else:
             message = L("Request could not be deleted")
-        return self.ViewRequests(token_hash=token_hash, message=message)
+        if type == 'movie':
+            return self.ViewMovieRequests(message=message)
+        elif type == 'tv':
+            return self.ViewTVRequests(message=message)
+        elif type == 'music':
+            return self.ViewMusicRequests(message=message)
+        else:
+            return self.ViewRequests(message=message)
 
     # CouchPotato Functions
     def SendToCouchpotato(self, movie_id):
