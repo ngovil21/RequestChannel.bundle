@@ -1156,7 +1156,7 @@ class Session:
             Dict[type] = holder
             Dict.Save()
         except Exception as e:
-            pass
+            Log.Debug(e.message)
         if type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + type + " requests have been cleared"))
         elif type == 'tv':
