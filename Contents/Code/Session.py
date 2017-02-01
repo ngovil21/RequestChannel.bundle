@@ -430,7 +430,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         return oc
 
-    def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
+    def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary="", imdb=None):
         title_year = title + " (" + year + ")" if year else title
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Confirm Movie Request"), title2=title_year + "?", header=TITLE,
@@ -470,16 +470,17 @@ class Session:
             oc.add(TVShowObject(
                 key=Callback(self.ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year,
                              poster=poster, backdrop=backdrop,
-                             summary=summary), rating_key=movie_id, thumb=poster, summary=summary, title=title_year))
+                             summary=summary), rating_key=movie_id, thumb=poster, summary=summary, title=title_year, imdb=imdb))
         oc.add(DirectoryObject(
             key=Callback(self.AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster,
                          backdrop=backdrop,
-                         summary=summary), title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
+                         summary=summary), imdb=imdb,
+                         title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
 
-    def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
+    def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary="", imdb=None):
         if movie_id in Dict['movie']:
             Log.Debug("Movie is already requested")
             return self.SMainMenu(message=L("Movie has already been requested"), title1=title,
@@ -499,6 +500,8 @@ class Session:
                                        'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
                                        }
             Dict['movie'][movie_id][source.lower()] = movie_id
+            if imdb:
+                Dict['movie'][movie_id]['imdb'] = imdb
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
@@ -1270,21 +1273,24 @@ class Session:
         if movie_id not in Dict['movie']:
             return MessageContainer(L("Error"), L("The movie id was not found in the database"))
         movie = Dict['movie'][movie_id]
-        if 'source' in movie and movie['source'].upper() == 'TMDB':  # Check if id source is tmdb
+        if movie.get('source', "").lower() == "tmdb":   # Check if id source is tmdb
             # we need to convert tmdb id to imdb
-            json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
-                                      headers={'Accept': 'application/json'})
-            if json.get('imdb_id'):
-                imdb_id = json['imdb_id']
-                Dict['movie'][movie_id]['imdb'] = imdb_id
-                Dict.Save()
+            if movie.get('imdb',"").startswith("tt"):
+                imdb_id = movie.get('imdb')
             else:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
+                                          headers={'Accept': 'application/json'})
+                if json.get('imdb_id'):
+                    imdb_id = json['imdb_id']
+                    Dict['movie'][movie_id]['imdb'] = imdb_id
+                    Dict.Save()
                 else:
-                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                return oc
+                    if isClient(MESSAGE_OVERLAY_CLIENTS):
+                        oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                    else:
+                        oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                    oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                    return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
