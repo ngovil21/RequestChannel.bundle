@@ -1154,7 +1154,7 @@ class Session:
                     Log.Debug("Deleting " + req_id)
                     Dict[type].pop(req_id)
             Dict.Save()
-        except e:
+        except Exception as e:
             pass
         if type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + type + " requests have been cleared"))
