@@ -1155,7 +1155,7 @@ class Session:
             #         holder[req_id] = Dict[type][req_id]
             # Dict[type] = holder
             # Dict.Save()
-            for req_id in Dict[type]
+            for req_id in Dict[type]:
                 if Dict[type][req_id].get('completed', False):
                     self.DeleteRequest(req_id,type)
         except Exception as e:
