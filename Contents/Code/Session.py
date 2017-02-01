@@ -470,12 +470,13 @@ class Session:
             oc.add(TVShowObject(
                 key=Callback(self.ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year,
                              poster=poster, backdrop=backdrop,
-                             summary=summary), rating_key=movie_id, thumb=poster, summary=summary, title=title_year, imdb=imdb))
+                             summary=summary), rating_key=movie_id, thumb=poster, summary=summary, title=title_year,
+                imdb=imdb))
         oc.add(DirectoryObject(
             key=Callback(self.AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster,
                          backdrop=backdrop,
                          summary=summary), imdb=imdb,
-                         title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
+            title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
@@ -1147,11 +1148,14 @@ class Session:
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
-        for req_id in Dict[type]:
-            if Dict[type][req_id].get('completed', False):
-                Log.Debug("Deleting " + req_id)
-                Dict[type].pop(req_id)
-        Dict.Save()
+        try:
+            for req_id in Dict[type]:
+                if Dict[type][req_id].get('completed', False):
+                    Log.Debug("Deleting " + req_id)
+                    Dict[type].pop(req_id)
+            Dict.Save()
+        except e:
+            pass
         if type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + type + " requests have been cleared"))
         elif type == 'tv':
@@ -1273,9 +1277,9 @@ class Session:
         if movie_id not in Dict['movie']:
             return MessageContainer(L("Error"), L("The movie id was not found in the database"))
         movie = Dict['movie'][movie_id]
-        if movie.get('source', "").lower() == "tmdb":   # Check if id source is tmdb
+        if movie.get('source', "").lower() == "tmdb":  # Check if id source is tmdb
             # we need to convert tmdb id to imdb
-            if movie.get('imdb',"").startswith("tt"):
+            if movie.get('imdb', "").startswith("tt"):
                 imdb_id = movie.get('imdb')
             else:
                 json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
@@ -2777,11 +2781,15 @@ def checkCompletedMovieRequests():
             Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
             for movie in movie_list['movies']:
                 Log.Debug(str(movie['info'].get('imdb', "")) + " ?= " + str(Dict['movie'][req_id].get('imdb', req_id)))
-                Log.Debug(str(movie['info'].get('tmdb_id', "")) + " ?= " + str(Dict['movie'][req_id].get('tmdb', req_id)))
-                if str(movie['info'].get('imdb')) == alt(Dict['movie'][req_id].get('imdb'), req_id) or str(movie['info'].get('tmdb_id')) == alt(Dict['movie'][req_id].get('tmdb'), req_id):
-                    Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ") marked as done in movie watcher")
+                Log.Debug(
+                    str(movie['info'].get('tmdb_id', "")) + " ?= " + str(Dict['movie'][req_id].get('tmdb', req_id)))
+                if str(movie['info'].get('imdb')) == alt(Dict['movie'][req_id].get('imdb'), req_id) or str(
+                        movie['info'].get('tmdb_id')) == alt(Dict['movie'][req_id].get('tmdb'), req_id):
+                    Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
+                        'id'] + ") marked as done in movie watcher")
                     Dict['movie'][req_id]['completed'] = True
     Dict.Save()
+
 
 def alt(stringy, default=None):
     if stringy:
