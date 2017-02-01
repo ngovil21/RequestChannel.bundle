@@ -1149,10 +1149,11 @@ class Session:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         try:
+            holder = {}
             for req_id in Dict[type]:
-                if Dict[type][req_id].get('completed', False):
-                    Log.Debug("Deleting " + req_id)
-                    Dict[type].pop(req_id)
+                if not Dict[type][req_id].get('completed', False):
+                    holder[req_id] = Dict[type][req_id]
+            Dict[type] = holder
             Dict.Save()
         except Exception as e:
             pass
