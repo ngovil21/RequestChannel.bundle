@@ -117,6 +117,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/managecouchpotato' % session_id, self.ManageCouchpotato)
         Route.Connect(PREFIX + '/%s/managecouchpotatomovie' % session_id, self.ManageCouchPotatoMovie)
         Route.Connect(PREFIX + '/%s/deletecouchpotatomovie' % session_id, self.DeleteCouchPotatoMovie)
+        Route.Connect(PREFIX + '/%s/sendtoradarr' % session_id, self.SendToRadarr)
         Route.Connect(PREFIX + '/%s/sendtosonarr' % session_id, self.SendToSonarr)
         Route.Connect(PREFIX + '/%s/managesonarr' % session_id, self.ManageSonarr)
         Route.Connect(PREFIX + '/%s/managesonarrshow' % session_id, self.ManageSonarrShow)
@@ -506,6 +507,8 @@ class Session:
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
+            if Prefs['radarr_autorequest']:
+                self.SendToRadarr(movie_id)
             notifyRequest(req_id=movie_id, req_type='movie')
             return self.SMainMenu(message=L("Movie has been requested"), title1=L("Main Menu"),
                                   title2=L("Movie Requested"))
@@ -1218,34 +1221,39 @@ class Session:
         if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id),
-                                       title=F("sendto", "CouchPotato"),
-                                       thumb=R('couchpotato.png')))
-        if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
-            if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-                oc.add(DirectoryObject(key=Callback(self.SendToSonarr, tvdbid=req_id,
-                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv',
+                                       title=F("sendto", "CouchPotato"), thumb=R('couchpotato.png')))
+            if Prefs['radarr_url'] and Prefs['radarr_api']:
+                oc.add(DirectoryObject(key=Callback(self.SendToRadarr, movie_id=req_id,
+                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='movie',
                                                                       token_hash=token_hash)),
+                                                    title=F("sendto", "Radarr"), thumb=R('radarr.png')))
+                if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
+                    if Prefs['sonarr_url'] and Prefs['sonarr_api']:
+                        oc.add(DirectoryObject(key=Callback(self.SendToSonarr, tvdbid=req_id,
+                                               callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv',
+                                               token_hash=token_hash)),
                                        title=F("sendto", "Sonarr"), thumb=R('sonarr.png')))
-            if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-                oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
-                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv',
-                                                                      token_hash=token_hash)),
-                                       title=F("sendto", Prefs['sickbeard_fork']),
-                                       thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
-        if key['type'] == 'music' and (self.is_admin or Prefs['usersviewrequests']):
-            if Prefs['headphones_url'] and Prefs['headphones_api']:
-                oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
-                                       title=F("sendto", "Headphones"),
-                                       thumb=R('headphones.png')))
-        if req_type == 'movie':
-            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
-                                   title=L("Return to Movie Requests"), thumb=R('return.png')))
-        elif req_type == 'tv':
-            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
-                                   title=L("Return to TV Requests"), thumb=R('return.png')))
-        elif req_type == 'music':
-            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
-                                   title=L("Return to Music Requests"), thumb=R('return.png')))
+                if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
+                    oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
+                                                        callback=Callback(self.ViewRequest, req_id=req_id,
+                                                                          req_type='tv',
+                                                                          token_hash=token_hash)),
+                                           title=F("sendto", Prefs['sickbeard_fork']),
+                                           thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+                if key['type'] == 'music' and (self.is_admin or Prefs['usersviewrequests']):
+                    if Prefs['headphones_url'] and Prefs['headphones_api']:
+                        oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
+                                               title=F("sendto", "Headphones"),
+                                               thumb=R('headphones.png')))
+                if req_type == 'movie':
+                    oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
+                                           title=L("Return to Movie Requests"), thumb=R('return.png')))
+                elif req_type == 'tv':
+                    oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
+                                           title=L("Return to TV Requests"), thumb=R('return.png')))
+                elif req_type == 'music':
+                    oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
+                                           title=L("Return to Music Requests"), thumb=R('return.png')))
         return oc
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
@@ -1428,6 +1436,100 @@ class Session:
             return self.ManageCouchpotato()
         else:
             return MessageContainer(header=TITLE, message=L("Could not delete movie from Couchpotato"))
+
+            # Sonarr Methods
+
+    def SendToRadarr(self, movie_id, callback=None):
+        if not Prefs['radarr_url'].startswith("http"):
+            radarr_url = "http://" + Prefs['radarr_url']
+        else:
+            radarr_url = Prefs['radarr_url']
+        if not radarr_url.endswith("/"):
+            radarr_url += "/"
+        title = Dict['tv'][movie_id]['title']
+        api_header = {
+            'X-Api-Key': Prefs['radarr_api']
+        }
+        radarr_movie_id = self.RadarrShowExists(movie_id)
+        if radarr_movie_id:
+            Dict['movie'][movie_id]['automated'] = True
+            Dict.Save()
+            if callback:
+                return callback
+            else:
+                return self.SMainMenu(message="Movie already exists in Radarr")
+
+        profile_json = JSON.ObjectFromURL(radarr_url + "api/Profile", headers=api_header)
+        profile_id = 1
+        for profile in profile_json:
+            if profile['name'] == Prefs['radarr_profile']:
+                profile_id = profile['id']
+                break
+        rootFolderPath = ""
+        if Prefs['radarr_path']:
+            rootFolderPath = Prefs['radarr_path']
+        else:
+            root = JSON.ObjectFromURL(radarr_url + "api/Rootfolder", headers=api_header)
+            if root:
+                rootFolderPath = root[0]['path']
+
+        Log.Debug("Profile id: " + str(profile_id))
+        movie = Dict['movie'][movie_id]
+
+        titleSlug = movie.get(title).lower().replace(" ", "-") + "-" + str(movie.get('year', "0000"))
+
+        options = {'title': movie.get('title'), 'imdbId': movie.get('idmb', ""), 'tmdbId': int(movie.get('tmdb', 0)),
+                   'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
+                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')}
+
+        options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
+        values = JSON.StringFromObject(options)
+        try:
+            Log.Debug("Options: " + str(options))
+            resp = HTTP.Request(radarr_url + "api/movie", data=values, headers=api_header)
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
+            else:
+                oc = ObjectContainer(title1="Radarr", title2=L("Success"))
+            Log.Debug("Setting movie automated to true")
+            Dict['movie'][movie_id]['automated'] = True
+            Dict.Save()
+        except Exception as e:
+            Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Options: " + str(options))
+            Log.Debug(e.message)
+            Log.Debug("Response Status: " + str(Response.Status))
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Could not send show to Radarr!"))
+            else:
+                oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
+        # radarr_movie_id = self.RadarrMovieExists(movie_id)
+        if self.is_admin:
+            oc.add(DirectoryObject(
+                key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie',
+                             title_year=movie.get('title')),
+                title=L("Delete Request"), thumb=R('trash.png')))
+        if callback:
+            oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("Return to Movie Requests"),
+                                   thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
+                                   thumb=R('plexrequestchannel.png')))
+        return oc
+
+    def RadarrMovieExists(self, movie_id):
+        if not Prefs['radarr_url'].startswith("http"):
+            radarr_url = "http://" + Prefs['radarr_url']
+        else:
+            radarr_url = Prefs['radarr_url']
+        if not radarr_url.endswith("/"):
+            radarr_url += "/"
+        movies = JSON.ObjectFromURL(radarr_url + "api/movie", headers={'X-Api-Key': Prefs['radarr_api']})
+        for movie in movies:
+            if movie['id'] and (movie['imdbId'] == str(movie_id) or str(movie['tmdbId']) == str(movie_id)):
+                return movie['id']
+        return False
 
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
@@ -2785,11 +2887,8 @@ def checkCompletedMovieRequests():
                 continue
             Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
             for movie in movie_list['movies']:
-                Log.Debug(str(movie['info'].get('imdb', "")) + " ?= " + str(Dict['movie'][req_id].get('imdb', req_id)))
-                Log.Debug(
-                    str(movie['info'].get('tmdb_id', "")) + " ?= " + str(Dict['movie'][req_id].get('tmdb', req_id)))
-                if str(movie['info'].get('imdb')) == alt(Dict['movie'][req_id].get('imdb'), req_id) or str(
-                        movie['info'].get('tmdb_id')) == alt(Dict['movie'][req_id].get('tmdb'), req_id):
+                if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
+                        movie['info'].get('tmdb_id')) == Dict['movie'][req_id].get('tmdb', req_id):
                     Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
                         'id'] + ") marked as done in movie watcher")
                     Dict['movie'][req_id]['completed'] = True
