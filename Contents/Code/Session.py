@@ -1476,11 +1476,16 @@ class Session:
 
         titleSlug = movie.get('title','').lower().replace(" ", "-") + "-" + str(movie.get('year', "0000"))
 
-        options = {'title': movie.get('title'), 'imdbId': movie.get('imdb', ""), 'tmdbId': int(movie.get('tmdb', 0)),
-                   'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
+        options = {'title': movie.get('title'), 'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
                    'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')}
 
-        options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
+        if movie.get('imdb') or movie.get('source','').lower() == 'imdb':
+            options['imdbId'] = movie.get('imdb',movie_id)
+        if movie.get('tmdb') or movie.get('source','').lower() == 'tmdb':
+            options['tmdbId'] = movie.get('tmdb',movie_id)
+
+
+        #options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
         values = JSON.StringFromObject(options)
         try:
             Log.Debug("Options: " + str(options))
