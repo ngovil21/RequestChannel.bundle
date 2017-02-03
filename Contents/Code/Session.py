@@ -1466,7 +1466,7 @@ class Session:
                                              "&external_source=imdb_id")
             if tmdb_lookup and tmdb_lookup.get('movie_results'):
                 tmdb_id = tmdb_lookup['movie_results'][0]['id']
-                Log.Debut(str(tmdb_id))
+                Log.Debug(str(tmdb_id))
                 Dict['movie'][movie_id]['tmdb'] = tmdb_id
         else:
             tmdb_id = movie.get('tmdb', movie_id)
