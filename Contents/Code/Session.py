@@ -1448,7 +1448,7 @@ class Session:
         api_header = {
             'X-Api-Key': Prefs['radarr_api']
         }
-        radarr_movie_id = self.RadarrShowExists(movie_id)
+        radarr_movie_id = self.RadarrMovieExists(movie_id)
         if radarr_movie_id:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
