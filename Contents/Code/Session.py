@@ -1444,7 +1444,7 @@ class Session:
             radarr_url = Prefs['radarr_url']
         if not radarr_url.endswith("/"):
             radarr_url += "/"
-        title = Dict['tv'][movie_id]['title']
+        title = Dict['movie'][movie_id]['title']
         api_header = {
             'X-Api-Key': Prefs['radarr_api']
         }
