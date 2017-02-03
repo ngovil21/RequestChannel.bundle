@@ -470,12 +470,12 @@ class Session:
         if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
             oc.add(TVShowObject(
                 key=Callback(self.ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year,
-                                poster=poster, backdrop=backdrop, summary=summary, imdb=imdb),
+                             poster=poster, backdrop=backdrop, summary=summary, imdb=imdb),
                 rating_key=movie_id, thumb=poster, summary=summary, title=title_year))
         oc.add(DirectoryObject(
             key=Callback(self.AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster,
                          backdrop=backdrop, summary=summary, imdb=imdb),
-                         title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
+            title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
@@ -1224,13 +1224,14 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.SendToRadarr, movie_id=req_id,
                                                     callback=Callback(self.ViewRequest, req_id=req_id, req_type='movie',
                                                                       token_hash=token_hash)),
-                                                    title=F("sendto", "Radarr"), thumb=R('radarr.png')))
+                                       title=F("sendto", "Radarr"), thumb=R('radarr.png')))
                 if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
                     if Prefs['sonarr_url'] and Prefs['sonarr_api']:
                         oc.add(DirectoryObject(key=Callback(self.SendToSonarr, tvdbid=req_id,
-                                               callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv',
-                                               token_hash=token_hash)),
-                                       title=F("sendto", "Sonarr"), thumb=R('sonarr.png')))
+                                                            callback=Callback(self.ViewRequest, req_id=req_id,
+                                                                              req_type='tv',
+                                                                              token_hash=token_hash)),
+                                               title=F("sendto", "Sonarr"), thumb=R('sonarr.png')))
                 if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
                     oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
                                                         callback=Callback(self.ViewRequest, req_id=req_id,
@@ -1457,6 +1458,18 @@ class Session:
             else:
                 return self.SMainMenu(message="Movie already exists in Radarr")
 
+        movie = Dict['movie'][movie_id]
+        tmdb_id = 0
+        if not movie.get('source', '').lower() == 'imdb' and not movie.get(
+                'tmdb'):  # Radarr uses tmdb id, convert imdb to tmdb
+            tmdb_lookup = JSON.ObjectFromURL(TMDB_API_URL + "find/" + movie_id + "?api_key=" + TMDB_API_KEY +
+                                             "&external_source=imdb_id")
+            if tmdb_lookup and tmdb_lookup.get('movie_results'):
+                tmdb_id = tmdb_lookup['movie_results'][0]['id']
+                Dict['movie'][movie_id]['tmdb'] = tmdb_id
+        else:
+            tmdb = movie.get('tmdb', movie_id)
+
         profile_json = JSON.ObjectFromURL(radarr_url + "api/Profile", headers=api_header)
         profile_id = 1
         for profile in profile_json:
@@ -1472,20 +1485,15 @@ class Session:
                 rootFolderPath = root[0]['path']
 
         Log.Debug("Profile id: " + str(profile_id))
-        movie = Dict['movie'][movie_id]
 
-        titleSlug = movie.get('title','').lower().replace(" ", "-") + "-" + str(movie.get('year', "0000"))
+        titleSlug = movie.get('title', '').lower().replace(" ", "-") + "-" + str(movie.get('year', "0000"))
 
-        options = {'title': movie.get('title'), 'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
-                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')}
-
-        if movie.get('imdb') or movie.get('source','').lower() == 'imdb':
-            options['imdbId'] = movie.get('imdb',movie_id)
-        if movie.get('tmdb') or movie.get('source','').lower() == 'tmdb':
-            options['tmdbId'] = movie.get('tmdb',movie_id)
+        options = {'tmdbId': tmdb_id, 'title': movie.get('title'), 'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
+                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')
+                   }
 
 
-        #options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
+        # options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
         values = JSON.StringFromObject(options)
         try:
             Log.Debug("Options: " + str(options))
