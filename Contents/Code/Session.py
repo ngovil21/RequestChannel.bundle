@@ -1476,7 +1476,7 @@ class Session:
 
         titleSlug = movie.get('title','').lower().replace(" ", "-") + "-" + str(movie.get('year', "0000"))
 
-        options = {'title': movie.get('title'), 'imdbId': movie.get('idmb', ""), 'tmdbId': int(movie.get('tmdb', 0)),
+        options = {'title': movie.get('title'), 'imdbId': movie.get('imdb', ""), 'tmdbId': int(movie.get('tmdb', 0)),
                    'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
                    'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')}
 
