@@ -1493,7 +1493,6 @@ class Session:
                    'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')
                    }
 
-
         options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
         values = JSON.StringFromObject(options)
         try:
