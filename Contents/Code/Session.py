@@ -1494,7 +1494,7 @@ class Session:
                    }
 
 
-        # options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
+        options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
         values = JSON.StringFromObject(options)
         try:
             Log.Debug("Options: " + str(options))
