@@ -1460,15 +1460,16 @@ class Session:
 
         movie = Dict['movie'][movie_id]
         tmdb_id = 0
-        if not movie.get('source', '').lower() == 'imdb' and not movie.get(
-                'tmdb'):  # Radarr uses tmdb id, convert imdb to tmdb
+        if (movie.get('source', '').lower() == 'imdb') and (not movie.get(
+                'tmdb')):  # Radarr uses tmdb id, convert imdb to tmdb
             tmdb_lookup = JSON.ObjectFromURL(TMDB_API_URL + "find/" + movie_id + "?api_key=" + TMDB_API_KEY +
                                              "&external_source=imdb_id")
             if tmdb_lookup and tmdb_lookup.get('movie_results'):
                 tmdb_id = tmdb_lookup['movie_results'][0]['id']
+                Log.Debut(str(tmdb_id))
                 Dict['movie'][movie_id]['tmdb'] = tmdb_id
         else:
-            tmdb = movie.get('tmdb', movie_id)
+            tmdb_id = movie.get('tmdb', movie_id)
 
         profile_json = JSON.ObjectFromURL(radarr_url + "api/Profile", headers=api_header)
         profile_id = 1
