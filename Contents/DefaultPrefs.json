@@ -138,13 +138,13 @@
   },
   {
     "id": "radarr_profile",
-    "label": "Sonarr Quality Profile",
+    "label": "Radarr Quality Profile",
     "type": "text",
     "default": ""
   },
   {
     "id": "radarr_path",
-    "label": "Root folder for Show to be placed in (optional)",
+    "label": "Root folder for Movie to be placed in (optional)",
     "type": "text",
     "default": ""
   },

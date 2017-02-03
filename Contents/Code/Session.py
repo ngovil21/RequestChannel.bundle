@@ -472,12 +472,11 @@ class Session:
                 key=Callback(self.ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year,
                              poster=poster, backdrop=backdrop,
                              summary=summary), rating_key=movie_id, thumb=poster, summary=summary, title=title_year,
-                imdb=imdb))
+                             imdb=imdb))
         oc.add(DirectoryObject(
             key=Callback(self.AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster,
-                         backdrop=backdrop,
-                         summary=summary), imdb=imdb,
-            title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
+                         backdrop=backdrop, summary=summary), imdb=imdb,
+                         title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
