@@ -1459,17 +1459,15 @@ class Session:
                 return self.SMainMenu(message="Movie already exists in Radarr")
 
         movie = Dict['movie'][movie_id]
-        tmdb_id = 0
-        if (movie.get('source', '').lower() == 'imdb') and (not movie.get(
-                'tmdb')):  # Radarr uses tmdb id, convert imdb to tmdb
-            tmdb_lookup = JSON.ObjectFromURL(TMDB_API_URL + "find/" + movie_id + "?api_key=" + TMDB_API_KEY +
-                                             "&external_source=imdb_id")
-            if tmdb_lookup and tmdb_lookup.get('movie_results'):
-                tmdb_id = tmdb_lookup['movie_results'][0]['id']
-                Log.Debug(str(tmdb_id))
-                Dict['movie'][movie_id]['tmdb'] = tmdb_id
+        if movie.get('source', '').lower() == 'tmdb':
+            s = "tmdbid:"
         else:
-            tmdb_id = movie.get('tmdb', movie_id)
+            s = "imdbid:"
+        lookup_json = JSON.ObjectFromURL(sonarr_url + "api/movies/Lookup?term=" + s + movie_id, headers=api_header)
+        if lookup_json:
+            radarr_movie = lookup_json[0]
+        else:
+            return
 
         profile_json = JSON.ObjectFromURL(radarr_url + "api/Profile", headers=api_header)
         profile_id = 1
@@ -1487,11 +1485,11 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        titleSlug = movie.get('title', '').lower().replace(" ", "-") + "-" + str(movie.get('year', "0000"))
-
-        options = {'tmdbId': tmdb_id, 'title': movie.get('title'), 'qualityProfileId': int(profile_id), 'titleSlug': titleSlug,
-                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': movie.get('year')
+        options = {'tmdbId': radarr_movie['tmdbId'], 'title': radarr_movie['title'], 'profileId': int(profile_id), 'titleSlug': radarr_movie['titleSlug'],
+                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': radarr_movie['year'], 'images': radarr_movie['images']
                    }
+        if not movie.get('tmdb'):
+            movie['tmdb'] = radarr_movie['tmdbId']
 
         options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
         values = JSON.StringFromObject(options)
