@@ -1463,7 +1463,7 @@ class Session:
             s = "tmdbid:"
         else:
             s = "imdbid:"
-        lookup_json = JSON.ObjectFromURL(sonarr_url + "api/movies/Lookup?term=" + s + movie_id, headers=api_header)
+        lookup_json = JSON.ObjectFromURL(radarr_url + "api/movies/Lookup?term=" + s + movie_id, headers=api_header)
         if lookup_json:
             radarr_movie = lookup_json[0]
         else:
