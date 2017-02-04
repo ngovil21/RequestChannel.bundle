@@ -987,7 +987,7 @@ class Session:
                                        title=L("Add All Movie Requests"),
                                        thumb=R('plus.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, type='movie'),
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie'),
                                        title=L("Clear All Completed Requests"),
                                        thumb=R('trash.png')))
             if len(oc) > 1 and self.is_admin:
@@ -1118,28 +1118,28 @@ class Session:
         else:
             return self.ViewRequests(message=L("All " + type + " have been added"))
 
-    def ConfirmDeleteCompletedRequests(self, type, parent=None):
-        oc = ObjectContainer(title2=L("These completed " + type + " requests will be deleted"))
-        if type == 'movie':
+    def ConfirmDeleteCompletedRequests(self, req_type, parent=None):
+        oc = ObjectContainer(title2=L("These completed " + req_type + " requests will be deleted"))
+        if req_type == 'movie':
             checkCompletedMovieRequests()
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        for req_id in Dict[type]:
-            if Dict[type][req_id].get('completed', False):
-                request = Dict[type][req_id]
+        for req_id in Dict[req_type]:
+            if Dict[req_type][req_id].get('completed', False):
+                request = Dict[req_type][req_id]
                 oc.add(TVShowObject(
-                    key=Callback(self.ConfirmDeleteCompletedRequests, type=type, parent=parent),
+                    key=Callback(self.ConfirmDeleteCompletedRequests, type=req_type, parent=parent),
                     rating_key=req_id,
                     title=request.get('title'), thumb=request.get('poster'), summary=request.get('summary'),
                     art=request.get('backdrop')))
         oc.add(
-            DirectoryObject(key=Callback(self.ClearCompletedRequests, type=type), title=L("Yes"), thumb=R('check.png')))
-        if type == 'movie':
+            DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        if req_type == 'movie':
             checkCompletedMovieRequests()
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
-        elif type == 'tv':
+        elif req_type == 'tv':
             oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
-        elif type == 'music':
+        elif req_type == 'music':
             oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
         else:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
