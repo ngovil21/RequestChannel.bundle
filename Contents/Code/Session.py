@@ -2892,7 +2892,7 @@ def checkCompletedMovieRequests():
             Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
     if Prefs['radarr_url'] and Prefs["radarr_api"]:
         radarr_movie_list = JSON.ObjectFromURL(
-            Prefs['radarr_url'] + "api/movie/", header={'X-Api-Token': Prefs['radarr_api']})
+            Prefs['radarr_url'] + "api/movie/", headers={'X-Api-Token': Prefs['radarr_api']})
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
             Log.Debug("Skipped " + str(req_id))
