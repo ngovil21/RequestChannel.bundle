@@ -1128,9 +1128,9 @@ class Session:
             if Dict[type][req_id].get('completed', False):
                 request = Dict[type][req_id]
                 oc.add(TVShowObject(
-                    key=Callback(self.ConfirmDeleteCompletedRequests, type=type, parent=None),
+                    key=Callback(self.ConfirmDeleteCompletedRequests, type=type, parent=parent),
                     rating_key=req_id,
-                    title=request.get('title'), thumb=request.get('thumb'), summary=request.get('summary'),
+                    title=request.get('title'), thumb=request.get('poster'), summary=request.get('summary'),
                     art=request.get('backdrop')))
         oc.add(
             DirectoryObject(key=Callback(self.ClearCompletedRequests, type=type), title=L("Yes"), thumb=R('check.png')))
