@@ -2374,7 +2374,7 @@ class Session:
         else:
             Dict['sortbyname'] = True
         Dict.Save()
-        return self.ManageChannel(message=L("Sorting by "("name" if Dict['sortbyname'] else "time")))
+        return self.ManageChannel(message=L("Sorting by " + ("name" if Dict['sortbyname'] else "time")))
 
     def Changelog(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
