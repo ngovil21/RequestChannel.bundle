@@ -141,6 +141,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
         Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
+        Route.Connect(PREFIX + '/%s/togglesorting' % session_id, self.ToggleSorting)
         Route.Connect(PREFIX + '/%s/toggledebug' % session_id, self.ToggleDebug)
         Route.Connect(PREFIX + '/%s/reportproblem' % session_id, self.ReportProblem)
         Route.Connect(PREFIX + '/%s/navigatemedia' % session_id, self.NavigateMedia)
