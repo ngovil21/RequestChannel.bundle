@@ -3,8 +3,8 @@ from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
 import re
 
-TITLE = 'Plex Request Channel'
-PREFIX = '/video/plexrequestchannel'
+TITLE = 'Request Channel'
+PREFIX = '/video/requestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
