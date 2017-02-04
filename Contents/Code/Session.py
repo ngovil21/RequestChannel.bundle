@@ -979,6 +979,8 @@ class Session:
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
                     d.get('summary', "") if d.get("summary") else "")
+                if d.get('created_on'):
+                    summary = summary + " (Requested on " + str(Datetime.FromTimestamp(d.get('created_on'))) + ")"
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
@@ -1032,6 +1034,8 @@ class Session:
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
                     d.get('summary', "") if d.get("summary") else "")
+                if d.get('created_on'):
+                    summary = summary + " (Requested on " + str(Datetime.FromTimestamp(d.get('created_on'))) + ")"
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
@@ -1075,6 +1079,8 @@ class Session:
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   "
+                if d.get('created_on'):
+                    summary = summary + " (Requested on " + str(Datetime.FromTimestamp(d.get('created_on'))) + ")"
                 oc.add(ArtistObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
