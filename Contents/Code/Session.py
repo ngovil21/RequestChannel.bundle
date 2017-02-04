@@ -2913,8 +2913,8 @@ def checkCompletedMovieRequests():
                     Dict['movie'][req_id]['completed'] = True
         if Prefs['radarr_url'] and Prefs["radarr_api"]:
             for movie in radarr_movie_list:
-                if str(movie.get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
-                        movie.get('tmdb_id')) == Dict['movie'][req_id].get('tmdb', req_id):
+                if str(movie.get('imdbId')) == Dict['movie'][req_id].get('imdb', req_id) or str(
+                        movie.get('tmdbId')) == Dict['movie'][req_id].get('tmdb', req_id):
                     if movie.get('downloaded'):
                         Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
                             'id'] + ") marked as done in Radarr")
