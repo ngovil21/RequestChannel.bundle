@@ -2888,11 +2888,17 @@ def userFromToken(token):
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
     if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
-        cp_movie_list = JSON.ObjectFromURL(
-            Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
+        try:
+            cp_movie_list = JSON.ObjectFromURL(
+                Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
+        except Exception as e:
+            Log.Debug("Unable to load CouchPotato movie list")
     if Prefs['radarr_url'] and Prefs["radarr_api"]:
-        radarr_movie_list = JSON.ObjectFromURL(
-            Prefs['radarr_url'] + "api/movie/", headers={'X-Api-Token': Prefs['radarr_api']})
+        try:
+            radarr_movie_list = JSON.ObjectFromURL(
+                Prefs['radarr_url'] + "api/movie/", headers={'X-Api-Key': Prefs['radarr_api']})
+        except Exception as e:
+            Log.Debug("Unable to load Radarr movie list")
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
             Log.Debug("Skipped " + str(req_id))
