@@ -8,15 +8,15 @@ from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 # Override Plex L, F functions
 from LocalePatch import L, F
 
-TITLE = 'Plex Request Channel'
-PREFIX = '/video/plexrequestchannel'
+TITLE = 'Request Channel'
+PREFIX = '/video/requestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.8.1"
+VERSION = "0.8.2"
 BRANCH = "DEVELOPMENT"
-CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/" + BRANCH + "/CHANGELOG"
+CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -2575,7 +2575,7 @@ class Session:
         return oc
 
     def NotifyProblem(self, problem):
-        title = "Plex Request Channel - Problem Reported"
+        title = "Request Channel - Problem Reported"
         user = "A user"
         if self.token in Dict['register'] and Dict['register'][self.token]['nickname']:
             user = Dict['register'][self.token]['nickname']
@@ -2618,21 +2618,21 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             elif req_type == 'music':
                 music = Dict['music'][req_id]
                 user = music['user'] if music['user'] else "A user"
-                title = "Plex Request Channel - New Album Request"
+                title = "Request Channel - New Album Request"
                 message = user + " has requested a new album.\n" + music['title'] + "\n" + \
                           music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
                           music['poster']
@@ -2658,21 +2658,21 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             elif req_type == 'music':
                 music = Dict['music'][req_id]
                 user = music['user'] if music['user'] else "A user"
-                title = "Plex Request Channel - New Album Request"
+                title = "Request Channel - New Album Request"
                 message = user + " has requested a new album.\n" + music['title'] + "\n" + \
                           music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
                           music['poster']
@@ -2691,21 +2691,21 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             elif req_type == 'music':
                 music = Dict['music'][req_id]
                 user = music['user'] if music['user'] else "A user"
-                title = "Plex Request Channel - New Album Request"
+                title = "Request Channel - New Album Request"
                 message = user + " has requested a new album.\n" + music['title'] + "\n" + \
                           music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
                           music['poster']
@@ -2724,21 +2724,21 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             elif req_type == 'music':
                 music = Dict['music'][req_id]
                 user = music['user'] if music['user'] else "A user"
-                title = "Plex Request Channel - New Album Request"
+                title = "Request Channel - New Album Request"
                 message = user + " has requested a new album.\n" + music['title'] + "\n" + \
                           music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
                           music['poster']
@@ -2758,7 +2758,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 poster = movie['poster']
                 user = movie['user'] if movie['user'] else "A user"
                 id_type = movie.get('source', "IMDB")
-                subject = "Plex Request Channel - New Movie Request"
+                subject = "Request Channel - New Movie Request"
                 summary = ""
                 if movie['summary']:
                     summary = movie['summary'] + "<br>\n"
@@ -2768,7 +2768,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 user = tv['user'] if tv['user'] else "A user"
                 id_type = tv.get('source', "TVDB")
                 poster = tv['poster']
-                subject = "Plex Request Channel - New TV Show Request"
+                subject = "Request Channel - New TV Show Request"
                 summary = ""
                 if tv['summary']:
                     summary = tv['summary'] + "<br>\n"
@@ -2778,7 +2778,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 user = music.get('user', "A user")
                 id_type = music.get('source', "musicbrainz")
                 poster = music['poster']
-                subject = "Plex Request Channel - New Album Request"
+                subject = "Request Channel - New Album Request"
                 summary = ""
             else:
                 return
