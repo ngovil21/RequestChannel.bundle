@@ -99,6 +99,7 @@
   "sickbeardshowserror": "Error retrieving %s Shows",
   "Manage": "Manage",
   "Manage Users": "Manage Users",
+  "togglesorting": "Sorting requests by %s",
   "toggledebug": "Turn Debugging %s",
   "Reset Dictionary Settings": "Reset Dictionary Settings",
   "Changelog": "Changelog",

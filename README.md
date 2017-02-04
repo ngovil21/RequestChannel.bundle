@@ -1,4 +1,4 @@
-#Plex Request Channel
+#Request Channel
 ###A Plex Channel to manage user requests
 
 Plex Request Channel will allow you to manage requests from your users directly from within Plex Media Server.
@@ -6,8 +6,8 @@ Plex Request Channel will allow you to manage requests from your users directly 
 **Features**
 * Users can search for Movies or TV Shows from the Open Movie DataBase, the Movie Database, or the TVDB 
 * Search results will show posters and descriptions for identification
-* Manage Requests from a single page. Can be password protected.
-* Couchpotato and Sonarr support is integrated for automation.
+* Manage Requests from most Plex Clients. Can be password protected.
+* Couchpotato, Sonarr, Radarr, Sickbeard/SickRage support is integrated for automation.
 * Pushbullet and Pushover support is also included for notifications whenever a new request is made.
 
 
@@ -29,7 +29,7 @@ Plex Forums Support thread:
 https://forums.plex.tv/discussion/205378/rel-plex-request-channel
 
 If you want to support me (does not equal development): <br>
-<a href="https://www.paypal.me/ngovil21/1" target=blank><img src=http://imgur.com/WSVZSTW.png alt="Buy Me a Coffee" height=75 width=150 align='center'></a> &nbsp;&nbsp; or &nbsp;&nbsp; <a href="https://www.paypal.me/ngovil21/3" target=blank><img src=http://imgur.com/gnvlm6n.jpg alt="Buy Me a Beer" height=75 width=150 align='center'></a>
+<a href="https://www.paypal.me/ngovil21/1" target=blank><img src=http://imgur.com/WSVZSTW.png alt="Buy Me a Coffee" height=50 width=100 align='center'></a> &nbsp;&nbsp; or &nbsp;&nbsp; <a href="https://www.paypal.me/ngovil21/3" target=blank><img src=http://imgur.com/gnvlm6n.jpg alt="Buy Me a Beer" height=50 width=100 align='center'></a>
 
 ##Screenshots
 ![Main Menu](http://i.imgur.com/SC0Q9dp.jpg "Main Menu") <br>

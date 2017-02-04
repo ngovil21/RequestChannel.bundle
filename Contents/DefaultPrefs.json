@@ -119,6 +119,42 @@
     "default": ""
   },
   {
+    "id": "radarr_url",
+    "label": "Radarr URL",
+    "type": "text",
+    "default": "http://127.0.0.1:7878/"
+  },
+  {
+    "id": "radarr_api",
+    "label": "Radarr API Key",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "radarr_autorequest",
+    "label": "Automatically add request to Radarr?",
+    "type": "bool",
+    "default": false
+  },
+  {
+    "id": "radarr_profile",
+    "label": "Radarr Quality Profile",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "radarr_path",
+    "label": "Root folder for Movie to be placed in (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "radarr_searchnow",
+    "label": "Search for movie on add?",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "sonarr_url",
     "label": "Sonarr URL",
     "type": "text",
@@ -268,6 +304,24 @@
   {
     "id": "pushalot_api",
     "label": "Pushalot API Key",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "slack_api",
+    "label": "Slack Access Token",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "slack_user",
+    "label": "Slack User (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "slack_channel",
+    "label": "Slack Channel (optional)",
     "type": "text",
     "default": ""
   },

@@ -3,14 +3,14 @@ from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
 import re
 
-TITLE = 'Plex Request Channel'
-PREFIX = '/video/plexrequestchannel'
+TITLE = 'Request Channel'
+PREFIX = '/video/requestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 from Session import VERSION
-CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
+CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -83,6 +83,8 @@ def Start():
         Dict['debug'] = False
     if 'DumbKeyboard-History' not in Dict:
         Dict['DumbKeyboard-History'] = []
+    if 'sortbyname' not in Dict:
+        Dict['sortbyname'] = True
     Dict.Save()
 
 
