@@ -2888,19 +2888,32 @@ def userFromToken(token):
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
     if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
-        movie_list = JSON.ObjectFromURL(
+        cp_movie_list = JSON.ObjectFromURL(
             Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
-        for req_id in Dict['movie']:
-            if Dict['movie'][req_id].get('completed', False):
-                Log.Debug("Skipped " + str(req_id))
-                continue
-            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
-            for movie in movie_list['movies']:
+    if Prefs['radarr_url'] and Prefs["radarr_api"]:
+        radarr_movie_list = JSON.ObjectFromURL(
+            Prefs['radarr_url'] + "api/movie/", header={'X-Api-Token': Prefs['radarr_api']})
+    for req_id in Dict['movie']:
+        if Dict['movie'][req_id].get('completed', False):
+            Log.Debug("Skipped " + str(req_id))
+            continue
+        Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
+        if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
+            for movie in cp_movie_list['movies']:
                 if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
                         movie['info'].get('tmdb_id')) == Dict['movie'][req_id].get('tmdb', req_id):
                     Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
-                        'id'] + ") marked as done in movie watcher")
+                        'id'] + ") marked as done in CouchPotato")
                     Dict['movie'][req_id]['completed'] = True
+        if Prefs['radarr_url'] and Prefs["radarr_api"]:
+            for movie in radarr_movie_list:
+                if str(movie.get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
+                        movie.get('tmdb_id')) == Dict['movie'][req_id].get('tmdb', req_id):
+                    if movie.get('downloaded'):
+                        Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
+                            'id'] + ") marked as done in Radarr")
+                        Dict['movie'][req_id]['completed'] = True
+
     Dict.Save()
 
 
