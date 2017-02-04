@@ -83,6 +83,8 @@ def Start():
         Dict['debug'] = False
     if 'DumbKeyboard-History' not in Dict:
         Dict['DumbKeyboard-History'] = []
+    if 'sortbyname' not in Dict:
+        Dict['sortbyname'] = True
     Dict.Save()
 
 

@@ -963,7 +963,11 @@ class Session:
             return oc
         else:
             requests = Dict['movie']
-            for req_id in sorted(requests, key=lambda k: requests[k]['title']):
+            if Dict['sortbyname']:
+                criteria = lambda k: requests[k].get('title', "")
+            else:
+                criteria = lambda k: requests[k].get('created_on', 0)
+            for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
@@ -1012,7 +1016,11 @@ class Session:
             return oc
         else:
             requests = Dict['tv']
-            for req_id in sorted(requests, key=lambda k: requests[k]['title']):
+            if Dict['sortbyname']:
+                criteria = lambda k: requests[k].get('title', "")
+            else:
+                criteria = lambda k: requests[k].get('created_on', 0)
+            for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
@@ -1052,7 +1060,11 @@ class Session:
             return oc
         else:
             requests = Dict['music']
-            for req_id in sorted(requests, key=lambda k: requests[k]['title']):
+            if Dict['sortbyname']:
+                criteria = lambda k: requests[k].get('title', "")
+            else:
+                criteria = lambda k: requests[k].get('created_on', 0)
+            for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
@@ -1133,7 +1145,8 @@ class Session:
                     title=request.get('title'), thumb=request.get('poster'), summary=request.get('summary'),
                     art=request.get('backdrop')))
         oc.add(
-            DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+            DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"),
+                            thumb=R('check.png')))
         if req_type == 'movie':
             checkCompletedMovieRequests()
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
@@ -1486,8 +1499,10 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        options = {'tmdbId': radarr_movie['tmdbId'], 'title': radarr_movie['title'], 'profileId': int(profile_id), 'titleSlug': radarr_movie['titleSlug'],
-                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': radarr_movie['year'], 'images': radarr_movie['images']
+        options = {'tmdbId': radarr_movie['tmdbId'], 'title': radarr_movie['title'], 'profileId': int(profile_id),
+                   'titleSlug': radarr_movie['titleSlug'],
+                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': radarr_movie['year'],
+                   'images': radarr_movie['images']
                    }
         if not movie.get('tmdb'):
             movie['tmdb'] = radarr_movie['tmdbId']
@@ -2184,11 +2199,13 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message)
         else:
             oc = ObjectContainer(title1=L("Manage"), title2=message)
+        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.ManageUsers), title=L("Manage Users")))
         oc.add(
             DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "Off" if Dict['debug'] else "On")))
+        oc.add(
+            DirectoryObject(key=Callback(self.ToggleSorting), title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
@@ -2349,6 +2366,14 @@ class Session:
             return self.ManageChannel(message=L("Dictionary has been reset!"))
 
         return MessageContainer(header=TITLE, message="Unknown response")
+
+    def ToggleSorting(self):
+        if Dict['sortbyname']:
+            Dict['sortbyname'] = False
+        else:
+            Dict['sortbyname'] = True
+        Dict.Save()
+        return self.ManageChannel(message=L("Sorting by "("name" if Dict['sortbyname'] else "time")))
 
     def Changelog(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
