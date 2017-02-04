@@ -1155,6 +1155,7 @@ class Session:
                     self.DeleteRequest(req_id, req_type)
         except Exception as e:
             Log.Debug(e.message)
+        Thread.Sleep(100)
         if req_type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
         elif req_type == 'tv':
