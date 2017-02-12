@@ -2587,7 +2587,7 @@ class Session:
         if self.token in Dict['register'] and Dict['register'][self.token]['nickname']:
             user = Dict['register'][self.token]['nickname']
         body = user + " has reported a problem with the Plex Server. \n" + problem
-        Notify(title=title, body=body, devices=Prefs['pushbullet_devices'])
+        Notify(title=title, body=body)
         return self.SMainMenu(message="The admin has been notified", title1="Main Menu",
                               title2="Admin notified of problem")
 
@@ -2731,29 +2731,33 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
             elif req_type == 'music':
                 music = Dict['music'][req_id]
                 user = music['user'] if music['user'] else "A user"
-                title = "Request Channel - New Album Request"
                 message = user + " has requested a new album.\n" + music['title'] + "\n" + \
                           music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
                           music['poster']
             else:
                 return
-            response = sendSlack(title + "\n" + message)
-            if response:
-                Log.Debug("Slack notification sent for :" + req_id)
+            if Prefs['slack_channels']:
+                channels = Prefs['slack_channels'].split(",")
+                for c in channels:
+                    response = sendSlack(message, c.strip())
+                    if response:
+                        Log.Debug("Slack notification sent to channel: " + d.strip() + " for: " + req_id)
+            else:
+                response = sendSlack(message)
+                if response:
+                    Log.Debug("Slack notification sent for: " + req_id)
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Slack failed: " + e.message)
@@ -2801,7 +2805,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Email failed: " + e.message)
 
 
-def Notify(title, body, devices=None):
+
+def Notify(title, body):
     if Prefs['email_to']:
         try:
             if not sendEmail(title, body, 'html'):
@@ -2811,8 +2816,8 @@ def Notify(title, body, devices=None):
             Log.Debug("Email failed: " + e.message)
     if Prefs['pushbullet_api']:
         try:
-            if devices:
-                for d in devices.split(','):
+            if Prefs['pushbullet_devices']:
+                for d in Prefs['pushbullet_devices'].split(','):
                     if sendPushBullet(title, body, d):
                         Log.Debug("Pushbullet notification sent to " + d)
             elif sendPushBullet(title, body):
@@ -2829,7 +2834,11 @@ def Notify(title, body, devices=None):
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['slack_api']:
         try:
-            if sendSlack(body):
+            if Prefs['slack_channels']:
+                for c in Prefs['slack_channels'].split(','):
+                    if sendSlack(body, c.strip()):
+                        Log.Debug("Slack notification sent to " + c.strip())
+            elif sendSlack(body):
                 Log.Debug("Slack notification sent")
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
@@ -2864,20 +2873,15 @@ def sendPushalot(title, message):
             'IsSilent': 'false'}
     return HTTP.Request(PUSHALOT_API_URL, values=data)
 
-
-def sendSlack(text, icon=None):
-    # header = {'Content-type': 'application/json'}
-    data = {"token": Prefs['slack_api']}
-    if Prefs['slack_user']:
-        data['username'] = Prefs['slack_user']
-    if Prefs['slack_channel']:
-        data['channel'] = Prefs['slack_channel']
-    if icon:
-        data['icon_url'] = icon
-    data['text'] = text
-    reply = JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
-    return reply
-
+def sendSlack(message, channel=None):
+    data = {
+        'token': Prefs['slack_api'],
+        'username': Prefs['slack_user'],
+        'text': message
+    }
+    if channel:
+        data['channel'] = channel
+    return JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
 
 # noinspection PyUnresolvedReferences
 def sendEmail(subject, body, email_type='html'):
