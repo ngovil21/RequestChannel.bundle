@@ -317,7 +317,7 @@
     "id": "slack_user",
     "label": "Slack User (optional)",
     "type": "text",
-    "default": ""
+    "default": "Plex Request Channel"
   },
   {
     "id": "slack_channel",
