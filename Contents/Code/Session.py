@@ -980,7 +980,8 @@ class Session:
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
                     d.get('summary', "") if d.get("summary") else "")
                 if d.get('created_on'):
-                    summary = summary + " (Requested on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y") + ")"
+                    summary = summary + " (Requested on " + Datetime.FromTimestamp(d.get('created_on')).strftime(
+                        "%m-%d-%Y") + ")"
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
@@ -1035,7 +1036,8 @@ class Session:
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
                     d.get('summary', "") if d.get("summary") else "")
                 if d.get('created_on'):
-                    summary = summary + " (Requested on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y") + ")"
+                    summary = summary + " (Requested on " + Datetime.FromTimestamp(d.get('created_on')).strftime(
+                        "%m-%d-%Y") + ")"
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
@@ -1080,7 +1082,8 @@ class Session:
                 thumb = d.get('poster', R('no-poster.jpg'))
                 summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   "
                 if d.get('created_on'):
-                    summary = summary + " (Requested on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y") + ")"
+                    summary = summary + " (Requested on " + Datetime.FromTimestamp(d.get('created_on')).strftime(
+                        "%m-%d-%Y") + ")"
                 oc.add(ArtistObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
@@ -1112,9 +1115,14 @@ class Session:
     def AddAllRequests(self, type):
         for id in Dict[type]:
             if type == 'movie':
-                if not (Prefs['couchpotato_url'] and Prefs['couchpotato_api']):
-                    return self.ViewMovieRequests(L("CouchPotato not setup, unable to add movies!"))
-                self.SendToCouchpotato(id)
+                hasCouchpotato = Prefs['couchpotato_url'] and Prefs['couchpotato_api']
+                hasRadarr = Prefs['radarr_url'] and Prefs['radarr_api']
+                if not (hasCouchpotato or hasRadarr):
+                    return self.ViewMovieRequests(L("Movie Service not setup, unable to add movies!"))
+                if hasCouchpotato:
+                    self.SendToCouchpotato(id)
+                elif hasRadarr:
+                    self.SendToRadarr(id)
             elif type == 'tv':
                 hasSonarr = Prefs['sonarr_url'] and Prefs['sonarr_api']
                 hasSickbeard = Prefs['sickbeard_url'] and Prefs['sickbeard_api']
@@ -1246,34 +1254,33 @@ class Session:
                                                     callback=Callback(self.ViewRequest, req_id=req_id, req_type='movie',
                                                                       token_hash=token_hash)),
                                        title=F("sendto", "Radarr"), thumb=R('radarr.png')))
-                if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
-                    if Prefs['sonarr_url'] and Prefs['sonarr_api']:
-                        oc.add(DirectoryObject(key=Callback(self.SendToSonarr, tvdbid=req_id,
-                                                            callback=Callback(self.ViewRequest, req_id=req_id,
-                                                                              req_type='tv',
-                                                                              token_hash=token_hash)),
-                                               title=F("sendto", "Sonarr"), thumb=R('sonarr.png')))
-                if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
-                    oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
-                                                        callback=Callback(self.ViewRequest, req_id=req_id,
-                                                                          req_type='tv',
-                                                                          token_hash=token_hash)),
-                                           title=F("sendto", Prefs['sickbeard_fork']),
-                                           thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
-                if key['type'] == 'music' and (self.is_admin or Prefs['usersviewrequests']):
-                    if Prefs['headphones_url'] and Prefs['headphones_api']:
-                        oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
-                                               title=F("sendto", "Headphones"),
-                                               thumb=R('headphones.png')))
-                if req_type == 'movie':
-                    oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
-                                           title=L("Return to Movie Requests"), thumb=R('return.png')))
-                elif req_type == 'tv':
-                    oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
-                                           title=L("Return to TV Requests"), thumb=R('return.png')))
-                elif req_type == 'music':
-                    oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
-                                           title=L("Return to Music Requests"), thumb=R('return.png')))
+        if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
+            if Prefs['sonarr_url'] and Prefs['sonarr_api']:
+                oc.add(DirectoryObject(key=Callback(self.SendToSonarr, tvdbid=req_id,
+                                                    callback=Callback(self.ViewRequest, req_id=req_id,
+                                                                      req_type='tv',
+                                                                      token_hash=token_hash)),
+                                       title=F("sendto", "Sonarr"), thumb=R('sonarr.png')))
+            if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
+                oc.add(DirectoryObject(key=Callback(self.SendToSickbeard, tvdbid=req_id,
+                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv',
+                                                                      token_hash=token_hash)),
+                                       title=F("sendto", Prefs['sickbeard_fork']),
+                                       thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
+        if key['type'] == 'music' and (self.is_admin or Prefs['usersviewrequests']):
+            if Prefs['headphones_url'] and Prefs['headphones_api']:
+                oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
+                                       title=F("sendto", "Headphones"),
+                                       thumb=R('headphones.png')))
+        if req_type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
+                                   title=L("Return to Movie Requests"), thumb=R('return.png')))
+        elif req_type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
+                                   title=L("Return to TV Requests"), thumb=R('return.png')))
+        elif req_type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
+                                   title=L("Return to Music Requests"), thumb=R('return.png')))
         return oc
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
@@ -1602,7 +1609,7 @@ class Session:
             if root:
                 rootFolderPath = root[0]['path']
 
-        #Log.Debug(str(found_show))
+        # Log.Debug(str(found_show))
 
         Log.Debug("Profile id: " + str(profile_id))
         options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'tvRageId': found_show['tvRageId'],
@@ -1639,7 +1646,7 @@ class Session:
         options['addOptions'] = add_options
         values = JSON.StringFromObject(options)
         try:
-            #Log.Debug("Options: " + str(options))
+            # Log.Debug("Options: " + str(options))
             HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Show has been sent to Sonarr"))
@@ -2213,7 +2220,8 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "Off" if Dict['debug'] else "On")))
         oc.add(
-            DirectoryObject(key=Callback(self.ToggleSorting), title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
+            DirectoryObject(key=Callback(self.ToggleSorting),
+                            title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
@@ -2850,7 +2858,7 @@ def sendPushBullet(title, body, device_iden=""):
     values = JSON.StringFromObject(data)
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
     pushBulletRequest = urllib2.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
-    return urllib2.urlopen(pushBulletRequest,context=ctx)
+    return urllib2.urlopen(pushBulletRequest, context=ctx)
 
 
 def sendPushover(title, message):
