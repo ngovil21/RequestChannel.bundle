@@ -4,7 +4,7 @@
     "label": "Movie Database  ",
     "type": "enum",
     "values": ["OpenMovieDatabase", "TheMovieDatabase"],
-    "default": "OpenMovieDatabase"
+    "default": "TheMovieDatabase"
   },
   {
     "id": "search_language",
