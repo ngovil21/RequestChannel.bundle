@@ -1230,10 +1230,10 @@ class Session:
         title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else \
             key['title']  # If there is already a year in the title, just use title
         date = ""
-        if d.get('created_on'):
-            date = " on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y")
-        summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + date + ")   " + (
-            d.get('summary', "") if d.get("summary") else "")
+        if key.get('created_on'):
+            date = " on " + Datetime.FromTimestamp(key.get('created_on')).strftime("%m-%d-%Y")
+        summary = "(Requested by " + (key.get('user') if key.get('user') else 'Unknown') + date + ")   " + (
+            key.get('summary', "") if key.get("summary") else "")
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
