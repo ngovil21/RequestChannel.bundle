@@ -1,3 +1,4 @@
+2/02/17 - 0.8.2b - Fixed some bugs that came up in the last release. Merged pull request for multiple Slack Channels.
 2/02/17 - 0.8.2 - Added Radarr support for adding movies.
 1/28/17 - 0.8.1 - Added Slack support for notifications, fix for Pushbullet, other minor changes.
 8/25/16 - 0.8.0 - Added preliminary music with Headphones support, plus numerous minor changes.
