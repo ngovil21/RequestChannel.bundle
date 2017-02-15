@@ -1419,20 +1419,21 @@ class Session:
 
         if movie_list['success'] and not movie_list['empty']:
             for movie in movie_list['movies']:
-                title = movie.get('title')
-                movie_id = movie.get('_id')
-                title_year = title
-                movie_info = movie.get('info', {})
-                year = movie_info.get('year')
-                imdb_id = movie_info.get('imdb', "0")
-                poster = movie_info.get('images', {}).get('poster')
-                if poster:
-                    poster = poster[0]
-                summary = movie_info.get('plot')
-                title_year += " (" + str(year) + ")" if year else ""
-                oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title),
-                                    rating_key=imdb_id, title=title_year,
-                                    thumb=poster, summary=summary))
+                if movie.get('title'):
+                    title = movie.get('title')
+                    movie_id = movie.get('_id')
+                    title_year = title
+                    movie_info = movie.get('info', {})
+                    year = movie_info.get('year')
+                    imdb_id = movie_info.get('imdb', "0")
+                    poster = movie_info.get('images', {}).get('poster')
+                    if poster:
+                        poster = poster[0]
+                    summary = movie_info.get('plot')
+                    title_year += " (" + str(year) + ")" if year else ""
+                    oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title),
+                                        rating_key=imdb_id, title=title_year,
+                                        thumb=poster, summary=summary))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
@@ -2662,7 +2663,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if Prefs['pushbullet_devices']:
                 devices = Prefs['pushbullet_devices'].split(",")
                 for d in devices:
-                    response = sendPushBullet(title, message, d)
+                    response = sendPushBullet(title, message, d.strip())
                     if response:
                         Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
             else:
@@ -2939,15 +2940,29 @@ def userFromToken(token):
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
     if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
+        cp_movie_list = None
         try:
+            if not Prefs['couchpotato_url'].startswith("http"):
+                couchpotato_url = "http://" + Prefs['couchpotato_url']
+            else:
+                couchpotato_url = Prefs['couchpotato_url']
+            if not couchpotato_url.endswith("/"):
+                couchpotato_url += "/"
             cp_movie_list = JSON.ObjectFromURL(
-                Prefs['couchpotato_url'] + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
+                couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
         except Exception as e:
             Log.Debug("Unable to load CouchPotato movie list")
+    radarr_movie_list = None
     if Prefs['radarr_url'] and Prefs["radarr_api"]:
         try:
+            if not Prefs['radarr_url'].startswith("http"):
+                radarr_url = "http://" + Prefs['radarr_url']
+            else:
+                radarr_url = Prefs['radarr_url']
+            if not radarr_url.endswith("/"):
+                radarr_url += "/"
             radarr_movie_list = JSON.ObjectFromURL(
-                Prefs['radarr_url'] + "api/movie/", headers={'X-Api-Key': Prefs['radarr_api']})
+                radarr_url + "api/movie/", headers={'X-Api-Key': Prefs['radarr_api']})
         except Exception as e:
             Log.Debug("Unable to load Radarr movie list")
     for req_id in Dict['movie']:
@@ -2955,14 +2970,14 @@ def checkCompletedMovieRequests():
             Log.Debug("Skipped " + str(req_id))
             continue
         Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
-        if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
+        if Prefs['couchpotato_url'] and Prefs["couchpotato_api"] and cp_movie_list:
             for movie in cp_movie_list['movies']:
                 if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
                         movie['info'].get('tmdb_id')) == Dict['movie'][req_id].get('tmdb', req_id):
                     Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
                         'id'] + ") marked as done in CouchPotato")
                     Dict['movie'][req_id]['completed'] = True
-        if Prefs['radarr_url'] and Prefs["radarr_api"]:
+        if Prefs['radarr_url'] and Prefs["radarr_api"] and radarr_movie_list:
             for movie in radarr_movie_list:
                 if str(movie.get('imdbId')) == Dict['movie'][req_id].get('imdb', req_id) or str(
                         movie.get('tmdbId')) == Dict['movie'][req_id].get('tmdb', req_id):
