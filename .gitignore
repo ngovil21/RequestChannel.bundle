@@ -108,3 +108,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 .idea/workspace.xml
+.idea/misc.xml
+.idea/modules.xml
+Tester.py
+.idea/RequestChannel.bundle.iml
+.idea/vcs.xml
