@@ -1,8 +1,3 @@
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, MESSAGE_OVERLAY_CLIENTS
-from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
-
-import re
-
 TITLE = 'Request Channel'
 PREFIX = '/video/requestchannel'
 
@@ -10,7 +5,6 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 from Session import VERSION
-CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -93,15 +87,19 @@ def ValidatePrefs():
 
 
 from Session import Session
-
+sessions = {}
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
-    client_id = Request.Headers.get("X-Plex-Token", "")
-    sesh = Session(session_id=Hash.MD5(str(client_id)))
+    session_id = Hash.MD5(Request.Headers.get("X-Plex-Token", str(Datetime.Now())))
+    if session_id in sessions:                  #Prior session started, continue
+        sesh = sessions[session_id]
+    else:                                       #Create a new session
+        sesh = Session(session_id=session_id)
+        sessions[session_id] = sesh
     return sesh.SMainMenu()
 
 """
