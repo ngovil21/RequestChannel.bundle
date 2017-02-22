@@ -5,6 +5,7 @@ RADARR_API = None
 
 
 def setURL(url):
+    global RADARR_URL
     if not url.startswith("http"):
         url = "http://" + url
     if not url.endswith("/"):
@@ -13,6 +14,7 @@ def setURL(url):
 
 
 def setAPI(api):
+    global RADARR_API
     RADARR_API = api
 
 def getMovies():
