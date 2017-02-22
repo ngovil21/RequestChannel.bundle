@@ -1,0 +1,1 @@
+PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"

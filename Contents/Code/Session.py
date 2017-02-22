@@ -3,6 +3,8 @@
 import re, urllib2, ssl
 import traceback
 
+from api import Radarr
+
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 
 # Override Plex L, F functions
