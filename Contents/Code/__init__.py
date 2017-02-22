@@ -94,7 +94,11 @@ sessions = {}
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
-    session_id = Hash.MD5(Request.Headers.get("X-Plex-Token", str(Datetime.Now())))
+    client_id = Request.Headers.get("X-Plex-Client-Identifier")
+    if client_id:
+        session_id = Hash.MD5(client_id)
+    else:
+        session_id = Hash.MD5(str(Datetime.Now()))
     if session_id in sessions:                  #Prior session started, continue
         sesh = sessions[session_id]
     else:                                       #Create a new session
