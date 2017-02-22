@@ -26,9 +26,10 @@ def getMovies():
 
 def getMovieByTMDB(tmdb):
     movies = getMovies()
-    for movie in movies:
-        if int(tmdb) == movie.get('tmdbId', -1):
-            return movie.get('id')
+    if movies:
+        for movie in movies:
+            if int(tmdb) == movie.get('tmdbId', -1):
+                return movie.get('id')
     return -1
 
 def getMovieByIMDB(imdb):

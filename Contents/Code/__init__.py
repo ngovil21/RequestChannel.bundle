@@ -100,7 +100,8 @@ from Session import Session
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
-    sesh = Session(session_id=Hash.MD5(str(Datetime.Now())))
+    client_id = Request.Headers.get("X-Plex-Token", "")
+    sesh = Session(session_id=Hash.MD5(str(client_id)))
     return sesh.SMainMenu()
 
 """
