@@ -1483,13 +1483,18 @@ class Session:
         radarr_movie_id = Radarr.getMovieByTMDB(movie_id)
         if not radarr_movie_id:
             radarr_movie_id = Radarr.getMovieByIMDB(movie_id)
-        if radarr_movie_id:
+        if radarr_movie_id > 0:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
             if callback:
-                return callback
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Movie already exists in Radarr"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Movie already exists!"))
+                oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+                return oc
             else:
-                return self.SMainMenu(message="Movie already exists in Radarr")
+                return self.SMainMenu(message=L("Movie already exists in Radarr"))
 
         movie = Dict['movie'][movie_id]
 
