@@ -33,6 +33,7 @@ LANGUAGE_ABBREVIATIONS = {
 
 
 def setAPI(key):
+    global TMDB_API_KEY
     TMDB_API_KEY = key
 
 
