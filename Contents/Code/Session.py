@@ -153,6 +153,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
         Radarr.setAPI(Prefs['radarr_api'])
+        Log.Debug(str(Radarr.RADARR_API))
         Radarr.setURL(Prefs['radarr_url'])
         TheMovieDatabase.setAPI(TMDB_API_KEY)
         self.token = Request.Headers.get("X-Plex-Token", "")
