@@ -1,14 +1,13 @@
 # coding=utf-8
 
-import re, urllib2, ssl
+import re
+import ssl
 import traceback
-
-from api import Radarr
+import urllib2
 
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
-
-# Override Plex L, F functions
 from LocalePatch import L, F
+from api import Radarr, TheMovieDatabase
 
 TITLE = 'Request Channel'
 PREFIX = '/video/requestchannel'
@@ -153,6 +152,9 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
+        Radarr.setAPI(Prefs['radarr_api'])
+        Radarr.setURL(Prefs['radarr_url'])
+        TheMovieDatabase.setAPI(TMDB_API_KEY)
         self.token = Request.Headers.get("X-Plex-Token", "")
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
@@ -1104,7 +1106,8 @@ class Session:
         oc = ObjectContainer(title2=L("Are you sure you would like to add all " + req_type + " requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.AddAllRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        oc.add(
+            DirectoryObject(key=Callback(self.AddAllRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'tv':
@@ -1200,7 +1203,8 @@ class Session:
         oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + req_type + "  requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.ClearRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        oc.add(
+            DirectoryObject(key=Callback(self.ClearRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'tv':
@@ -1474,17 +1478,10 @@ class Session:
             # Sonarr Methods
 
     def SendToRadarr(self, movie_id, callback=None):
-        if not Prefs['radarr_url'].startswith("http"):
-            radarr_url = "http://" + Prefs['radarr_url']
-        else:
-            radarr_url = Prefs['radarr_url']
-        if not radarr_url.endswith("/"):
-            radarr_url += "/"
         title = Dict['movie'][movie_id]['title']
-        api_header = {
-            'X-Api-Key': Prefs['radarr_api']
-        }
-        radarr_movie_id = self.RadarrMovieExists(movie_id)
+        radarr_movie_id = Radarr.getMovieByTMDB(movie_id)
+        if not radarr_movie_id:
+            radarr_movie_id = Radarr.getMovieByIMDB(movie_id)
         if radarr_movie_id:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
@@ -1494,45 +1491,33 @@ class Session:
                 return self.SMainMenu(message="Movie already exists in Radarr")
 
         movie = Dict['movie'][movie_id]
-        if movie.get('source', '').lower() == 'tmdb':
-            s = "tmdbid:"
-        else:
-            s = "imdbid:"
-        lookup_json = JSON.ObjectFromURL(radarr_url + "api/movies/Lookup?term=" + s + movie_id, headers=api_header)
-        if lookup_json:
-            radarr_movie = lookup_json[0]
-        else:
-            return
 
-        profile_json = JSON.ObjectFromURL(radarr_url + "api/Profile", headers=api_header)
         profile_id = 1
-        for profile in profile_json:
-            if profile['name'] == Prefs['radarr_profile']:
-                profile_id = profile['id']
-                break
+        if Prefs['radarr_profile']:
+            profile_id = Radarr.getProfileIDfomName(Prefs['radarr_profile'])
+            if profile_id < 0:
+                profile_id = 1
+
         rootFolderPath = ""
         if Prefs['radarr_path']:
             rootFolderPath = Prefs['radarr_path']
         else:
-            root = JSON.ObjectFromURL(radarr_url + "api/Rootfolder", headers=api_header)
-            if root:
-                rootFolderPath = root[0]['path']
+            rootFolderPath = Radarr.getRootFolderPath()
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        options = {'tmdbId': radarr_movie['tmdbId'], 'title': radarr_movie['title'], 'profileId': int(profile_id),
-                   'titleSlug': radarr_movie['titleSlug'],
-                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': radarr_movie['year'],
-                   'images': radarr_movie['images']
-                   }
-        if not movie.get('tmdb'):
-            movie['tmdb'] = radarr_movie['tmdbId']
+        if movie.get('source').lower() == "imdb" and not movie.get("tmdb"):  # if we don't have a tmdb id, look it up
+            tmdbId = TheMovieDatabase.getMovieByIMDB(movie_id)
+        elif movie.get('source').lower() == "tmdb":
+            tmdbId = movie_id
 
-        options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
-        values = JSON.StringFromObject(options)
-        try:
-            Log.Debug("Options: " + str(options))
-            resp = HTTP.Request(radarr_url + "api/movie", data=values, headers=api_header)
+        if not movie.get('tmdb'):
+            movie['tmdb'] = tmdbId
+
+        result = Radarr.addMovie(tmdb=tmdbId, title=movie.get('title'), year=movie.get('year'), titleSlug=movie.get('title'),
+                        profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                        searchNow=Prefs['radarr_searchnow'])
+        if result:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
             else:
@@ -1540,16 +1525,13 @@ class Session:
             Log.Debug("Setting movie automated to true")
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Options: " + str(options))
-            Log.Debug(e.message)
-            Log.Debug("Response Status: " + str(Response.Status))
+
+        else:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Could not send show to Radarr!"))
             else:
                 oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
-        # radarr_movie_id = self.RadarrMovieExists(movie_id)
+
         if self.is_admin:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie',
@@ -1564,18 +1546,6 @@ class Session:
                                    thumb=R('plexrequestchannel.png')))
         return oc
 
-    def RadarrMovieExists(self, movie_id):
-        if not Prefs['radarr_url'].startswith("http"):
-            radarr_url = "http://" + Prefs['radarr_url']
-        else:
-            radarr_url = Prefs['radarr_url']
-        if not radarr_url.endswith("/"):
-            radarr_url += "/"
-        movies = JSON.ObjectFromURL(radarr_url + "api/movie", headers={'X-Api-Key': Prefs['radarr_api']})
-        for movie in movies:
-            if movie['id'] and (movie['imdbId'] == str(movie_id) or str(movie['tmdbId']) == str(movie_id)):
-                return movie['id']
-        return False
 
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
@@ -1689,6 +1659,7 @@ class Session:
                                    thumb=R('plexrequestchannel.png')))
         return oc
 
+
     def ManageSonarr(self):
         oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1721,6 +1692,7 @@ class Session:
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
+
 
     def ManageSonarrShow(self, series_id, title="", callback=None, message=None):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1759,6 +1731,7 @@ class Session:
                 title=mark + (L("Season ") + str(season_number) if season_number > 0 else "Specials"),
                 thumb=None))
         return oc
+
 
     def ManageSonarrSeason(self, series_id, season, message=None, callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1799,6 +1772,7 @@ class Session:
                     title=marked + str(episode.get('episodeNumber', "##")) + ". " + episode.get('title', ""),
                     summary=(episode.get('overview', None)), thumb=None))
         return oc
+
 
     def SonarrMonitorShow(self, series_id, seasons, episodes='all', callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1873,6 +1847,7 @@ class Session:
                 return MessageContainer(header=Title, message=L("Error sending episode to Sonarr"))
                 # return self.MainMenu()
 
+
     def SonarrShowExists(self, tvdbid):
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -1888,6 +1863,7 @@ class Session:
             if show['tvdbId'] == int(tvdbid) and show['id']:
                 return show['id']
         return False
+
 
     # Sickbeard Functions
     def SendToSickbeard(self, tvdbid, callback=None):
@@ -1962,6 +1938,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
+
     def ManageSickbeard(self):
         oc = ObjectContainer(title1=TITLE, title2="Manage " + Prefs['sickbeard_fork'])
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -1993,6 +1970,7 @@ class Session:
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
+
 
     def ManageSickbeardShow(self, series_id, title="", callback=None, message=None):
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -2042,6 +2020,7 @@ class Session:
                             title="Refresh"))
         return oc
 
+
     def ManageSickbeardSeason(self, series_id, season, message=None, callback=None):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -2089,6 +2068,7 @@ class Session:
                                 title=marked + e + ". " + episode.get('name', ""),
                                 summary=(episode.get('status', None)), thumb=None))
         return oc
+
 
     def SickbeardMonitorShow(self, series_id, seasons, episodes='all', callback=None):
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -2153,6 +2133,7 @@ class Session:
                 return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
                 # return self.MainMenu()
 
+
     def SickbeardShowExists(self, tvdbid):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -2175,6 +2156,7 @@ class Session:
             Log.Debug(e.message)
         Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
         return False
+
 
     def SendToHeadphones(self, music_id):
         if not Prefs['headphones_url'].startswith("http"):
@@ -2213,6 +2195,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
+
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
         if not self.is_admin:
@@ -2233,6 +2216,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
+
     def ManageUsers(self, message=None):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2249,6 +2233,7 @@ class Session:
                                     title=user + ": " + str(Dict['register'][toke]['requests'])))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
+
 
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
@@ -2283,6 +2268,7 @@ class Session:
 
         return oc
 
+
     def RenameUser(self, toke, message=""):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2306,6 +2292,7 @@ class Session:
                                      prompt=L("Enter the user's name")))
         return oc
 
+
     def RegisterUserName(self, query="", toke=""):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2315,6 +2302,7 @@ class Session:
         Dict['register'][toke]['nickname'] = query
         Dict.Save()
         return self.ManageUser(toke=toke, message=L("Username has been set"))
+
 
     def BlockUser(self, toke, setter):
         if setter == 'True':
@@ -2330,6 +2318,7 @@ class Session:
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User has been unblocked.")
         return self.ManageUser(toke=toke)
+
 
     def SonarrUser(self, toke, setter):
         tv_auto = ""
@@ -2351,6 +2340,7 @@ class Session:
                 return self.ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
         return self.ManageUser(toke=toke)
 
+
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
             return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -2363,6 +2353,7 @@ class Session:
             Dict.Save()
             return self.ManageUsers(message=L("User registration has been deleted."))
         return oc
+
 
     def ResetDict(self, confirm='False'):
         if not self.is_admin:
@@ -2391,6 +2382,7 @@ class Session:
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
+
     def ToggleSorting(self):
         if Dict['sortbyname']:
             Dict['sortbyname'] = False
@@ -2398,6 +2390,7 @@ class Session:
             Dict['sortbyname'] = True
         Dict.Save()
         return self.ManageChannel(message=L("Sorting by " + ("name" if Dict['sortbyname'] else "time")))
+
 
     def Changelog(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
@@ -2416,6 +2409,7 @@ class Session:
                                thumb=R('return.png')))
         return oc
 
+
     def ToggleDebug(self):
         if Dict['debug']:
             Dict['debug'] = False
@@ -2424,8 +2418,10 @@ class Session:
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
+
     def ShowMessage(self, header, message):
         return MessageContainer(header=header, message=message)
+
 
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Report a Problem"))
@@ -2446,6 +2442,7 @@ class Session:
                 InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title=L("Report General Problem"),
                                      prompt=L("What is the problem?")))
         return oc
+
 
     def NavigateMedia(self, path=None):
         if not path:
@@ -2511,6 +2508,7 @@ class Session:
                                            thumb=v.attrib.get('thumb')))
         return oc
 
+
     def ReportProblemMedia(self, rating_key, title):
         oc = ObjectContainer(title1="What is the problem?", title2=title)
         page = XML.ElementFromURL("http://127.0.0.1:32400/library/metadata/" + rating_key)
@@ -2558,6 +2556,7 @@ class Session:
 
         return oc
 
+
     def ReportProblemMediaOther(self, query="", report=""):
         if not query:
             oc = ObjectContainer(title2=L("Report Problem with Media"))
@@ -2569,6 +2568,7 @@ class Session:
                                      prompt=L("What is the problem?")))
             return oc
         return self.ConfirmReportProblem(query=report + " - " + query, rep_type='media')
+
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -2590,6 +2590,7 @@ class Session:
                                      prompt=L("What is the problem?")))
         return oc
 
+
     def ConfirmReportProblem(self, query="", rep_type='general'):
         if rep_type == 'general':
             query = "Issue: " + query
@@ -2597,6 +2598,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title=L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
         return oc
+
 
     def NotifyProblem(self, problem):
         title = "Request Channel - Problem Reported"
@@ -2822,7 +2824,6 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Email failed: " + e.message)
 
 
-
 def Notify(title, body):
     if Prefs['email_to']:
         try:
@@ -2890,6 +2891,7 @@ def sendPushalot(title, message):
             'IsSilent': 'false'}
     return HTTP.Request(PUSHALOT_API_URL, values=data)
 
+
 def sendSlack(message, channel=None):
     data = {
         'token': Prefs['slack_api'],
@@ -2899,6 +2901,7 @@ def sendSlack(message, channel=None):
     if channel:
         data['channel'] = channel
     return JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
+
 
 # noinspection PyUnresolvedReferences
 def sendEmail(subject, body, email_type='html'):

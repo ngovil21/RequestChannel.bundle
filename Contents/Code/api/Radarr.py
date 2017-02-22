@@ -1,7 +1,7 @@
 import traceback
 
-RADARR_URL = ""
-RADARR_API = ""
+RADARR_URL = None
+RADARR_API = None
 
 
 def setURL(url):
@@ -17,7 +17,7 @@ def setAPI(api):
 
 def getMovies():
     try:
-        return JSON.ObjectFromURL(RADARR_URL + "api/movie", headers=RADARR_API)
+        return JSON.ObjectFromURL(RADARR_URL + "api/movie", headers={'X-Api-Key': RADARR_API})
     except Exception as e:
         Log.Debug("Error in getProfiles: " + e.message)
         Log.Error(str(traceback.format_exc()))
@@ -38,7 +38,7 @@ def getMovieByIMDB(imdb):
 
 def getProfiles():
     try:
-        return JSON.ObjectFromURL(RADARR_URL + "api/Profile", headers=RADARR_API)
+        return JSON.ObjectFromURL(RADARR_URL + "api/Profile", headers={'X-Api-Key': RADARR_API})
     except Exception as e:
         Log.Debug("Error in getProfiles: " + e.message)
         Log.Error(str(traceback.format_exc()))
@@ -48,7 +48,14 @@ def getProfileIDfomName(name):
     profiles = getProfiles()
     for profile in profiles:
         if profile['name'] == name:
-            return profile.get('id', 0)
+            return profile.get('id', -1)
+    return -1                               #-1 for not found
+
+def getRootFolderPath():
+    root = JSON.ObjectFromURL(RADARR_URL + "api/Rootfolder", headers={'X-Api-Key': RADARR_API})
+    if root:
+        return root[0]['path']
+    return None
 
 
 #add movie to Radarr, returns Radarr response
@@ -58,7 +65,7 @@ def addMovie(tmdb,title, year, profileId, titleSlug, monitored, rootPath, search
                'addOptions': {'searchForMovie': searchNow}}
     values = JSON.StringFromObject(options)
     try:
-        resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers=RADARR_API)
+        resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API})
         return resp
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
