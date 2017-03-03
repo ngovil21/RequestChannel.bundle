@@ -1500,7 +1500,6 @@ class Session:
             if profile_id < 0:
                 profile_id = 1
 
-        rootFolderPath = ""
         if Prefs['radarr_path']:
             rootFolderPath = Prefs['radarr_path']
         else:
