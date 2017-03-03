@@ -30,7 +30,7 @@ def getMovieById(movie_id, imdb=False):
     if movies:
         for movie in movies:
             if imdb:
-                if str(imdb) == movie.get('imdbId'):
+                if str(movie_id) == movie.get('imdbId'):
                     return movie.get('id')
             else:
                 if int(movie_id) == movie.get('tmdbId', -1):

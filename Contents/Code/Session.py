@@ -1478,7 +1478,7 @@ class Session:
 
     def SendToRadarr(self, movie_id, callback=None):
         title = Dict['movie'][movie_id]['title']
-        radarr_movie_id = Radarr.getMovieById(movie_id, movie_id.startswith('tt'))
+        radarr_movie_id = Radarr.getMovieById(movie_id, imdb=movie_id.startswith('tt'))
         if radarr_movie_id > 0:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
@@ -1508,7 +1508,7 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        lookup = Radarr.lookupMovieId(movie_id, movie_id.startswith('tt'))
+        lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
 
         if not lookup:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
