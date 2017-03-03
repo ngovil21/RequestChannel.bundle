@@ -1508,7 +1508,7 @@ class Session:
         Log.Debug("Profile id: " + str(profile_id))
 
         lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
-
+        Log.Debug(str(lookup))
         if not lookup:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
@@ -1518,7 +1518,7 @@ class Session:
             if not movie.get('tmdb'):
                 movie['tmdb'] = lookup['tmdbId']
 
-            result = Radarr.addMovie(tmdb=lookup.get('tmdbId',0), title=lookup.get('title'), year=lookup.get('year'), titleSlug=lookup.get('titleSlug'),
+            result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'), titleSlug=lookup.get('titleSlug'),
                             profileId=profile_id, monitored=True, rootPath=rootFolderPath,
                             searchNow=Prefs['radarr_searchnow'])
             if result:
