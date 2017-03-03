@@ -66,7 +66,7 @@ def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searc
                'addOptions': {'searchForMovie': searchNow}}
     values = JSON.StringFromObject(options)
     try:
-        resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API})
+        resp = JSON.ObjectFromURL(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API})
         return resp
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
@@ -78,7 +78,7 @@ def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searc
 
 def lookupMovie(term):
     try:
-        resp = HTTP.Request(RADARR_URL + "api/movies/Lookup?term=" + String.Quote(term, True), headers={'X-Api-Key': RADARR_API})
+        resp = JSON.ObjectFromURL(RADARR_URL + "api/movies/Lookup?term=" + String.Quote(term, True), headers={'X-Api-Key': RADARR_API})
         return resp
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
@@ -94,7 +94,7 @@ def lookupMovieId(id, imdb=False):
     else:
         url = RADARR_URL + "api/movies/Lookup/tmdb?tmdbId=" + str(id)
     try:
-        return HTTP.Request(url=url, headers={'X-Api-Key': RADARR_API})
+        return JSON.ObjectFromURL(url=url, headers={'X-Api-Key': RADARR_API})
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
         Log.Debug("Options: " + str(options))
