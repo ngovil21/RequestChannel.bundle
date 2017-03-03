@@ -5,7 +5,7 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 
 PUSHBULLET_API_KEY = None
 
-def setApi(api):
+def setAPI(api):
     global PUSHBULLET_API_KEY
     PUSHBULLET_API_KEY = api
 

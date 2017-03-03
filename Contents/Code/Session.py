@@ -8,6 +8,7 @@ import urllib2
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 from LocalePatch import L, F
 from api import Radarr, TheMovieDatabase
+import Helper
 
 TITLE = 'Request Channel'
 PREFIX = '/video/requestchannel'
@@ -152,10 +153,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
-        Radarr.setAPI(Prefs['radarr_api'])
-        Log.Debug(str(Radarr.RADARR_API))
-        Radarr.setURL(Prefs['radarr_url'])
-        TheMovieDatabase.setAPI(TMDB_API_KEY)
+        Helper.setupApi()
         self.token = Request.Headers.get("X-Plex-Token", "")
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
@@ -1480,9 +1478,9 @@ class Session:
 
     def SendToRadarr(self, movie_id, callback=None):
         title = Dict['movie'][movie_id]['title']
-        radarr_movie_id = Radarr.getMovieByTMDB(movie_id)
+        radarr_movie_id = Radarr.getMovieById(movie_id)
         if not radarr_movie_id:
-            radarr_movie_id = Radarr.getMovieByIMDB(movie_id)
+            radarr_movie_id = Radarr.getMovieByIMDB(movie_id, True)
         if radarr_movie_id > 0:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
@@ -1512,31 +1510,35 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        if movie.get('source').lower() == "imdb" and not movie.get("tmdb"):  # if we don't have a tmdb id, look it up
-            tmdbId = TheMovieDatabase.getMovieByIMDB(movie_id)
-        elif movie.get('source').lower() == "tmdb":
-            tmdbId = movie_id
+        lookup = Radarr.lookupMovieId(movie_id, movie_id.startswith('tt'))
 
-        if not movie.get('tmdb'):
-            movie['tmdb'] = tmdbId
-
-        result = Radarr.addMovie(tmdb=tmdbId, title=movie.get('title'), year=movie.get('year'), titleSlug=movie.get('title'),
-                        profileId=profile_id, monitored=True, rootPath=rootFolderPath,
-                        searchNow=Prefs['radarr_searchnow'])
-        if result:
+        if not lookup:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
-            else:
-                oc = ObjectContainer(title1="Radarr", title2=L("Success"))
-            Log.Debug("Setting movie automated to true")
-            Dict['movie'][movie_id]['automated'] = True
-            Dict.Save()
-
-        else:
-            if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message=L("Could not send show to Radarr!"))
+                oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
             else:
                 oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
+        else:
+            mlookup = lookup[0]
+            if not movie.get('tmdb'):
+                movie['tmdb'] = mlookup['tmdbId']
+
+            result = Radarr.addMovie(tmdb=mlookup['tmdbId'], title=mlookup['title'], year=mlookup['year'], titleSlug=mlookup['titleSlug'],
+                            profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                            searchNow=Prefs['radarr_searchnow'])
+            if result:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Success"))
+                Log.Debug("Setting movie automated to true")
+                Dict['movie'][movie_id]['automated'] = True
+                Dict.Save()
+
+            else:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
 
         if self.is_admin:
             oc.add(DirectoryObject(

@@ -17,6 +17,7 @@ def setAPI(api):
     global RADARR_API
     RADARR_API = api
 
+
 def getMovies():
     try:
         return JSON.ObjectFromURL(RADARR_URL + "api/movie", headers={'X-Api-Key': RADARR_API})
@@ -24,20 +25,15 @@ def getMovies():
         Log.Debug("Error in getProfiles: " + e.message)
         Log.Error(str(traceback.format_exc()))
 
-def getMovieByTMDB(tmdb):
+def getMovieById(movie_id, imdb=False):
     movies = getMovies()
     if movies:
         for movie in movies:
-            if int(tmdb) == movie.get('tmdbId', -1):
+            if imdb and str(imdb) == movie.get('imdbId'):
+                return movie.get('id')
+            elif int(movie_id) == movie.get('tmdbId', -1):
                 return movie.get('id')
     return -1
-
-def getMovieByIMDB(imdb):
-    movies = getMovies()
-    for movie in movies:
-        if str(imdb) == movie.get('imdbId'):
-            return movie.get('id')
-    return None
 
 def getProfiles():
     try:
@@ -62,7 +58,7 @@ def getRootFolderPath():
 
 
 #add movie to Radarr, returns Radarr response
-def addMovie(tmdb,title, year, profileId, titleSlug, monitored, rootPath, searchNow=False):
+def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searchNow=False):
     options = {'tmdbId': tmdb, 'title': title, 'profileId': profileId, 'titleSlug': titleSlug,
                'rootFolderPath': rootPath, 'monitored': monitored, 'year': year,
                'addOptions': {'searchForMovie': searchNow}}
@@ -78,8 +74,32 @@ def addMovie(tmdb,title, year, profileId, titleSlug, monitored, rootPath, search
     return None
 
 
+def lookupMovie(term):
+    try:
+        resp = HTTP.Request(RADARR_URL + "api/movies/Lookup?term=" + String.Quote(term, True), headers={'X-Api-Key': RADARR_API})
+        return resp
+    except Exception as e:
+        Log.Error(str(traceback.format_exc()))  # raise e
+        Log.Debug("Options: " + str(options))
+        Log.Debug("Error in addMovie: " + e.message)
+        Log.Debug("Response Status: " + str(Response.Status))
+    return []
 
 
+def lookupMovieId(id, imdb=False):
+    if imdb:
+        url = RADARR_URL + "api/movies/Lookup/tmdb/tmdbId=" + str(id)
+    else:
+        url = RADARR_URL + "api/movies/Lookup/imdb/imdbId=" + str(id)
+    try:
+        resp = HTTP.Request(url=url, headers={'X-Api-Key': RADARR_API})
+        return resp
+    except Exception as e:
+        Log.Error(str(traceback.format_exc()))  # raise e
+        Log.Debug("Options: " + str(options))
+        Log.Debug("Error in addMovie: " + e.message)
+        Log.Debug("Response Status: " + str(Response.Status))
+    return None
 
 
 
