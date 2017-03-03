@@ -68,7 +68,8 @@ def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searc
     try:
         resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API}, immediate=True)
         Log.Debug(resp.content)
-        return JSON.ObjectFromString(resp.content)
+        return True
+        #return JSON.ObjectFromString(resp.content)
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
         Log.Debug("Options: " + str(options))
