@@ -1518,7 +1518,7 @@ class Session:
             if not movie.get('tmdb'):
                 movie['tmdb'] = lookup['tmdbId']
 
-            result = Radarr.addMovie(tmdb=lookup['tmdbId'], title=lookup['title'], year=lookup['year'], titleSlug=lookup['titleSlug'],
+            result = Radarr.addMovie(tmdb=lookup.get('tmdbId',0), title=lookup.get('title'), year=lookup.get('year'), titleSlug=lookup.get('titleSlug'),
                             profileId=profile_id, monitored=True, rootPath=rootFolderPath,
                             searchNow=Prefs['radarr_searchnow'])
             if result:

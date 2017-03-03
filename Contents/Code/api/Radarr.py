@@ -94,8 +94,7 @@ def lookupMovieId(id, imdb=False):
     else:
         url = RADARR_URL + "api/movies/Lookup/tmdb?tmdbId=" + str(id)
     try:
-        resp = HTTP.Request(url=url, headers={'X-Api-Key': RADARR_API})
-        return resp
+        return HTTP.Request(url=url, headers={'X-Api-Key': RADARR_API})
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
         Log.Debug("Options: " + str(options))
