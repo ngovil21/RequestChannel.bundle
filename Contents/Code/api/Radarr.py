@@ -66,8 +66,7 @@ def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searc
                'images': images, 'addOptions': {'searchForMovie': searchNow}}
     values = JSON.StringFromObject(options)
     try:
-        resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API})
-        resp.load()
+        resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API}, immediate=True)
         Log.Debug(resp.content)
         return JSON.ObjectFromString(resp.content)
     except Exception as e:
