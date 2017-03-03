@@ -1478,7 +1478,7 @@ class Session:
 
     def SendToRadarr(self, movie_id, callback=None):
         title = Dict['movie'][movie_id]['title']
-        radarr_movie_id = Radarr.getMovieByIs(movie_id, movie_id.startswith('tt'))
+        radarr_movie_id = Radarr.getMovieById(movie_id, movie_id.startswith('tt'))
         if radarr_movie_id > 0:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
