@@ -60,10 +60,10 @@ def getRootFolderPath():
 
 
 #add movie to Radarr, returns Radarr response
-def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searchNow=False):
+def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searchNow=False, cleanTitle=None, images=None):
     options = {'tmdbId': tmdb, 'title': title, 'profileId': profileId, 'titleSlug': titleSlug,
-               'rootFolderPath': rootPath, 'monitored': monitored, 'year': year,
-               'addOptions': {'searchForMovie': searchNow}}
+               'rootFolderPath': rootPath, 'monitored': monitored, 'year': year, 'cleanTitle': cleanTitle,
+               'images': images, 'addOptions': {'searchForMovie': searchNow}}
     values = JSON.StringFromObject(options)
     try:
         resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API})

@@ -1519,7 +1519,7 @@ class Session:
                 movie['tmdb'] = lookup['tmdbId']
 
             result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'), titleSlug=lookup.get('titleSlug'),
-                            profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                            profileId=profile_id, monitored=True, rootPath=rootFolderPath, cleanTitle=lookup.get('cleanTitle'), images=lookup.get('images'),
                             searchNow=Prefs['radarr_searchnow'])
             if result:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
