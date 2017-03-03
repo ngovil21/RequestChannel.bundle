@@ -1480,7 +1480,7 @@ class Session:
         title = Dict['movie'][movie_id]['title']
         radarr_movie_id = Radarr.getMovieById(movie_id)
         if not radarr_movie_id:
-            radarr_movie_id = Radarr.getMovieByIMDB(movie_id, True)
+            radarr_movie_id = Radarr.getMovieByIs(movie_id, True)
         if radarr_movie_id > 0:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()

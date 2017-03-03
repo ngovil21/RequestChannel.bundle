@@ -88,9 +88,9 @@ def lookupMovie(term):
 
 def lookupMovieId(id, imdb=False):
     if imdb:
-        url = RADARR_URL + "api/movies/Lookup/tmdb?tmdbId=" + str(id)
-    else:
         url = RADARR_URL + "api/movies/Lookup/imdb?imdbId=" + str(id)
+    else:
+        url = RADARR_URL + "api/movies/Lookup/tmdb?tmdbId=" + str(id)
     try:
         resp = HTTP.Request(url=url, headers={'X-Api-Key': RADARR_API})
         return resp
