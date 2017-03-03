@@ -31,7 +31,7 @@ def getMovieById(movie_id, imdb=False):
         for movie in movies:
             if imdb and str(imdb) == movie.get('imdbId'):
                 return movie.get('id')
-            elif not imdb and int(movie_id) == movie.get('tmdbId', -1):
+            elif (not imdb) and int(movie_id) == movie.get('tmdbId', -1):
                 return movie.get('id')
     return -1
 
