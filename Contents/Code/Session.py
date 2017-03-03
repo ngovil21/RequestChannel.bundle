@@ -1517,7 +1517,7 @@ class Session:
                 oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
         else:
             if not movie.get('tmdb'):
-                movie['tmdb'] = mlookup['tmdbId']
+                movie['tmdb'] = lookup['tmdbId']
 
             result = Radarr.addMovie(tmdb=lookup['tmdbId'], title=lookup['title'], year=lookup['year'], titleSlug=lookup['titleSlug'],
                             profileId=profile_id, monitored=True, rootPath=rootFolderPath,
