@@ -1529,7 +1529,6 @@ class Session:
                 Log.Debug("Setting movie automated to true")
                 Dict['movie'][movie_id]['automated'] = True
                 Dict.Save()
-
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))

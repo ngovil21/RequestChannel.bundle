@@ -22,7 +22,7 @@ def getMovies():
     try:
         return JSON.ObjectFromURL(RADARR_URL + "api/movie", headers={'X-Api-Key': RADARR_API})
     except Exception as e:
-        Log.Debug("Error in getProfiles: " + e.message)
+        Log.Debug("Error in getMovies: " + e.message)
         Log.Error(str(traceback.format_exc()))
 
 def getMovieById(movie_id, imdb=False):
@@ -66,7 +66,9 @@ def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searc
                'images': images, 'addOptions': {'searchForMovie': searchNow}}
     values = JSON.StringFromObject(options)
     try:
-        resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API}, immediate=True)
+        resp = JSON.ObjectFromURL(RADARR_URL + "api/movie", values=options, headers={'X-Api-Key': RADARR_API})
+        Log.Debug(str(resp))
+        #resp = HTTP.Request(RADARR_URL + "api/movie", data=values, headers={'X-Api-Key': RADARR_API}, immediate=True)
         #Log.Debug(resp.content)
         return True
         #return JSON.ObjectFromString(resp.content)
