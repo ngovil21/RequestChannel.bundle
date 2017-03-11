@@ -346,8 +346,10 @@ class Session:
                         continue
                     if key['release_date']:
                         year = key['release_date'][0:4]
+                        date = key['release_date']
                     else:
                         year = ""
+                        date=None
                     if key['poster_path']:
                         thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
                     else:
@@ -358,12 +360,18 @@ class Session:
                         art = None
                     title_year = key['title']
                     title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
+                    if date:
+                        rel_date = Datetime.ParseDate(date)
+                        if rel_date:
+                            date = rel_date.date()
+                        else:
+                            date = None
                     oc.add(TVShowObject(
                         key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'],
                                      year=year, poster=thumb,
                                      backdrop=art,
                                      summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
-                        summary=key['overview'], art=art))
+                        summary=key['overview'], art=art, originally_available_at=date))
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
@@ -1508,7 +1516,7 @@ class Session:
         Log.Debug("Profile id: " + str(profile_id))
 
         lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
-        Log.Debug(str(lookup))
+        #Log.Debug(str(lookup))
         if not lookup:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
