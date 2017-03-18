@@ -351,7 +351,7 @@ class Session:
                         date = key['release_date']
                     else:
                         year = ""
-                        date=None
+                        date = None
                     if key['poster_path']:
                         thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
                     else:
@@ -369,7 +369,7 @@ class Session:
                         else:
                             date = None
                     oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'],
+                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=title_year,
                                      year=year, poster=thumb,
                                      backdrop=art,
                                      summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
@@ -409,7 +409,7 @@ class Session:
                     else:
                         thumb = R('no-poster.jpg')
                     oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['imdbID'], title=key['Title'],
+                        key=Callback(self.ConfirmMovieRequest, movie_id=key['imdbID'], title=title_year,
                                      source='IMDB', year=key['Year'],
                                      poster=key['Poster']), rating_key=key['imdbID'], title=title_year, thumb=thumb))
             else:
@@ -420,8 +420,6 @@ class Session:
                     oc = ObjectContainer(title2="No results")
                 if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-                    #                        thumb=R('search.png')))
                     DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                                  dktitle=L("Search Again"),
                                  message="Enter the name of the Movie", dkthumb=R('search.png'))
@@ -434,8 +432,6 @@ class Session:
                 return oc
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-            #                        thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                          dktitle=L("Search Again"),
                          message="Enter the name of the Movie", dkthumb=R('search.png'))
@@ -459,8 +455,7 @@ class Session:
             if local_search:
                 videos = local_search.xpath("//Video")
                 for video in videos:
-                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib[
-                        'type'] == 'movie':
+                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                         Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
                         summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
                             video.attrib['summary'] if video.attrib['summary'] else "")
@@ -1518,7 +1513,7 @@ class Session:
         Log.Debug("Profile id: " + str(profile_id))
 
         lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
-        #Log.Debug(str(lookup))
+        # Log.Debug(str(lookup))
         if not lookup:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
@@ -1528,9 +1523,11 @@ class Session:
             if not movie.get('tmdb'):
                 movie['tmdb'] = lookup['tmdbId']
 
-            result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'), titleSlug=lookup.get('titleSlug'),
-                            profileId=profile_id, monitored=True, rootPath=rootFolderPath, cleanTitle=lookup.get('cleanTitle'), images=lookup.get('images'),
-                            searchNow=Prefs['radarr_searchnow'])
+            result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'),
+                                     titleSlug=lookup.get('titleSlug'),
+                                     profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                                     cleanTitle=lookup.get('cleanTitle'), images=lookup.get('images'),
+                                     searchNow=Prefs['radarr_searchnow'])
             if result:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
@@ -1558,7 +1555,6 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
                                    thumb=R('plexrequestchannel.png')))
         return oc
-
 
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
@@ -1672,7 +1668,6 @@ class Session:
                                    thumb=R('plexrequestchannel.png')))
         return oc
 
-
     def ManageSonarr(self):
         oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1705,7 +1700,6 @@ class Session:
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
-
 
     def ManageSonarrShow(self, series_id, title="", callback=None, message=None):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1744,7 +1738,6 @@ class Session:
                 title=mark + (L("Season ") + str(season_number) if season_number > 0 else "Specials"),
                 thumb=None))
         return oc
-
 
     def ManageSonarrSeason(self, series_id, season, message=None, callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1785,7 +1778,6 @@ class Session:
                     title=marked + str(episode.get('episodeNumber', "##")) + ". " + episode.get('title', ""),
                     summary=(episode.get('overview', None)), thumb=None))
         return oc
-
 
     def SonarrMonitorShow(self, series_id, seasons, episodes='all', callback=None):
         if not Prefs['sonarr_url'].startswith("http"):
@@ -1860,7 +1852,6 @@ class Session:
                 return MessageContainer(header=Title, message=L("Error sending episode to Sonarr"))
                 # return self.MainMenu()
 
-
     def SonarrShowExists(self, tvdbid):
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -1876,7 +1867,6 @@ class Session:
             if show['tvdbId'] == int(tvdbid) and show['id']:
                 return show['id']
         return False
-
 
     # Sickbeard Functions
     def SendToSickbeard(self, tvdbid, callback=None):
@@ -1945,12 +1935,12 @@ class Session:
                 count += 1
         if self.is_admin:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, req_type='tv', title_year=title),
-                                title=L("Delete Request")))
+                DirectoryObject(
+                    key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, req_type='tv', title_year=title),
+                    title=L("Delete Request")))
         oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("Return to TV Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
-
 
     def ManageSickbeard(self):
         oc = ObjectContainer(title1=TITLE, title2="Manage " + Prefs['sickbeard_fork'])
@@ -1983,7 +1973,6 @@ class Session:
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
-
 
     def ManageSickbeardShow(self, series_id, title="", callback=None, message=None):
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -2033,7 +2022,6 @@ class Session:
                             title="Refresh"))
         return oc
 
-
     def ManageSickbeardSeason(self, series_id, season, message=None, callback=None):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -2081,7 +2069,6 @@ class Session:
                                 title=marked + e + ". " + episode.get('name', ""),
                                 summary=(episode.get('status', None)), thumb=None))
         return oc
-
 
     def SickbeardMonitorShow(self, series_id, seasons, episodes='all', callback=None):
         if not Prefs['sickbeard_url'].startswith("http"):
@@ -2146,7 +2133,6 @@ class Session:
                 return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
                 # return self.MainMenu()
 
-
     def SickbeardShowExists(self, tvdbid):
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -2169,7 +2155,6 @@ class Session:
             Log.Debug(e.message)
         Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
         return False
-
 
     def SendToHeadphones(self, music_id):
         if not Prefs['headphones_url'].startswith("http"):
@@ -2208,7 +2193,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
-
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
         if not self.is_admin:
@@ -2229,7 +2213,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
-
     def ManageUsers(self, message=None):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2246,7 +2229,6 @@ class Session:
                                     title=user + ": " + str(Dict['register'][toke]['requests'])))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
-
 
     def ManageUser(self, toke, message=None):
         if not self.is_admin:
@@ -2281,7 +2263,6 @@ class Session:
 
         return oc
 
-
     def RenameUser(self, toke, message=""):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2305,7 +2286,6 @@ class Session:
                                      prompt=L("Enter the user's name")))
         return oc
 
-
     def RegisterUserName(self, query="", toke=""):
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2315,7 +2295,6 @@ class Session:
         Dict['register'][toke]['nickname'] = query
         Dict.Save()
         return self.ManageUser(toke=toke, message=L("Username has been set"))
-
 
     def BlockUser(self, toke, setter):
         if setter == 'True':
@@ -2331,7 +2310,6 @@ class Session:
                 Dict.Save()
                 return self.ManageUser(toke=toke, message="User has been unblocked.")
         return self.ManageUser(toke=toke)
-
 
     def SonarrUser(self, toke, setter):
         tv_auto = ""
@@ -2353,7 +2331,6 @@ class Session:
                 return self.ManageUser(toke=toke, message="User can no longer manage " + tv_auto)
         return self.ManageUser(toke=toke)
 
-
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
             return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
@@ -2366,7 +2343,6 @@ class Session:
             Dict.Save()
             return self.ManageUsers(message=L("User registration has been deleted."))
         return oc
-
 
     def ResetDict(self, confirm='False'):
         if not self.is_admin:
@@ -2395,7 +2371,6 @@ class Session:
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
-
     def ToggleSorting(self):
         if Dict['sortbyname']:
             Dict['sortbyname'] = False
@@ -2403,7 +2378,6 @@ class Session:
             Dict['sortbyname'] = True
         Dict.Save()
         return self.ManageChannel(message=L("Sorting by " + ("name" if Dict['sortbyname'] else "time")))
-
 
     def Changelog(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
@@ -2422,7 +2396,6 @@ class Session:
                                thumb=R('return.png')))
         return oc
 
-
     def ToggleDebug(self):
         if Dict['debug']:
             Dict['debug'] = False
@@ -2431,10 +2404,8 @@ class Session:
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
-
     def ShowMessage(self, header, message):
         return MessageContainer(header=header, message=message)
-
 
     def ReportProblem(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Report a Problem"))
@@ -2455,7 +2426,6 @@ class Session:
                 InputDirectoryObject(key=Callback(self.ConfirmReportProblem), title=L("Report General Problem"),
                                      prompt=L("What is the problem?")))
         return oc
-
 
     def NavigateMedia(self, path=None):
         if not path:
@@ -2521,7 +2491,6 @@ class Session:
                                            thumb=v.attrib.get('thumb')))
         return oc
 
-
     def ReportProblemMedia(self, rating_key, title):
         oc = ObjectContainer(title1="What is the problem?", title2=title)
         page = XML.ElementFromURL("http://127.0.0.1:32400/library/metadata/" + rating_key)
@@ -2549,8 +2518,9 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, rep_type='media'),
-                                title=problem))
+                DirectoryObject(
+                    key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, rep_type='media'),
+                    title=problem))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
@@ -2569,7 +2539,6 @@ class Session:
 
         return oc
 
-
     def ReportProblemMediaOther(self, query="", report=""):
         if not query:
             oc = ObjectContainer(title2=L("Report Problem with Media"))
@@ -2581,7 +2550,6 @@ class Session:
                                      prompt=L("What is the problem?")))
             return oc
         return self.ConfirmReportProblem(query=report + " - " + query, rep_type='media')
-
 
     def ReportGeneralProblem(self):
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -2603,7 +2571,6 @@ class Session:
                                      prompt=L("What is the problem?")))
         return oc
 
-
     def ConfirmReportProblem(self, query="", rep_type='general'):
         if rep_type == 'general':
             query = "Issue: " + query
@@ -2611,7 +2578,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title=L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
         return oc
-
 
     def NotifyProblem(self, problem):
         title = "Request Channel - Problem Reported"
