@@ -1,12 +1,14 @@
 # coding=utf-8
 
-import re, urllib2, ssl
+import re
+import ssl
 import traceback
+import urllib2
 
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
-
-# Override Plex L, F functions
 from LocalePatch import L, F
+from api import Radarr, TheMovieDatabase
+import Helper
 
 TITLE = 'Request Channel'
 PREFIX = '/video/requestchannel'
@@ -151,6 +153,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
+        Helper.setupApi()
         self.token = Request.Headers.get("X-Plex-Token", "")
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
@@ -239,6 +242,8 @@ class Session:
                 key=Callback(self.Register,
                              message=L("Entering your name will let the admin know who you are when making requests.")),
                 title=L("Register Device")))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("User Settings")))
         oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
@@ -343,8 +348,10 @@ class Session:
                         continue
                     if key['release_date']:
                         year = key['release_date'][0:4]
+                        date = key['release_date']
                     else:
                         year = ""
+                        date = None
                     if key['poster_path']:
                         thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
                     else:
@@ -354,13 +361,19 @@ class Session:
                     else:
                         art = None
                     title_year = key['title']
-                    title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
+                    title_year += (" (" + year + ")" if year else "")
+                    if date:
+                        rel_date = Datetime.ParseDate(date)
+                        if rel_date:
+                            date = rel_date.date()
+                        else:
+                            date = None
                     oc.add(TVShowObject(
                         key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'],
                                      year=year, poster=thumb,
                                      backdrop=art,
                                      summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
-                        summary=key['overview'], art=art))
+                        summary=key['overview'], art=art, originally_available_at=date))
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
@@ -369,8 +382,6 @@ class Session:
                 Log.Debug("No Results Found")
                 if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-                    #                        thumb=R('search.png')))
                     DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                                  dktitle=L("Search Again"),
                                  message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
@@ -407,8 +418,6 @@ class Session:
                     oc = ObjectContainer(title2="No results")
                 if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-                    #                        thumb=R('search.png')))
                     DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                                  dktitle=L("Search Again"),
                                  message="Enter the name of the Movie", dkthumb=R('search.png'))
@@ -421,8 +430,6 @@ class Session:
                 return oc
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-            #                        thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                          dktitle=L("Search Again"),
                          message="Enter the name of the Movie", dkthumb=R('search.png'))
@@ -446,15 +453,14 @@ class Session:
             if local_search:
                 videos = local_search.xpath("//Video")
                 for video in videos:
-                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib[
-                        'type'] == 'movie':
+                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                         Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
                         summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
                             video.attrib['summary'] if video.attrib['summary'] else "")
                         oc.add(TVShowObject(
                             key=Callback(self.SMainMenu, message=L("Movie already in library."), title1=L("In Library"),
                                          title2=title),
-                            rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary,
+                            rating_key=video.attrib['ratingKey'], title="+ " + title_year, summary=summary,
                             thumb=video.attrib['thumb']))
                         found_match = True
                         break
@@ -1102,7 +1108,8 @@ class Session:
         oc = ObjectContainer(title2=L("Are you sure you would like to add all " + req_type + " requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.AddAllRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        oc.add(
+            DirectoryObject(key=Callback(self.AddAllRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'tv':
@@ -1198,7 +1205,8 @@ class Session:
         oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + req_type + "  requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.ClearRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        oc.add(
+            DirectoryObject(key=Callback(self.ClearRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'tv':
@@ -1413,7 +1421,7 @@ class Session:
             if Dict['debug']:
                 Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
+            return self.SMainMenu(message=L("Error loading CouchPotato"))
 
         oc = ObjectContainer(title2="Manage Couchpotato")
 
@@ -1472,82 +1480,66 @@ class Session:
             # Sonarr Methods
 
     def SendToRadarr(self, movie_id, callback=None):
-        if not Prefs['radarr_url'].startswith("http"):
-            radarr_url = "http://" + Prefs['radarr_url']
-        else:
-            radarr_url = Prefs['radarr_url']
-        if not radarr_url.endswith("/"):
-            radarr_url += "/"
         title = Dict['movie'][movie_id]['title']
-        api_header = {
-            'X-Api-Key': Prefs['radarr_api']
-        }
-        radarr_movie_id = self.RadarrMovieExists(movie_id)
-        if radarr_movie_id:
+        radarr_movie_id = Radarr.getMovieById(movie_id, imdb=movie_id.startswith('tt'))
+        if radarr_movie_id > 0:
             Dict['movie'][movie_id]['automated'] = True
             Dict.Save()
             if callback:
-                return callback
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Movie already exists in Radarr"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Movie already exists!"))
+                oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+                return oc
             else:
-                return self.SMainMenu(message="Movie already exists in Radarr")
+                return self.SMainMenu(message=L("Movie already exists in Radarr"))
 
         movie = Dict['movie'][movie_id]
-        if movie.get('source', '').lower() == 'tmdb':
-            s = "tmdbid:"
-        else:
-            s = "imdbid:"
-        lookup_json = JSON.ObjectFromURL(radarr_url + "api/movies/Lookup?term=" + s + movie_id, headers=api_header)
-        if lookup_json:
-            radarr_movie = lookup_json[0]
-        else:
-            return
 
-        profile_json = JSON.ObjectFromURL(radarr_url + "api/Profile", headers=api_header)
         profile_id = 1
-        for profile in profile_json:
-            if profile['name'] == Prefs['radarr_profile']:
-                profile_id = profile['id']
-                break
-        rootFolderPath = ""
+        if Prefs['radarr_profile']:
+            profile_id = Radarr.getProfileIDfomName(Prefs['radarr_profile'])
+            if profile_id < 0:
+                profile_id = 1
+
         if Prefs['radarr_path']:
             rootFolderPath = Prefs['radarr_path']
         else:
-            root = JSON.ObjectFromURL(radarr_url + "api/Rootfolder", headers=api_header)
-            if root:
-                rootFolderPath = root[0]['path']
+            rootFolderPath = Radarr.getRootFolderPath()
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        options = {'tmdbId': radarr_movie['tmdbId'], 'title': radarr_movie['title'], 'profileId': int(profile_id),
-                   'titleSlug': radarr_movie['titleSlug'],
-                   'rootFolderPath': rootFolderPath, 'monitored': True, 'year': radarr_movie['year'],
-                   'images': radarr_movie['images']
-                   }
-        if not movie.get('tmdb'):
-            movie['tmdb'] = radarr_movie['tmdbId']
-
-        options['addOptions'] = {'searchForMovie': Prefs['radarr_searchnow']}
-        values = JSON.StringFromObject(options)
-        try:
-            Log.Debug("Options: " + str(options))
-            resp = HTTP.Request(radarr_url + "api/movie", data=values, headers=api_header)
+        lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
+        # Log.Debug(str(lookup))
+        if not lookup:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
-            else:
-                oc = ObjectContainer(title1="Radarr", title2=L("Success"))
-            Log.Debug("Setting movie automated to true")
-            Dict['movie'][movie_id]['automated'] = True
-            Dict.Save()
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Options: " + str(options))
-            Log.Debug(e.message)
-            Log.Debug("Response Status: " + str(Response.Status))
-            if isClient(MESSAGE_OVERLAY_CLIENTS):
-                oc = ObjectContainer(header=TITLE, message=L("Could not send show to Radarr!"))
+                oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
             else:
                 oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
-        # radarr_movie_id = self.RadarrMovieExists(movie_id)
+        else:
+            if not movie.get('tmdb'):
+                movie['tmdb'] = lookup['tmdbId']
+
+            result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'),
+                                     titleSlug=lookup.get('titleSlug'),
+                                     profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                                     cleanTitle=lookup.get('cleanTitle'), images=lookup.get('images'),
+                                     searchNow=Prefs['radarr_searchnow'])
+            if result:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Success"))
+                Log.Debug("Setting movie automated to true")
+                Dict['movie'][movie_id]['automated'] = True
+                Dict.Save()
+            else:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
+
         if self.is_admin:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie',
@@ -1561,19 +1553,6 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
                                    thumb=R('plexrequestchannel.png')))
         return oc
-
-    def RadarrMovieExists(self, movie_id):
-        if not Prefs['radarr_url'].startswith("http"):
-            radarr_url = "http://" + Prefs['radarr_url']
-        else:
-            radarr_url = Prefs['radarr_url']
-        if not radarr_url.endswith("/"):
-            radarr_url += "/"
-        movies = JSON.ObjectFromURL(radarr_url + "api/movie", headers={'X-Api-Key': Prefs['radarr_api']})
-        for movie in movies:
-            if movie['id'] and (movie['imdbId'] == str(movie_id) or str(movie['tmdbId']) == str(movie_id)):
-                return movie['id']
-        return False
 
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
@@ -1954,8 +1933,9 @@ class Session:
                 count += 1
         if self.is_admin:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, req_type='tv', title_year=title),
-                                title=L("Delete Request")))
+                DirectoryObject(
+                    key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, req_type='tv', title_year=title),
+                    title=L("Delete Request")))
         oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("Return to TV Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
@@ -2451,9 +2431,9 @@ class Session:
             parent = None
         else:
             parent = path[:path.rfind("/") - 1]
-        # headers = {'X-Plex-Token': self.token}
+        headers = {'X-Plex-Token': self.token}
         try:
-            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
+            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=headers)
         except:
             Log.Error(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
@@ -2536,8 +2516,9 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, rep_type='media'),
-                                title=problem))
+                DirectoryObject(
+                    key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, rep_type='media'),
+                    title=problem))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
@@ -2820,7 +2801,6 @@ def notifyRequest(req_id, req_type, title="", message=""):
             Log.Debug("Email failed: " + e.message)
 
 
-
 def Notify(title, body):
     if Prefs['email_to']:
         try:
@@ -2888,6 +2868,7 @@ def sendPushalot(title, message):
             'IsSilent': 'false'}
     return HTTP.Request(PUSHALOT_API_URL, values=data)
 
+
 def sendSlack(message, channel=None):
     data = {
         'token': Prefs['slack_api'],
@@ -2897,6 +2878,7 @@ def sendSlack(message, channel=None):
     if channel:
         data['channel'] = channel
     return JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
+
 
 # noinspection PyUnresolvedReferences
 def sendEmail(subject, body, email_type='html'):
