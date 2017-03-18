@@ -361,7 +361,7 @@ class Session:
                     else:
                         art = None
                     title_year = key['title']
-                    title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
+                    title_year += (" (" + year + ")" if year else "")
                     if date:
                         rel_date = Datetime.ParseDate(date)
                         if rel_date:
@@ -369,7 +369,7 @@ class Session:
                         else:
                             date = None
                     oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=title_year,
+                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=title,
                                      year=year, poster=thumb,
                                      backdrop=art,
                                      summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
@@ -382,8 +382,6 @@ class Session:
                 Log.Debug("No Results Found")
                 if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-                    #                        thumb=R('search.png')))
                     DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                                  dktitle=L("Search Again"),
                                  message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
@@ -409,7 +407,7 @@ class Session:
                     else:
                         thumb = R('no-poster.jpg')
                     oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['imdbID'], title=title_year,
+                        key=Callback(self.ConfirmMovieRequest, movie_id=key['imdbID'], title=title,
                                      source='IMDB', year=key['Year'],
                                      poster=key['Poster']), rating_key=key['imdbID'], title=title_year, thumb=thumb))
             else:
@@ -462,7 +460,7 @@ class Session:
                         oc.add(TVShowObject(
                             key=Callback(self.SMainMenu, message=L("Movie already in library."), title1=L("In Library"),
                                          title2=title),
-                            rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary,
+                            rating_key=video.attrib['ratingKey'], title="+ " + title_year, summary=summary,
                             thumb=video.attrib['thumb']))
                         found_match = True
                         break
