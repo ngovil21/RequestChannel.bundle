@@ -369,7 +369,7 @@ class Session:
                         else:
                             date = None
                     oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=title,
+                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'],
                                      year=year, poster=thumb,
                                      backdrop=art,
                                      summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
@@ -407,7 +407,7 @@ class Session:
                     else:
                         thumb = R('no-poster.jpg')
                     oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['imdbID'], title=title,
+                        key=Callback(self.ConfirmMovieRequest, movie_id=key['imdbID'], title=key['Title'],
                                      source='IMDB', year=key['Year'],
                                      poster=key['Poster']), rating_key=key['imdbID'], title=title_year, thumb=thumb))
             else:
