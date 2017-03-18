@@ -2463,9 +2463,9 @@ class Session:
             parent = None
         else:
             parent = path[:path.rfind("/") - 1]
-        # headers = {'X-Plex-Token': self.token}
+        headers = {'X-Plex-Token': self.token}
         try:
-            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
+            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=headers)
         except:
             Log.Error(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
