@@ -16,7 +16,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.8.2"
+VERSION = "0.8.3"
 BRANCH = "master"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
@@ -268,7 +268,7 @@ class Session:
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
-            Log.Debug("Client does support message overlays")
+            Log.Debug("Client does not support message overlays")
             oc = ObjectContainer(title1=L("Unrecognized Device"), title2=L("Please register"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
