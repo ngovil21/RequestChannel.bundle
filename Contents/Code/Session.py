@@ -2433,8 +2433,8 @@ class Session:
         if set is None:
             pname = "* " if Dict['sortbyname'] else ""
             ptime = "* " if not Dict['sortbyname'] else ""
-            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=True), title=(pname + L("Sort by Name"))))
-            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=False), title=(ptime + L("Sort by Time"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleSorting, toggle=True), title=(pname + L("Sort by Name"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleSorting, toggle=False), title=(ptime + L("Sort by Time"))))
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
             return oc
         elif toggle == "True":
