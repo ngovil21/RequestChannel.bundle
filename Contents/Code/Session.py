@@ -155,6 +155,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
         Helper.setupApi()
         self.token = Request.Headers.get("X-Plex-Token", "")
+        self.user = getPlexTVUser(self.token)
         self.is_admin = checkAdmin(self.token)
         self.platform = Client.Platform
         self.product = Client.Product
@@ -257,6 +258,9 @@ class Session:
             plexTVUser = xml.get("myPlexUsername")
             Log.Debug("PlexTV Username: " + plexTVUser)
             self.RegisterName(query=plexTVUser)
+            if Dict['debug']:
+                Log.Debug(str(Request.Headers))
+                Log.Debug(XML.StringFromObject(xml))
             return self.SMainMenu(message=L("Your username has been registered."), title1=L("Main Menu"),
                                   title2=L("Registered"))
         except:
@@ -272,7 +276,6 @@ class Session:
             oc = ObjectContainer(title1=L("Unrecognized Device"), title2=L("Please register"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent_call=Callback(MainMenu,)), title="Enter your name or nickname"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.RegisterName, parent_call=Callback(self.SMainMenu),
                          dktitle=L("Enter your name or nickname"))
         else:
@@ -309,7 +312,6 @@ class Session:
                                    title=L("Please enter the movie name in the searchbox and press enter.")))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title=title, thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                          dktitle=title,
                          message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
@@ -2332,7 +2334,7 @@ class Session:
     def DeleteUser(self, toke, confirmed='False'):
         if not self.is_admin:
             return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
-        oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'])
+        oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'] if toke in Dict['register'] else "User Does Not Exist")
         if confirmed == 'False':
             oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title=L("Yes")))
             oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke), title=L("No")))
@@ -2918,6 +2920,14 @@ def userFromToken(token):
             return "guest_" + Hash.SHA1(token)[:10]
     return ""
 
+def getPlexTVUser(token):
+    url = "https://plex.tv"
+    try:
+        xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': token})
+        plexTVUser = xml.get("myPlexUsername")
+        return plexTVUser
+    except:
+        return None
 
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
@@ -2969,10 +2979,3 @@ def checkCompletedMovieRequests():
                         Dict['movie'][req_id]['completed'] = True
 
     Dict.Save()
-
-
-def alt(stringy, default=None):
-    if stringy:
-        return stringy
-    else:
-        return default
