@@ -294,7 +294,7 @@ class Session:
         else:
             oc.title2 = message
         oc.add(DirectoryObject(key=Callback(self.ChangeEmail),
-                               title=(L("Change Email: ") + str(Dict['register'][self.user]['email']))))
+                               title=(L("Change Email: ") + str(Dict['register'][self.user].get('email')))))
         oc.add(
             DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
 
