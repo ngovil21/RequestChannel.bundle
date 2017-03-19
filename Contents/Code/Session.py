@@ -253,7 +253,7 @@ class Session:
                              message=L("Entering your name will let the admin know who you are when making requests.")),
                 title=L("Register Username")))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("User Settings")))
+            oc.add(DirectoryObject(key=Callback(self.UserSettings), title=L("User Settings")))
         oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
