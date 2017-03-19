@@ -2412,21 +2412,37 @@ class Session:
     #     Dict.Save()
     #     return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
-    def ToggleDebug(self, set=None):
+    def ToggleDebug(self, toggle=None):
         oc = ObjectContainer(title1=TITLE, title2=L("Set Debugging"))
-        if set == None:
+        if toggle is None:
             pon = "* " if Dict['Debug'] else ""
             poff = "* " if not Dict['Debug'] else ""
-            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, set=True), title=(pon + L("On"))))
-            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, set=False), title=(poff + L("Off"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=True), title=(pon + L("On"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=False), title=(poff + L("Off"))))
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
             return oc
-        elif set == "True":
+        elif toggle == "True":
             Dict['Debug'] = True
-        elif set == "False":
+        elif toggle == "False":
             Dict['Debug'] = False
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
+
+    def ToggleSorting(self, toggle=None):
+        oc = ObjectContainer(title1=TITLE, title2=L("Change Sorting"))
+        if set is None:
+            pname = "* " if Dict['Debug'] else ""
+            ptime = "* " if not Dict['Debug'] else ""
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=True), title=(pname + L("Sort by Name"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=False), title=(ptime + L("Sort by Time"))))
+            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+            return oc
+        elif toggle == "True":
+            Dict['sortbyname'] = True
+        elif toggle == "False":
+            Dict['sortbyname'] = False
+        Dict.Save()
+        return self.ManageChannel(message="Sorting requests by " + ("name" if Dict['sortbyname'] else "time"))
 
     def ShowMessage(self, header, message):
         return MessageContainer(header=header, message=message)
