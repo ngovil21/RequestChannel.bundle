@@ -155,11 +155,15 @@ class Session:
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
         Helper.setupApi()
         self.token = Request.Headers.get("X-Plex-Token", "")
-        self.user = getPlexTVUser(self.token)
         self.is_admin = checkAdmin(self.token)
+        if not self.is_admin:
+            self.user = getPlexTVUser(self.token)
+        else:
+            self.user = "Admin"
         self.platform = Client.Platform
         self.product = Client.Product
         self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
+        Log.Debug("User is " + str(self.user))
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
@@ -167,17 +171,21 @@ class Session:
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
-
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc.message = message
         if self.is_admin:
-            Log.Debug("User is Admin")
-        if self.is_admin:
             if self.token in Dict['register']:  # Do not save admin token in the register
                 del Dict['register'][self.token]
+        elif self.user and self.user not in Dict['register']:
+            if self.token in Dict['register']:
+                Dict['register'][self.user] = Dict['register'][self.token]
+            else:
+                Dict['register'][self.user] = {'nickname': "", 'requests': 0}
         elif Dict['register'] and (self.token not in Dict['register'] or not Dict['register'][self.token]['nickname']):
             return self.Register()
-        elif self.token not in Dict['register']:
+        elif self.user and self.user not in Dict['register']:
+            if self.token in Dict['register']:
+                Dict['register'][self.user] = Dict['register'][self.token]
             Dict['register'][self.token] = {'nickname': "", 'requests': 0}
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
@@ -238,7 +246,12 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ReportProblem), title=L("Report a Problem")))
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Manage Channel")))
-        elif not Dict['register'][self.token]['nickname']:
+        elif self.user and not Dict['register'][self.user]['nickname']:
+            oc.add(DirectoryObject(
+                key=Callback(self.Register,
+                             message=L("Entering your name will let the admin know who you are when making requests.")),
+                title=L("Register Device")))
+        elif self.token in Dict['register'] and not Dict['register'][self.token]['nickname']:
             oc.add(DirectoryObject(
                 key=Callback(self.Register,
                              message=L("Entering your name will let the admin know who you are when making requests.")),
@@ -283,10 +296,12 @@ class Session:
                                         prompt=L("Enter your name or nickname")))
         return oc
 
-    def RegisterName(self, query=""):
+    def RegisterName(self, query="", requests=0):
         if not query:
             return self.Register(message=L("You must enter a name. Try again."))
-        Dict['register'][self.token] = {'nickname': query, 'requests': 0}
+        Dict['register'][self.token] = {'nickname': query, 'requests': int(requests)}
+        if self.user:
+            Dict['register'][self.user] = {'nickname': query, 'requests': int(requests)}
         Dict.Save()
         return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"),
                               title2=L("Registered"))
@@ -2371,13 +2386,6 @@ class Session:
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
-    def ToggleSorting(self):
-        if Dict['sortbyname']:
-            Dict['sortbyname'] = False
-        else:
-            Dict['sortbyname'] = True
-        Dict.Save()
-        return self.ManageChannel(message=L("Sorting by " + ("name" if Dict['sortbyname'] else "time")))
 
     def Changelog(self):
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
@@ -2396,11 +2404,27 @@ class Session:
                                thumb=R('return.png')))
         return oc
 
-    def ToggleDebug(self):
-        if Dict['debug']:
-            Dict['debug'] = False
-        else:
-            Dict['debug'] = True
+    # def ToggleDebug(self):
+    #     if Dict['debug']:
+    #         Dict['debug'] = False
+    #     else:
+    #         Dict['debug'] = True
+    #     Dict.Save()
+    #     return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
+
+    def ToggleDebug(self, set=None):
+        oc = ObjectContainer(title1=TITLE, title2=L("Set Debugging"))
+        if set == None:
+            pon = "* " if Dict['Debug'] else ""
+            poff = "* " if not Dict['Debug'] else ""
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, set=True), title=(pon + L("On"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, set=False), title=(poff + L("Off"))))
+            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+            return oc
+        elif set == "True":
+            Dict['Debug'] = True
+        elif set == "False":
+            Dict['Debug'] = False
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
@@ -2412,9 +2436,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.NavigateMedia), title=L("Report Problem with Media")))
         if self.use_dumb_keyboard:  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(
-            #     DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem, title="Report General Problem",
-            #                                  message="What is the problem?"), title="Report General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ConfirmReportProblem,
                          parent_call=Callback(self.ReportProblem),
                          dktitle=L("Report General Problem"),
