@@ -2430,7 +2430,7 @@ class Session:
 
     def ToggleSorting(self, toggle=None):
         oc = ObjectContainer(title1=TITLE, title2=L("Change Sorting"))
-        if set is None:
+        if toggle is None:
             pname = "* " if Dict['sortbyname'] else ""
             ptime = "* " if not Dict['sortbyname'] else ""
             oc.add(DirectoryObject(key=Callback(self.ToggleSorting, toggle=True), title=(pname + L("Sort by Name"))))
