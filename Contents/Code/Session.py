@@ -88,6 +88,8 @@ class Session:
         Route.Connect(PREFIX + '/%s/register' % session_id, self.Register)
         Route.Connect(PREFIX + '/%s/switchkeyboard' % session_id, self.SwitchKeyboard)
         Route.Connect(PREFIX + '/%s/registername' % session_id, self.RegisterName)
+        Route.Connect(PREFIX + '/%s/usersettings' % session_id, self.UserSettings)
+        Route.Connect(PREFIX + '/%s/changeemail' % session_id, self.ChangeEmail)
         Route.Connect(PREFIX + '/%s/addnewmovie' % session_id, self.AddNewMovie)
         Route.Connect(PREFIX + '/%s/searchmovie' % session_id, self.SearchMovie)
         Route.Connect(PREFIX + '/%s/confirmmovierequest' % session_id, self.ConfirmMovieRequest)
@@ -158,6 +160,8 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         if not self.is_admin:
             self.user = getPlexTVUser(self.token)
+            if not self.user:     #Fallback if we are unable to get the username
+                self.user = self.token
         else:
             self.user = "Admin"
         self.platform = Client.Platform
@@ -177,16 +181,13 @@ class Session:
             if self.token in Dict['register']:  # Do not save admin token in the register
                 del Dict['register'][self.token]
         elif self.user and self.user not in Dict['register']:
-            if self.token in Dict['register']:
-                Dict['register'][self.user] = Dict['register'][self.token]
+            if self.token in Dict['register'] and self.user != self.token:
+                Dict['register'][self.user] = Dict['register'][self.token]  #Copy token info over to username
+                Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
             else:
-                Dict['register'][self.user] = {'nickname': "", 'requests': 0}
-        elif Dict['register'] and (self.token not in Dict['register'] or not Dict['register'][self.token]['nickname']):
-            return self.Register()
-        elif self.user and self.user not in Dict['register']:
-            if self.token in Dict['register']:
-                Dict['register'][self.user] = Dict['register'][self.token]
-            Dict['register'][self.token] = {'nickname': "", 'requests': 0}
+                Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None}
+                if self.user == self.token and not Dict['register']['nickname']:
+                    return self.Register()
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
@@ -250,12 +251,7 @@ class Session:
             oc.add(DirectoryObject(
                 key=Callback(self.Register,
                              message=L("Entering your name will let the admin know who you are when making requests.")),
-                title=L("Register Device")))
-        elif self.token in Dict['register'] and not Dict['register'][self.token]['nickname']:
-            oc.add(DirectoryObject(
-                key=Callback(self.Register,
-                             message=L("Entering your name will let the admin know who you are when making requests.")),
-                title=L("Register Device")))
+                title=L("Register Username")))
         else:
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("User Settings")))
         oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
@@ -265,19 +261,6 @@ class Session:
         return oc
 
     def Register(self, message=None):
-        url = "https://plex.tv"
-        try:
-            xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': self.token})
-            plexTVUser = xml.get("myPlexUsername")
-            Log.Debug("PlexTV Username: " + plexTVUser)
-            self.RegisterName(query=plexTVUser)
-            if Dict['debug']:
-                Log.Debug(str(Request.Headers))
-                Log.Debug(XML.StringFromObject(xml))
-            return self.SMainMenu(message=L("Your username has been registered."), title1=L("Main Menu"),
-                                  title2=L("Registered"))
-        except:
-            Log.Debug("PlexTV Username: N/A")
         if message is None:
             message = L("Unrecognized device. The admin would like you to register it.")
         if Client.Product == "Plex Web":
@@ -299,12 +282,48 @@ class Session:
     def RegisterName(self, query="", requests=0):
         if not query:
             return self.Register(message=L("You must enter a name. Try again."))
-        Dict['register'][self.token] = {'nickname': query, 'requests': int(requests)}
-        if self.user:
-            Dict['register'][self.user] = {'nickname': query, 'requests': int(requests)}
+        Dict['register'][self.token] = {'nickname': query, 'requests': int(requests), 'email': None}
         Dict.Save()
         return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"),
                               title2=L("Registered"))
+
+    def UserSettings(self, message=None):
+        oc = ObjectContainer(title2="User Settings", message=None)
+        if message and isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.message = message
+        else:
+            oc.title2 = message
+        oc.add(DirectoryObject(key=Callback(self.ChangeEmail),
+                               title=(L("Change Email: ") + str(Dict['register'][self.user]['email']))))
+        oc.add(
+            DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
+
+    def ChangeEmail(self, query=None):
+        if query is None:
+            # oc.add(DirectoryObject(key=Callback(self.ChangeEmail, query="USE_PLEX_EMAIL"),
+            #                        title="Use Plex Email", message=None))
+            if self.use_dumb_keyboard:
+                Log.Debug("Client does not support Input. Using DumbKeyboard")
+                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ChangeEmail, parent_call=Callback(self.SMainMenu),
+                             dktitle=L("Enter your email"))
+            elif Client.Product == "Plex Web":
+                oc.message = L("Type your email in the searchbox and press enter")
+                oc.add(InputDirectoryObject(key=Callback(self.ChangeEmail), title="Email",
+                                         prompt=L("Type in your email:")))
+            else:
+                oc.add(InputDirectoryObject(key=Callback(self.ChangeEmail), title="Email",
+                                            prompt=L("Type in your email:")))
+            return oc
+        # elif query == "USE_PLEX_EMAIL":
+        #     pass
+        elif not validateEmail(query):
+            return self.UserSettings(message="Not a valid email!")
+        else:
+            Dict['register'][self.user]['email'] = query
+            return UserSettings(message="Email changed")
+
+
+
 
     def SwitchKeyboard(self):
         self.use_dumb_keyboard = not self.use_dumb_keyboard
@@ -3016,3 +3035,10 @@ def checkCompletedMovieRequests():
                         Dict['movie'][req_id]['completed'] = True
 
     Dict.Save()
+
+
+def validateEmail(email):
+ if len(email) > 7:
+    if re.match("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$", email) is not None:
+        return True
+ return False
