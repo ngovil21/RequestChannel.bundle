@@ -2220,7 +2220,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.ManageUsers), title=L("Manage Users")))
         oc.add(
-            DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "Off" if Dict['debug'] else "On")))
+            DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "On" if Dict['debug'] else "Off")))
         oc.add(
             DirectoryObject(key=Callback(self.ToggleSorting),
                             title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
@@ -2415,24 +2415,24 @@ class Session:
     def ToggleDebug(self, toggle=None):
         oc = ObjectContainer(title1=TITLE, title2=L("Set Debugging"))
         if toggle is None:
-            pon = "* " if Dict['Debug'] else ""
-            poff = "* " if not Dict['Debug'] else ""
+            pon = "* " if Dict['debug'] else ""
+            poff = "* " if not Dict['debug'] else ""
             oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=True), title=(pon + L("On"))))
             oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=False), title=(poff + L("Off"))))
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
             return oc
         elif toggle == "True":
-            Dict['Debug'] = True
+            Dict['debug'] = True
         elif toggle == "False":
-            Dict['Debug'] = False
+            Dict['debug'] = False
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
     def ToggleSorting(self, toggle=None):
         oc = ObjectContainer(title1=TITLE, title2=L("Change Sorting"))
         if set is None:
-            pname = "* " if Dict['Debug'] else ""
-            ptime = "* " if not Dict['Debug'] else ""
+            pname = "* " if Dict['sortbyname'] else ""
+            ptime = "* " if not Dict['sortbyname'] else ""
             oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=True), title=(pname + L("Sort by Name"))))
             oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=False), title=(ptime + L("Sort by Time"))))
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
