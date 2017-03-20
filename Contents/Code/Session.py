@@ -300,6 +300,7 @@ class Session:
         return oc
 
     def ChangeEmail(self, query=None):
+        oc = ObjectContainer(title2="Change Email", message=None)
         if query is None:
             # oc.add(DirectoryObject(key=Callback(self.ChangeEmail, query="USE_PLEX_EMAIL"),
             #                        title="Use Plex Email", message=None))
