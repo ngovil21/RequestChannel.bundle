@@ -322,7 +322,7 @@ class Session:
             return self.UserSettings(message="Not a valid email!")
         else:
             Dict['register'][self.user]['email'] = query
-            return UserSettings(message="Email changed")
+            return self.UserSettings(message="Email changed")
 
 
 
