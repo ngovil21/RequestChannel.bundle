@@ -297,6 +297,7 @@ class Session:
                                title=(L("Change Email: ") + str(Dict['register'][self.user].get('email')))))
         oc.add(
             DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
+        return oc
 
     def ChangeEmail(self, query=None):
         if query is None:
