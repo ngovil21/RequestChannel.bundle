@@ -3041,6 +3041,6 @@ def checkCompletedMovieRequests():
 
 def validateEmail(email):
  if len(email) > 7:
-    if re.match("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$", email) is not None:
+    if re.match("^[A-z0-9._%+-]+@[A-z0-9.-]+\.[A-z]{2,}$", email) is not None:
         return True
  return False
