@@ -39,3 +39,6 @@ sys.modules["api.TheMovieDatabase"] = TheMovieDatabase
 import theTVDB
 sys.modules["api.theTVDB"] = theTVDB
 
+import Plex
+sys.modules["api.Plex"] = Plex
+
