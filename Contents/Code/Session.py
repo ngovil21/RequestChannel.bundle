@@ -3061,7 +3061,7 @@ def checkCompletedMovies():
                 if Dict['debug']:
                     Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
                 if Prefs['notifyusercompletedmovie'] and movie.get('user'):
-                    if movie.get('user') in Dict['register'] and Dict['register'][movie[user]].get('email'):
+                    if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
                         subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
                         message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
                         "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
