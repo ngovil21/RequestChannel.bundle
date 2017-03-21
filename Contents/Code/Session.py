@@ -1348,7 +1348,8 @@ class Session:
 
     def DeleteRequest(self, req_id, req_type, token_hash=None):
         if req_id in Dict[req_type]:
-            del Dict[req_type][req_id]
+            Dict[req_type].pop(req_id)
+            Thread.Sleep(0.03)          #Wait 30ms to save dict
             Dict.Save()
             message = L("Request was deleted")
         else:
