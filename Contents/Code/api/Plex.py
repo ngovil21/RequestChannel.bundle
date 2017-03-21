@@ -23,7 +23,7 @@ def getURL(secure=False):
 
 
 #search library for query and return xml
-def searchLibrary(query, local=1, secure=False, headers=None):
+def searchLibrary(query, local=1, secure=False, headers={}):
     try:
         return XML.ElementFromURL(url=getURL(secure) + "search?local=" + str(local) + "&query=" + String.Quote(query),
                                   headers=headers)
@@ -33,7 +33,7 @@ def searchLibrary(query, local=1, secure=False, headers=None):
 
 
 #try to match a movie locally in plex using title and year
-def matchMovie(title, year, local=1, secure=False, headers=None):
+def matchMovie(title, year, local=1, secure=False, headers={}):
     search = searchLibrary(title, local, secure, headers)
     matches = []
     if search:
