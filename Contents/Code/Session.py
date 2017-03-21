@@ -1212,7 +1212,6 @@ class Session:
             DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"),
                             thumb=R('check.png')))
         if req_type == 'movie':
-            checkCompletedMovieRequests()
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'tv':
             oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
@@ -1232,7 +1231,8 @@ class Session:
                     self.DeleteRequest(req_id, req_type)
         except Exception as e:
             Log.Debug(e.message)
-        Thread.Sleep(100)
+        Thread.Sleep(0.1)
+        Dict.Save()
         if req_type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
         elif req_type == 'tv':
