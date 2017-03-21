@@ -118,7 +118,7 @@ def MainMenu():
 
 def PeriodicScan():
     checkCompletedMovies()
-    Thread.CreateTimer(30, PeriodicScan)
+    Thread.CreateTimer(60, PeriodicScan)
 
 
 """
