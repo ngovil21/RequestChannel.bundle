@@ -84,8 +84,8 @@ def Start():
     if 'sortbyname' not in Dict:
         Dict['sortbyname'] = True
     Dict.Save()
-    if Dict['debug']:
-        update()
+    # if Dict['debug']:
+    #     update()
 
 
 def ValidatePrefs():
