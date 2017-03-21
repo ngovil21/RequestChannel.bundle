@@ -3068,7 +3068,7 @@ def checkCompletedMovies():
                             Log.Debug(str(Dict['register'][movie['user']].get('email')))
                         subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
                         message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
-                        "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
+                        "<font style='font-size:20px; font-weight:bold'> " + movie.get('title') + " </font><br>\n" + \
                         "(" + movie.get('source',"") + " id: " + str(movie_id) + ") <br>\n" + \
                         movie.get('summary', "") + " <br>\n" \
                         "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
