@@ -3039,7 +3039,11 @@ def checkCompletedMovieRequests():
     Dict.Save()
 
 def checkCompletedMovies():
-    for movie_id in Dict.get('movie', {}):
+    if 'movie' not in Dict:
+        if Dict['debug']:
+            Log.Debug("movie is not in Dict struture!")
+        return
+    for movie_id in Dict['movie']:
         movie = Dict['movie'][movie_id]
         if not movie.get('completed', False):
             matches = Plex.matchMovie(movie.get('title'), movie.get('year'), local=1, secure=False, )
