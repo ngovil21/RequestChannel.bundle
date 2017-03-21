@@ -4,7 +4,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-from Session import VERSION
+from Session import VERSION, checkCompletedMovies
 from api import Plex, Email
 
 ### URL Constants for TheMovieDataBase ##################
