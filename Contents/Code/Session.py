@@ -1042,6 +1042,7 @@ class Session:
                                        thumb=R('plus.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie'),
+                                       token_hash=token_hash,
                                        title=L("Clear All Completed Requests"),
                                        thumb=R('trash.png')))
             if len(oc) > 1 and self.is_admin:
@@ -1193,7 +1194,7 @@ class Session:
         else:
             return self.ViewRequests(message=L("All " + req_type + " have been added"))
 
-    def ConfirmDeleteCompletedRequests(self, req_type, parent=None):
+    def ConfirmDeleteCompletedRequests(self, req_type, token_hash=None, parent=None):
         oc = ObjectContainer(title2=L("These completed " + req_type + " requests will be deleted"))
         if req_type == 'movie':
             checkCompletedMovieRequests()
@@ -1203,7 +1204,7 @@ class Session:
             if Dict[req_type][req_id].get('completed', False):
                 request = Dict[req_type][req_id]
                 oc.add(TVShowObject(
-                    key=Callback(self.ConfirmDeleteCompletedRequests, req_type=req_type, parent=parent),
+                    key=Callback(self.ViewRequest, req_type=req_type, token_hash=token_hash, parent=parent),
                     rating_key=req_id,
                     title=request.get('title'), thumb=request.get('poster'), summary=request.get('summary'),
                     art=request.get('backdrop')))
@@ -3003,7 +3004,7 @@ def checkCompletedMovieRequests():
                 couchpotato_url += "/"
             cp_movie_list = JSON.ObjectFromURL(
                 couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
-        except Exception as e:
+        except Exception:
             Log.Debug("Unable to load CouchPotato movie list")
     radarr_movie_list = None
     if Prefs['radarr_url'] and Prefs["radarr_api"]:
@@ -3016,13 +3017,15 @@ def checkCompletedMovieRequests():
                 radarr_url += "/"
             radarr_movie_list = JSON.ObjectFromURL(
                 radarr_url + "api/movie/", headers={'X-Api-Key': Prefs['radarr_api']})
-        except Exception as e:
+        except Exception:
             Log.Debug("Unable to load Radarr movie list")
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
-            Log.Debug("Skipped " + str(req_id))
+            if Dict['debug']:
+                Log.Debug(str(req_id) + " is already completed.")
             continue
-        Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
+        if Dict['debug']:
+            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
         if Prefs['couchpotato_url'] and Prefs["couchpotato_api"] and cp_movie_list:
             for movie in cp_movie_list['movies']:
                 if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
