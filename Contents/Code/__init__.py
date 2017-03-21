@@ -121,7 +121,7 @@ def PeriodicScan():
         checkCompletedMovies()
         if Dict['debug']:
             Log.Debug("Scanning library every %s hours for completed movies." % Prefs['checkcompletedmoviesperiod'])
-        Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
+        Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod']), PeriodicScan)
 
 
 """

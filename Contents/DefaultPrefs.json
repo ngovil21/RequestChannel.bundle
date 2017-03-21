@@ -77,7 +77,7 @@
   },
   {
     "id": "checkcompletedmoviesperiod",
-    "label": "Interval to scan Plex Library for completed requests (set to 0 to disable)",
+    "label": "Interval in seconds to scan Plex Library for completed requests (set to 0 to disable)",
     "type": "text",
     "default": "0"
   },

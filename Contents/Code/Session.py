@@ -3068,10 +3068,10 @@ def checkCompletedMovies():
                         "(" + movie.get('source',"") + " id: " + str(movie_id) + ") <br>\n" + \
                         movie.get('summary', "") + " <br>\n" \
                         "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
-                        if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie[user]].get('email'), subject, message, Prefs['email_server'],
+                        if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie['user']].get('email'), subject, message, Prefs['email_server'],
                                         Prefs['email_port'], Prefs['email_user'], Prefs['email_pass'],
                                         Prefs['email_secure']):
-                            Log.Debug("Email set to " + Dict['register'][movie[user]].get('email') + " for request " + str(movie_id))
+                            Log.Debug("Email set to " + Dict['register'][movie['user']].get('email') + " for request " + str(movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
             elif len(matches) > 1:
