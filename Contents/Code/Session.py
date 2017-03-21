@@ -3061,7 +3061,11 @@ def checkCompletedMovies():
                 if Dict['debug']:
                     Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
                 if Prefs['notifyusercompletedmovie'] and movie.get('user'):
+                    if Dict['debug']:
+                        Log.Debug(str(movie.get('user')))
                     if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
+                        if Dict['debug']:
+                            Log.Debug(str(Dict['register'][movie['user']].get('email')))
                         subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
                         message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
                         "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
@@ -3071,7 +3075,7 @@ def checkCompletedMovies():
                         if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie['user']].get('email'), subject, message, Prefs['email_server'],
                                         Prefs['email_port'], Prefs['email_user'], Prefs['email_pass'],
                                         Prefs['email_secure']):
-                            Log.Debug("Email set to " + Dict['register'][movie['user']].get('email') + " for request " + str(movie_id))
+                            Log.Debug("Email sent to " + Dict['register'][movie['user']].get('email') + " for request " + str(movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
             elif len(matches) > 1:
