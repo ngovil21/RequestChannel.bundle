@@ -37,7 +37,7 @@ def matchMovie(title, year, local=1, secure=False, headers={}):
     search = searchLibrary(title, local, secure, headers)
     matches = []
     if search:
-        videos = local_search.xpath("//Video")
+        videos = search.xpath("//Video")
         for video in videos:
             if video.attrib['title'].lower() == title.lower() and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                 matches.append(video.attrib['ratingKey'])
