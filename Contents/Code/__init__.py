@@ -37,7 +37,7 @@ from LocalePatch import SetAvailableLanguages
 LANGUAGES = ['en', 'fr', 'nl', 'de', 'it']
 
 runs = 0
-lastrun = 0
+lastrun = Datetime.Now()
 
 
 ########################################################
