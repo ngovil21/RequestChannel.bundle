@@ -7,7 +7,7 @@ import urllib2
 
 from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 from LocalePatch import L, F
-from api import Radarr, TheMovieDatabase
+from api import *
 import Helper
 
 TITLE = 'Request Channel'
@@ -3037,6 +3037,23 @@ def checkCompletedMovieRequests():
                         Dict['movie'][req_id]['completed'] = True
 
     Dict.Save()
+
+def checkCompletedMovies():
+    for movie_id in Dict.get('movie', {}):
+        movie = Dict['movie'][movie_id]
+        if not movie.get('completed', False):
+            matches = Plex.matchMovie(movie.get('title'), movie.get('year'), local=1, secure=False, )
+            if len(matches) == 1:
+                movie['completed'] = True
+                if Dict['debug']:
+                    Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
+            elif len(matches) > 1:
+                Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
+                if Dict['debug']:
+                    Log.Debug(str(matches))
+            else:
+                if Dict['debug']:
+                    Log.Debug("No library matches found for " + str(movie_id))
 
 
 def validateEmail(email):

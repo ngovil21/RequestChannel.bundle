@@ -5,6 +5,7 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 from Session import VERSION
+from api import Plex, Email
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -84,8 +85,8 @@ def Start():
     if 'sortbyname' not in Dict:
         Dict['sortbyname'] = True
     Dict.Save()
-    # if Dict['debug']:
-    #     update()
+    Log.Debug(Network.Address)
+    PeriodicScan()
 
 
 def ValidatePrefs():
@@ -115,15 +116,9 @@ def MainMenu():
     return sesh.SMainMenu()
 
 
-def update():
-    global runs
-    global lastrun
-    runs += 1
-    Log.Debug("Timer has run " + str(runs) + " times!")
-    delta = Datetime.Now() - lastrun
-    Log.Debug("Timer ran " + str(delta.total_seconds()) + " seconds ago")
-    Thread.CreateTimer(10, update)
-    lastrun = Datetime.Now()
+def PeriodicScan():
+    Session.checkCompletedMovies()
+    Thread.CreateTimer(6*3600, )
 
 
 """

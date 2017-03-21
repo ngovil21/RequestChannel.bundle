@@ -1,7 +1,7 @@
 import traceback
 
-PLEX_IP = None
-PLEX_PORT = None
+PLEX_IP = "127.0.0.1"
+PLEX_PORT = "32400"
 
 
 def setIp(ip):
@@ -38,3 +38,17 @@ def matchMovie(title, year, local=1, secure=False, headers=None):
             if video.attrib['title'].lower() == title.lower() and video.attrib['year'] == year and video.attrib['type'] == 'movie':
                 matches.append(video.attrib['ratingKey'])
     return matches
+
+########################################################################################################################
+########################################################################################################################
+################ PLEX.TV FUNCTIONS #####################################################################################
+########################################################################################################################
+
+def getPlexTVUser(token):
+    url = "https://plex.tv"
+    try:
+        xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': token})
+        plexTVUser = xml.get("myPlexUsername")
+        return plexTVUser
+    except:
+        return None
