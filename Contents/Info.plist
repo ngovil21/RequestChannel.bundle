@@ -27,6 +27,6 @@
             <string>Elevated</string>
         <key>PlexPluginMode</key>
             <!-- This one does nothing with a value of Always On, but using a value of "daemon" keeps the plugin alive in the background -->    
-            <string>AlwaysOn</string>            
+            <string>daemon</string>
         </dict>
 </plist>

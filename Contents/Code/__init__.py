@@ -36,6 +36,10 @@ from LocalePatch import SetAvailableLanguages
 
 LANGUAGES = ['en', 'fr', 'nl', 'de', 'it']
 
+runs = 0
+lastrun = 0
+
+
 ########################################################
 #   Start Code
 ########################################################
@@ -80,6 +84,8 @@ def Start():
     if 'sortbyname' not in Dict:
         Dict['sortbyname'] = True
     Dict.Save()
+    if Dict['debug']:
+        update()
 
 
 def ValidatePrefs():
@@ -87,7 +93,9 @@ def ValidatePrefs():
 
 
 from Session import Session
+
 sessions = {}
+
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
@@ -99,12 +107,24 @@ def MainMenu():
         session_id = Hash.MD5(client_id)
     else:
         session_id = Hash.MD5(str(Datetime.Now()))
-    if session_id in sessions:                  #Prior session started, continue
+    if session_id in sessions:  # Prior session started, continue
         sesh = sessions[session_id]
-    else:                                       #Create a new session
+    else:  # Create a new session
         sesh = Session(session_id=session_id)
         sessions[session_id] = sesh
     return sesh.SMainMenu()
+
+
+def update():
+    global runs
+    global lastrun
+    runs += 1
+    Log.Debug("Timer has run " + str(runs) + " times!")
+    delta = Datetime.Now() - lastrun
+    Log.Debug("Timer ran " + str(delta.total_seconds()) + " seconds ago")
+    Thread.CreateTimer(10, update)
+    lastrun = Datetime.Now()
+
 
 """
 List of Client.Product and Client.Platform
