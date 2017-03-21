@@ -27,7 +27,7 @@ SLACK_API_URL = "https://slack.com/api/"
 ########################################################
 
 def setupApi():
-    Plex.setIP("127.0.0.1")
+    Plex.setIp("127.0.0.1")
     Plex.setPort("32400")
     Radarr.setAPI(Prefs['radarr_api'])
     Radarr.setURL(Prefs['radarr_url'])
