@@ -1018,7 +1018,9 @@ class Session:
                     continue
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('automated', False):
+                if d.get('completed', False):           #Use * for completed
+                    title_year = "* " + title_year
+                elif d.get('automated', False):         #Use + for automated
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 date = ""
