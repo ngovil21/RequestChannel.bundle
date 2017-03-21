@@ -24,8 +24,12 @@ def getURL(secure=False):
 
 #search library for query and return xml
 def searchLibrary(query, local=1, secure=False, headers=None):
-    return XML.ElementFromURL(url=getURL(secure) + "search?local=" + str(local) + "&query=" + String.Quote(query),
-                              headers=headers)
+    try:
+        return XML.ElementFromURL(url=getURL(secure) + "search?local=" + str(local) + "&query=" + String.Quote(query),
+                                  headers=headers)
+    except Exception as e:
+        Log.Debug("Error in searchLibrary: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
 
 
 #try to match a movie locally in plex using title and year
