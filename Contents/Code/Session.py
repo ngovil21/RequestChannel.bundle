@@ -1690,7 +1690,7 @@ class Session:
             else:
                 oc = ObjectContainer(title1="Sonarr", title2=L("Send Failed"))
         if Prefs['sonarr_monitor'] == "manual":
-            Thread.Sleep(1)
+            Thread.Sleep(0.2)
             series_id = self.SonarrShowExists(tvdbid)
             if series_id:
                 return self.ManageSonarrShow(series_id, title=title, callback=callback)
@@ -1969,7 +1969,7 @@ class Session:
             while count < 5:
                 if self.SickbeardShowExists(tvdbid):
                     return self.ManageSickbeardShow(tvdbid, title=title, callback=callback)
-                Thread.Sleep(1)
+                Thread.Sleep(0.5)
                 Log.Debug("Slept for " + str(count) + " seconds")
                 count += 1
         if self.is_admin:
