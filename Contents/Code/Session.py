@@ -1041,8 +1041,7 @@ class Session:
                                        title=L("Add All Movie Requests"),
                                        thumb=R('plus.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie'),
-                                       token_hash=token_hash,
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie', token_hash=token_hash),
                                        title=L("Clear All Completed Requests"),
                                        thumb=R('trash.png')))
             if len(oc) > 1 and self.is_admin:
@@ -1212,13 +1211,13 @@ class Session:
             DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"),
                             thumb=R('check.png')))
         if req_type == 'movie':
-            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'tv':
-            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
         elif req_type == 'music':
-            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
     def ClearCompletedRequests(self, req_type):
