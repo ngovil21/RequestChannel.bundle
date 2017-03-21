@@ -1203,7 +1203,7 @@ class Session:
             if Dict[req_type][req_id].get('completed', False):
                 request = Dict[req_type][req_id]
                 oc.add(TVShowObject(
-                    key=Callback(self.ViewRequest, req_type=req_type, token_hash=token_hash, parent=parent),
+                    key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type, token_hash=token_hash),
                     rating_key=req_id,
                     title=request.get('title'), thumb=request.get('poster'), summary=request.get('summary'),
                     art=request.get('backdrop')))
