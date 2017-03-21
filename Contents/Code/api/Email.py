@@ -2,6 +2,7 @@ from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
 from email.Utils import formatdate
 import smtplib
+import traceback
 
 
 def validateEmail(email):
@@ -18,15 +19,21 @@ def sendEmail(email_from, email_to, subject, body, server, port, username="", pa
     msg['Subject'] = subject
     msg['Date'] = formatdate(localtime=True)
     msg.attach(MIMEText(body, email_type))
-    server = smtplib.SMTP(server, port)
-    if secure:
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-    if username:
-        server.login(username, password)
-    text = msg.as_string()
-    senders = server.sendmail(email_from, email_to, text)
-    server.quit()
-    return senders
+    try:
+        server = smtplib.SMTP(server, port)
+        if secure:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+        if username:
+            server.login(username, password)
+        text = msg.as_string()
+        senders = server.sendmail(email_from, email_to, text)
+        server.quit()
+        return senders
+    except Exception as e:
+        Log.Debug("Error in sendEMail: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return True
+
 

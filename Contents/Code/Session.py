@@ -237,11 +237,11 @@ class Session:
         else:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=Hash.SHA1(self.token)),
                                    title=L("View My Requests")))
-        if Prefs['couchpotato_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+        if Prefs['couchpotato_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageCouchpotato), title=F("managesickbeard", "Couchpotato")))
-        if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+        if Prefs['sonarr_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title=F("managesickbeard", "Sonarr")))
-        if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+        if Prefs['sickbeard_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSickbeard),
                                    title=F("managesickbeard", str(Prefs['sickbeard_fork']))))
         oc.add(DirectoryObject(key=Callback(self.ReportProblem), title=L("Report a Problem")))
@@ -282,7 +282,7 @@ class Session:
     def RegisterName(self, query="", requests=0):
         if not query:
             return self.Register(message=L("You must enter a name. Try again."))
-        Dict['register'][self.token] = {'nickname': query, 'requests': int(requests), 'email': None}
+        Dict['register'][self.user] = {'nickname': query, 'requests': int(requests), 'email': None}
         Dict.Save()
         return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"),
                               title2=L("Registered"))
@@ -337,7 +337,7 @@ class Session:
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title2="Enter Movie")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
@@ -363,11 +363,11 @@ class Session:
                              view_group="Details")
         query = String.Quote(query, usePlus=True)
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not self.is_admin:
-            if Dict['register'].get(self.token, None) and Dict['register'][self.token]['requests'] >= int(
+            if Dict['register'].get(self.user, None) and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.user in Dict['blocked'] or self.token in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."), title1=L("Main Menu"),
                                   title2=L("User Blocked"))
         if Prefs['movie_db'] == "TheMovieDatabase":
@@ -531,10 +531,14 @@ class Session:
             return self.SMainMenu(message=L("Movie has already been requested"), title1=title,
                                   title2=L("Already Requested"))
         else:
-            user = "Admin" if self.is_admin else ""
-            if self.token in Dict['register']:
-                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                user = userFromToken(self.token)
+            if self.is_admin:
+                user = "Admin"
+            elif self.user == self.token:
+                user = "guest_" + Hash.SHA1(token)[:10]
+            else:
+                user = self.user
+            if self.user in Dict['register']:
+                Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
             title_year = title
             title_year += (" (" + year + ")" if year else "")
             Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year,
@@ -561,11 +565,11 @@ class Session:
         if title is None:
             title = L("Request a TV Show")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.user in Dict['blocked'] or self.token in Dict['blocked'] or self.user in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
@@ -590,7 +594,7 @@ class Session:
 
     def SearchTV(self, query):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
@@ -742,10 +746,14 @@ class Session:
             return self.SMainMenu(message=L("TV Show has already been requested"), title1=title,
                                   title2=L("Already Requested"))
         else:
-            user = "Admin" if self.is_admin else ""
-            if self.token in Dict['register']:
-                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                user = userFromToken(self.token)
+            if self.is_admin:
+                user = "Admin"
+            elif self.user == self.token:
+                user = "guest_" + Hash.SHA1(token)[:10]
+            else:
+                user = self.user
+            if self.user in Dict['register']:
+                Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
             Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year,
                                      'poster': poster,
                                      'backdrop': backdrop, 'summary': summary, 'user': user,
@@ -773,11 +781,11 @@ class Session:
         if title is None:
             title = L("Request Music")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.token in Dict['blocked'] or self.user in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         oc = ObjectContainer()
@@ -819,11 +827,11 @@ class Session:
 
     def NewMusicSearch(self, searchtype, searchstr):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.token in Dict['blocked'] or self.user in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
@@ -848,7 +856,7 @@ class Session:
 
     def SearchMusic(self, query, searchtype="release", searchstr="Album"):
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
@@ -938,10 +946,14 @@ class Session:
             return self.SMainMenu(message=L("Music has already been requested"), title1=music_name,
                                   title2=L("Already Requested"))
         else:
-            user = "Admin" if self.is_admin else ""
-            if self.token in Dict['register']:
-                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                user = userFromToken(self.token)
+            if self.is_admin:
+                user = "Admin"
+            elif self.user == self.token:
+                user = "guest_" + Hash.SHA1(token)[:10]
+            else:
+                user = self.user
+            if self.user in Dict['register']:
+                Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
         Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'title': music_name,
                                    'date': music_date, 'year': music_date[:4], 'poster': music_image,
                                    'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False,
@@ -1292,7 +1304,7 @@ class Session:
                                 summary=summary, title=title_year))
 
         Log.Debug("Req Type: " + req_type + "  Key Type: " + key['type'] + "  Req ID: " + req_id)
-        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
+        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token) or key.get('user') == self.user:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year,
                              token_hash=token_hash),
@@ -2262,10 +2274,9 @@ class Session:
             oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
             for toke in Dict['register']:
-                user = userFromToken(toke)
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=toke),
-                                    title=user + ": " + str(Dict['register'][toke]['requests'])))
+                                    title=toke + ": " + str(Dict['register'][toke].get('requests'))))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
@@ -2273,7 +2284,11 @@ class Session:
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
-        user = userFromToken(toke)
+        if toke in Dict['register']:
+            if Dict['register'][toke].get('nickname'):
+                user = Dict['register'][toke].get('nickname')
+            else:
+                user = toke
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
@@ -2282,10 +2297,6 @@ class Session:
                                title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
         oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
         tv_auto = ""
-        # if Prefs['sonarr_api']:
-        #     tv_auto = "Sonarr"
-        # elif Prefs['sickbeard_api']:
-        #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'),
                                    title=F("removetvmanage", tv_auto)))
@@ -2316,7 +2327,7 @@ class Session:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterUserName,
                          parent_call=Callback(self.ManageUser, toke=toke),
-                         dktitle=L(L("Enter the user's name")),
+                         dktitle=L("Enter the user's name"),
                          message=L("Enter the user's name"), toke=toke)
             # return MessageContainer(header=TITLE, message="You must use a keyboard enabled client (Plex Web) to use this feature")
         else:
@@ -2342,12 +2353,12 @@ class Session:
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
-                return self.ManageUser(toke == toke, message="User has been blocked.")
+                return self.ManageUser(toke == toke, message=L("User has been blocked."))
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['blocked'].remove(toke)
                 Dict.Save()
-                return self.ManageUser(toke=toke, message="User has been unblocked.")
+                return self.ManageUser(toke=toke, message=L("User has been unblocked."))
         return self.ManageUser(toke=toke)
 
     def SonarrUser(self, toke, setter):
@@ -2428,13 +2439,6 @@ class Session:
                                thumb=R('return.png')))
         return oc
 
-    # def ToggleDebug(self):
-    #     if Dict['debug']:
-    #         Dict['debug'] = False
-    #     else:
-    #         Dict['debug'] = True
-    #     Dict.Save()
-    #     return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
 
     def ToggleDebug(self, toggle=None):
         oc = ObjectContainer(title1=TITLE, title2=L("Set Debugging"))
@@ -2543,9 +2547,6 @@ class Session:
                                         rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
                                         summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
                 elif dir_type == 'episode':
-                    # oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
-                    #                      rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
-                    #                      summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
                     oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'],
                                                         title=v.attrib.get('title')),
                                            title=v.attrib.get('title'), summary=v.attrib.get('summary'),
@@ -2642,9 +2643,12 @@ class Session:
 
     def NotifyProblem(self, problem):
         title = "Request Channel - Problem Reported"
-        user = "A user"
-        if self.token in Dict['register'] and Dict['register'][self.token]['nickname']:
-            user = Dict['register'][self.token]['nickname']
+        if self.user in Dict['register'] and Dict['register'][self.user]['nickname']:
+            user = Dict['register'][self.user]['nickname']
+        elif self.user == self.token:
+            user = "guest_" + Hash.SHA1(token)[:10]
+        else:
+            user = self.user
         body = user + " has reported a problem with the Plex Server. \n" + problem
         Notify(title=title, body=body)
         return self.SMainMenu(message="The admin has been notified", title1="Main Menu",
@@ -2812,7 +2816,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 for c in channels:
                     response = sendSlack(message, c.strip())
                     if response:
-                        Log.Debug("Slack notification sent to channel: " + d.strip() + " for: " + req_id)
+                        Log.Debug("Slack notification sent to channel: " + c.strip() + " for: " + req_id)
             else:
                 response = sendSlack(message)
                 if response:
@@ -3056,6 +3060,20 @@ def checkCompletedMovies():
                 movie['completed'] = True
                 if Dict['debug']:
                     Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
+                if Prefs['notifyusercompletedmovie'] and movie.get('user'):
+                    if movie.get('user') in Dict['register'] and Dict['register'][movie[user]].get('email'):
+                        subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
+                        message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
+                        "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
+                        "(" + movie.get('source',"") + " id: " + str(movie_id) + ") <br>\n" + \
+                        movie.get('summary', "") + " <br>\n" \
+                        "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
+                        if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie[user]].get('email'), subject, message, Prefs['email_server'],
+                                        Prefs['email_port'], Prefs['email_user'], Prefs['email_pass'],
+                                        Prefs['email_secure']):
+                            Log.Debug("Email set to " + Dict['register'][movie[user]].get('email') + " for request " + str(movie_id))
+                        else:
+                            Log.Debug("Unable to send email notification to " + movie.get('user'))
             elif len(matches) > 1:
                 Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
                 if Dict['debug']:
