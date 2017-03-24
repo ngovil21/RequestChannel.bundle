@@ -1372,13 +1372,13 @@ class Session:
         else:
             message = L("Request could not be deleted")
         if req_type == 'movie':
-            return self.ViewMovieRequests(message=message)
+            return self.ViewMovieRequests(message=message, token_hash=token_hash)
         elif req_type == 'tv':
-            return self.ViewTVRequests(message=message)
+            return self.ViewTVRequests(message=message, token_hash=token_hash)
         elif req_type == 'music':
-            return self.ViewMusicRequests(message=message)
+            return self.ViewMusicRequests(message=message, token_hash=token_hash)
         else:
-            return self.ViewRequests(message=message)
+            return self.ViewRequests(message=message, token_hash=token_hash)
 
     # CouchPotato Functions
     def SendToCouchpotato(self, movie_id):
