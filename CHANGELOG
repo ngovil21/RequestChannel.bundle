@@ -1,3 +1,4 @@
+3/24/17 - 0.9.0 - Added Checking for Completed Requests and User notifications
 2/02/17 - 0.8.3 - Fixed adding movies to Radarr. Added year to movie titles during request.
 2/02/17 - 0.8.2b - Fixed some bugs that came up in the last release. Merged pull request for multiple Slack Channels.
 2/02/17 - 0.8.2 - Added Radarr support for adding movies.
