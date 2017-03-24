@@ -185,11 +185,10 @@ class Session:
                 Dict['register'][self.user] = Dict['register'][self.token]  #Copy token info over to username
                 Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
                 Dict['register'][self.user]['type'] = 'user'
-            else:
                 Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None}
                 if self.user == self.token:
                     Dict['register'][self.user]['type'] = 'token'
-                    if not Dict['register']['nickname']:
+                    if Prefs['register'] and not Dict['register']['nickname']:
                         return self.Register()
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
@@ -2277,9 +2276,13 @@ class Session:
             oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
             for toke in Dict['register']:
+                if Dict['register'][toke].get('type', 'token') == 'token':
+                    user = "guest_" + Hash.SHA1(toke)
+                else:
+                    user = toke
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=toke),
-                                    title=toke + ": " + str(Dict['register'][toke].get('requests'))))
+                                    title=user + ": " + str(Dict['register'][toke].get('requests'))))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
