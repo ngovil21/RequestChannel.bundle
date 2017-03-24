@@ -185,11 +185,12 @@ class Session:
                 Dict['register'][self.user] = Dict['register'][self.token]  #Copy token info over to username
                 Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
                 Dict['register'][self.user]['type'] = 'user'
-                Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None}
-                if self.user == self.token:
-                    Dict['register'][self.user]['type'] = 'token'
-                    if Prefs['register'] and not Dict['register']['nickname']:
-                        return self.Register()
+            elif self.user == self.token:
+                Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'token'}
+                if Prefs['register']:
+                    return self.Register()
+            else: #new user, register by username
+                Dict['register'][self.user] = {'nickname': "", 'requests': int(requests), 'email': None, 'type': 'user'}
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
@@ -264,7 +265,7 @@ class Session:
 
     def Register(self, message=None):
         if message is None:
-            message = L("Unrecognized device. The admin would like you to register it.")
+            message = L("Unrecognized device. The admin would like you to register it. ")
         if Client.Product == "Plex Web":
             message += L("Enter your name in the searchbox and press enter.")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
