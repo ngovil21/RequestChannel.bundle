@@ -2277,7 +2277,7 @@ class Session:
         if len(Dict['register']) > 0:
             for toke in Dict['register']:
                 if Dict['register'][toke].get('type', 'token') == 'token':
-                    user = "guest_" + Hash.SHA1(toke)
+                    user = "guest_" + Hash.SHA1(toke)[:10]
                 else:
                     user = toke
                 oc.add(
