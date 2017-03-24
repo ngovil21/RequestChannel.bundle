@@ -190,7 +190,7 @@ class Session:
                 if Prefs['register']:
                     return self.Register()
             else: #new user, register by username
-                Dict['register'][self.user] = {'nickname': "", 'requests': int(requests), 'email': None, 'type': 'user'}
+                Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'user'}
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
