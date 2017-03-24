@@ -186,7 +186,7 @@ class Session:
                 Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
                 Dict['register'][self.user]['type'] = 'user'
             elif self.user == self.token:
-                Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'token'}
+                Dict['register'][self.token] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'token'}
                 if Prefs['register']:
                     return self.Register()
             else: #new user, register by username
@@ -2276,14 +2276,14 @@ class Session:
         else:
             oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
-            for toke in Dict['register']:
-                if Dict['register'][toke].get('type', 'token') == 'token':
-                    user = "guest_" + Hash.SHA1(toke)[:10]
+            for key in Dict['register']:
+                if Dict['register'][key].get('type', 'token') == 'token':
+                    user = "guest_" + Hash.SHA1(key)[:10]
                 else:
-                    user = toke
+                    user = key
                 oc.add(
-                    DirectoryObject(key=Callback(self.ManageUser, toke=toke),
-                                    title=user + ": " + str(Dict['register'][toke].get('requests'))))
+                    DirectoryObject(key=Callback(self.ManageUser, toke=key),
+                                    title=user + ": " + str(Dict['register'][key].get('requests'))))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
