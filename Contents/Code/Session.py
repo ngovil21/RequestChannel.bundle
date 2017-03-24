@@ -179,15 +179,18 @@ class Session:
             oc.message = message
         if self.is_admin:
             if self.token in Dict['register']:  # Do not save admin token in the register
-                del Dict['register'][self.token]
+                Dict['register'].pop(self.token)
         elif self.user and self.user not in Dict['register']:
             if self.token in Dict['register'] and self.user != self.token:
                 Dict['register'][self.user] = Dict['register'][self.token]  #Copy token info over to username
                 Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
+                Dict['register'][self.user]['type'] = 'user'
             else:
                 Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None}
-                if self.user == self.token and not Dict['register']['nickname']:
-                    return self.Register()
+                if self.user == self.token:
+                    Dict['register'][self.user]['type'] = 'token'
+                    if not Dict['register']['nickname']:
+                        return self.Register()
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
