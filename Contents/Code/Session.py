@@ -3044,8 +3044,8 @@ def checkCompletedMovieRequests():
                         Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
                             'id'] + ") marked as done in Radarr")
                         Dict['movie'][req_id]['completed'] = True
-
     Dict.Save()
+
 
 def checkCompletedMovies():
     if 'movie' not in Dict:
