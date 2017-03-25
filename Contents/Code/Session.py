@@ -161,6 +161,7 @@ class Session:
         if not self.is_admin:
             self.user = getPlexTVUser(self.token)
             if not self.user:     #Fallback if we are unable to get the username
+                Log.Debug("Unable to get username from Plex.tv, using token...")
                 self.user = self.token
         else:
             self.user = "Admin"
@@ -2283,7 +2284,7 @@ class Session:
                     user = key
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=key),
-                                    title=user + ": " + str(Dict['register'][key].get('requests'))))
+                                    title=user + ": " + str(Dict['register'][key].get('requests',0))))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
