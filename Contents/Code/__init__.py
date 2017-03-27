@@ -104,7 +104,7 @@ sessions = {}
 @route(PREFIX + '/main')
 def MainMenu():
     toke = Request.Headers.get("X-Plex-Token", "")
-    if client_id:
+    if toke:
         session_id = Hash.MD5(toke)       #Hash by token to create user session.
     else:
         session_id = Hash.MD5(str(Datetime.Now()))
