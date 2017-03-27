@@ -103,9 +103,9 @@ sessions = {}
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
-    client_id = Request.Headers.get("X-Plex-Client-Identifier")
+    toke = Request.Headers.get("X-Plex-Token", "")
     if client_id:
-        session_id = Hash.MD5(client_id)
+        session_id = Hash.MD5(toke)       #Hash by token to create user session.
     else:
         session_id = Hash.MD5(str(Datetime.Now()))
     if session_id in sessions:  # Prior session started, continue
@@ -113,15 +113,27 @@ def MainMenu():
     else:  # Create a new session
         sesh = Session(session_id=session_id)
         sessions[session_id] = sesh
+        RemoveOldSessions()
     return sesh.SMainMenu()
 
 
 def PeriodicScan():
+    RemoveOldSessions()
     if Prefs['checkcompletedmoviesperiod'] and Prefs['checkcompletedmoviesperiod'].isdigit() and int(Prefs['checkcompletedmoviesperiod']) > 0:
         checkCompletedMovies()
         if Dict['debug']:
             Log.Debug("Scanning library every %s hours for completed movies." % Prefs['checkcompletedmoviesperiod'])
         Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
+
+
+def RemoveOldSessions():
+    for session_id in sessions:
+        if not sessions[session_id].lastrun:
+            continue
+        if (Datetime.Now() - sessions[session_id].lastrun).total_seconds() > 3600:      #if session last run over an hour ago then remove it
+            sessions.pop(session_id)
+            if Dict['debug']:
+                Log.Debug("Removing session " + str(session_id))
 
 
 """
