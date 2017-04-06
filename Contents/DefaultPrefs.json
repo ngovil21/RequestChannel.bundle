@@ -53,7 +53,7 @@
     "id": "musicrequests",
     "label": "Allow users to request Music Albums?",
     "type": "bool",
-    "default": true
+    "default": false
   },
   {
     "id": "usersviewrequests",
@@ -74,6 +74,18 @@
     "option": "hidden",
     "default": "",
     "secure": true
+  },
+  {
+    "id": "checkcompletedmoviesperiod",
+    "label": "Interval in hours to scan Plex Library for completed requests (set to 0 to disable)",
+    "type": "text",
+    "default": "0"
+  },
+  {
+    "id": "notifyusercompletedmovie",
+    "label": "Notify user when movie marked complete? (Requires email notification setup)",
+    "type": "bool",
+    "default": "false"
   },
   {
     "id": "register",
