@@ -16,7 +16,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.8.3"
+VERSION = "0.9.0"
 BRANCH = "master"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
