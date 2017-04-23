@@ -2343,7 +2343,7 @@ class Session:
                 Dict['restrictedsections'].remove(section)
             else:
                 Dict['restrictedsections'].append(section)
-        page = Plex.getSections()
+        page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
                 section = d.attrib.get('key')
