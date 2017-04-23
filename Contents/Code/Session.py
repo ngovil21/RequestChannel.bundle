@@ -2346,15 +2346,15 @@ class Session:
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
-                section = d.attrib.get('key')
-                if section in Dict['restrictedsections']:
+                s = d.attrib.get('key')
+                if s in Dict['restrictedsections']:
                     header = "*"
                 else:
                     header = ""
-                oc.add(DirectoryObject(key=Callback(self.RestrictSections, section=section),
+                oc.add(DirectoryObject(key=Callback(self.RestrictSections, section=s),
                                        title=header + d.attrib.get('title', "Unknown Section"),
                                        thumb=d.attrib.get('thumb', None)))
-                oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
     def ManageUsers(self, message=None):
