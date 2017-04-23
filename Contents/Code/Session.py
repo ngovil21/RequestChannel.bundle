@@ -2340,13 +2340,19 @@ class Session:
             oc = ObjectContainer(title1=L("Restrict Sections"), title2=message)
         if section:
             if section in Dict['restrictedsections']:
+                if Dict['debug']:
+                    Log.Debug(str(Dict['restrictedsections']))
                 Dict['restrictedsections'].remove(section)
             else:
                 Dict['restrictedsections'].append(section)
+                if Dict['debug']:
+                    Log.Debug(str(Dict['restrictedsections']))
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
                 s = d.attrib.get('key')
+                if Dict['debug']:
+                    Log.Debug(s)
                 if s in Dict['restrictedsections']:
                     header = "*"
                 else:
