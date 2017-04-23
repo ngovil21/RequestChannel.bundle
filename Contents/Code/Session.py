@@ -2354,6 +2354,8 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.RestrictSections, section=section),
                                        title=header + d.attrib.get('title', "Unknown Section"),
                                        thumb=d.attrib.get('thumb', None)))
+                oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+        return oc
 
     def ManageUsers(self, message=None):
         self.update_run()
