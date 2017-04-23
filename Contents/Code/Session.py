@@ -1,22 +1,24 @@
 # coding=utf-8
 
-from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
-
 import re
+import ssl
 import traceback
+import urllib2
 
-# Override Plex L, F functions
+from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
 from LocalePatch import L, F
+from api import *
+import Helper
 
-TITLE = 'Plex Request Channel'
-PREFIX = '/video/plexrequestchannel'
+TITLE = 'Request Channel'
+PREFIX = '/video/requestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.7.5"
+VERSION = "0.9.0"
+CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 BRANCH = "TEST"
-CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -41,6 +43,7 @@ PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 PUSHALOT_API_URL = "https://pushalot.com/api/sendmessage"
+SLACK_API_URL = "https://slack.com/api/"
 ########################################################
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
@@ -85,6 +88,8 @@ class Session:
         Route.Connect(PREFIX + '/%s/register' % session_id, self.Register)
         Route.Connect(PREFIX + '/%s/switchkeyboard' % session_id, self.SwitchKeyboard)
         Route.Connect(PREFIX + '/%s/registername' % session_id, self.RegisterName)
+        Route.Connect(PREFIX + '/%s/usersettings' % session_id, self.UserSettings)
+        Route.Connect(PREFIX + '/%s/changeemail' % session_id, self.ChangeEmail)
         Route.Connect(PREFIX + '/%s/addnewmovie' % session_id, self.AddNewMovie)
         Route.Connect(PREFIX + '/%s/searchmovie' % session_id, self.SearchMovie)
         Route.Connect(PREFIX + '/%s/confirmmovierequest' % session_id, self.ConfirmMovieRequest)
@@ -103,15 +108,20 @@ class Session:
         Route.Connect(PREFIX + '/%s/viewtvrequests' % session_id, self.ViewTVRequests)
         Route.Connect(PREFIX + '/%s/viewmusicrequests' % session_id, self.ViewMusicRequests)
         Route.Connect(PREFIX + '/%s/viewrequestspassword' % session_id, self.ViewRequestsPassword)
+        Route.Connect(PREFIX + '/%s/addallrequests' % session_id, self.AddAllRequests)
+        Route.Connect(PREFIX + '/%s/confirmdeletecompletedrequests' % session_id, self.ConfirmDeleteCompletedRequests)
+        Route.Connect(PREFIX + '/%s/clearcompletedrequests' % session_id, self.ClearCompletedRequests)
+        Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
         Route.Connect(PREFIX + '/%s/clearrequests' % session_id, self.ClearRequests)
         Route.Connect(PREFIX + '/%s/viewrequest' % session_id, self.ViewRequest)
-        Route.Connect(PREFIX + '/%s/confirmdeleterequest' % session_id, self.ConfirmDeleteRequest)
+        Route.Connect(PREFIX + '/%s/confirmallrequests' % session_id, self.ConfirmAllRequests)
         Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
         Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
         Route.Connect(PREFIX + '/%s/managecouchpotato' % session_id, self.ManageCouchpotato)
         Route.Connect(PREFIX + '/%s/managecouchpotatomovie' % session_id, self.ManageCouchPotatoMovie)
         Route.Connect(PREFIX + '/%s/deletecouchpotatomovie' % session_id, self.DeleteCouchPotatoMovie)
+        Route.Connect(PREFIX + '/%s/sendtoradarr' % session_id, self.SendToRadarr)
         Route.Connect(PREFIX + '/%s/sendtosonarr' % session_id, self.SendToSonarr)
         Route.Connect(PREFIX + '/%s/managesonarr' % session_id, self.ManageSonarr)
         Route.Connect(PREFIX + '/%s/managesonarrshow' % session_id, self.ManageSonarrShow)
@@ -135,6 +145,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
         Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
+        Route.Connect(PREFIX + '/%s/togglesorting' % session_id, self.ToggleSorting)
         Route.Connect(PREFIX + '/%s/toggledebug' % session_id, self.ToggleDebug)
         Route.Connect(PREFIX + '/%s/reportproblem' % session_id, self.ReportProblem)
         Route.Connect(PREFIX + '/%s/navigatemedia' % session_id, self.NavigateMedia)
@@ -144,34 +155,48 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmreportproblem' % session_id, self.ConfirmReportProblem)
         Route.Connect(PREFIX + '/%s/notifyproblem' % session_id, self.NotifyProblem)
         Route.Connect(PREFIX + '/%s/showmessage' % session_id, self.ShowMessage)
+        Helper.setupApi()
         self.token = Request.Headers.get("X-Plex-Token", "")
         self.is_admin = checkAdmin(self.token)
+        if not self.is_admin:
+            self.user = getPlexTVUser(self.token)
+            if not self.user:     #Fallback if we are unable to get the username
+                Log.Debug("Unable to get username from Plex.tv, using token...")
+                self.user = self.token
+        else:
+            self.user = "Admin"
         self.platform = Client.Platform
         self.product = Client.Product
         self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
+        self.lastrun = Datetime.Now()
+        Log.Debug("User is " + str(self.user))
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
 
+    def update_run(self):
+        self.lastrun = Datetime.Now()
+
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
-        # try:
-        #     HTTP.Request("http://127.0.0.1:32400")  # Do a http request so header is set
-        # except:
-        #     pass
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
-
+        self.update_run()
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc.message = message
         if self.is_admin:
-            Log.Debug("User is Admin")
-        if self.is_admin:
             if self.token in Dict['register']:  # Do not save admin token in the register
-                del Dict['register'][self.token]
-        elif Dict['register'] and (self.token not in Dict['register'] or not Dict['register'][self.token]['nickname']):
-            return self.Register()
-        elif self.token not in Dict['register']:
-            Dict['register'][self.token] = {'nickname': "", 'requests': 0}
+                Dict['register'].pop(self.token)
+        elif self.user and self.user not in Dict['register']:
+            if self.token in Dict['register'] and self.user != self.token:
+                Dict['register'][self.user] = Dict['register'][self.token]  #Copy token info over to username
+                Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
+                Dict['register'][self.user]['type'] = 'user'
+            elif self.user == self.token:
+                Dict['register'][self.token] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'token'}
+                if Prefs['register']:
+                    return self.Register()
+            else: #new user, register by username
+                Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'user'}
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
@@ -188,22 +213,26 @@ class Session:
                          dktitle=L("Request an Album"),
                          message=L("Enter the name of the Album"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
-            oc.add(
-                DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")), title=L("Request a Movie")))
-            oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
-            oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release", searchstr="Album"),
-                                   title=L("Request an Album")))
+            if Prefs['movierequests']:
+                oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")),
+                                       title=L("Request a Movie")))
+            if Prefs['tvrequests']:
+                oc.add(DirectoryObject(key=Callback(self.AddNewTVShow), title=L("Request a TV Show")))
+            if Prefs['musicrequests']:
+                oc.add(DirectoryObject(key=Callback(self.NewMusicSearch, searchtype="release", searchstr="Album"),
+                                       title=L("Request an Album")))
         else:  # All other clients
-            oc.add(
-                InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"),
-                                     prompt=L("Enter the name of the Movie")))
-            oc.add(
-                InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"),
-                                     prompt=L("Enter the name of the TV Show")))
-            oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="release", searchstr="Album"),
-                                        title=L("Request an Album"),
-                                        prompt=L("Enter the name of the Album"),
-                                        thumb=R('search.png')))
+            if Prefs['movierequests']:
+                oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Request a Movie"),
+                                            prompt=L("Enter the name of the Movie")))
+            if Prefs['tvrequests']:
+                oc.add(InputDirectoryObject(key=Callback(self.SearchTV), title=L("Request a TV Show"),
+                                            prompt=L("Enter the name of the TV Show")))
+            if Prefs['musicrequests']:
+                oc.add(InputDirectoryObject(key=Callback(self.SearchMusic, searchtype="release", searchstr="Album"),
+                                            title=L("Request an Album"),
+                                            prompt=L("Enter the name of the Album"),
+                                            thumb=R('search.png')))
 
         if Prefs['usersviewrequests'] or self.is_admin:
             if not self.locked or Prefs['password'] is None or Prefs['password'] == "":
@@ -217,21 +246,23 @@ class Session:
         else:
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=Hash.SHA1(self.token)),
                                    title=L("View My Requests")))
-        if Prefs['couchpotato_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+        if Prefs['couchpotato_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageCouchpotato), title=F("managesickbeard", "Couchpotato")))
-        if Prefs['sonarr_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+        if Prefs['sonarr_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSonarr), title=F("managesickbeard", "Sonarr")))
-        if Prefs['sickbeard_api'] and (self.is_admin or self.token in Dict['sonarr_users']):
+        if Prefs['sickbeard_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
             oc.add(DirectoryObject(key=Callback(self.ManageSickbeard),
                                    title=F("managesickbeard", str(Prefs['sickbeard_fork']))))
         oc.add(DirectoryObject(key=Callback(self.ReportProblem), title=L("Report a Problem")))
         if self.is_admin:
             oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Manage Channel")))
-        elif not Dict['register'][self.token]['nickname']:
+        elif self.user and not Dict['register'][self.user]['nickname']:
             oc.add(DirectoryObject(
                 key=Callback(self.Register,
                              message=L("Entering your name will let the admin know who you are when making requests.")),
-                title=L("Register Device")))
+                title=L("Register Username")))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.UserSettings), title=L("User Settings")))
         oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
@@ -239,38 +270,18 @@ class Session:
         return oc
 
     def Register(self, message=None):
-        url = "https://plex.tv"
-        try:
-            xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': self.token})
-            plexTVUser = xml.get("myPlexUsername")
-            Log.Debug("PlexTV Username: " + plexTVUser)
-            self.RegisterName(query=plexTVUser)
-            return self.SMainMenu(message=L("Your username has been registered."), title1=L("Main Menu"),
-                                  title2=L("Registered"))
-        except:
-            Log.Debug("PlexTV Username: N/A")
-        url = "https://plex.tv"
-        try:
-            xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': self.token})
-            plexTVUser = xml.get("myPlexUsername")
-            Log.Debug("PlexTV Username: " + plexTVUser)
-            self.RegisterName(query=plexTVUser)
-            return self.SMainMenu(message=L("Your username has been registered."), title1=L("Main Menu"),
-                                  title2=L("Registered"))
-        except:
-            Log.Debug("PlexTV Username: N/A")
+        self.update_run()
         if message is None:
-            message = L("Unrecognized device. The admin would like you to register it.")
+            message = L("Unrecognized device. The admin would like you to register it. ")
         if Client.Product == "Plex Web":
             message += L("Enter your name in the searchbox and press enter.")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message)
         else:
-            Log.Debug("Client does support message overlays")
+            Log.Debug("Client does not support message overlays")
             oc = ObjectContainer(title1=L("Unrecognized Device"), title2=L("Please register"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=RegisterName, parent_call=Callback(MainMenu,)), title="Enter your name or nickname"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.RegisterName, parent_call=Callback(self.SMainMenu),
                          dktitle=L("Enter your name or nickname"))
         else:
@@ -278,25 +289,68 @@ class Session:
                                         prompt=L("Enter your name or nickname")))
         return oc
 
-    def RegisterName(self, query=""):
+    def RegisterName(self, query="", requests=0):
         if not query:
             return self.Register(message=L("You must enter a name. Try again."))
-        Dict['register'][self.token] = {'nickname': query, 'requests': 0}
+        Dict['register'][self.user] = {'nickname': query, 'requests': int(requests), 'email': None}
         Dict.Save()
         return self.SMainMenu(message=L("Your device has been registered."), title1=L("Main Menu"),
                               title2=L("Registered"))
+
+    def UserSettings(self, message=None):
+        self.update_run()
+        oc = ObjectContainer(title2="User Settings", message=None)
+        if message and isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.message = message
+        else:
+            oc.title2 = message
+        oc.add(DirectoryObject(key=Callback(self.ChangeEmail),
+                               title=(L("Change Email: ") + str(Dict['register'][self.user].get('email')))))
+        oc.add(
+            DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
+        return oc
+
+    def ChangeEmail(self, query=None):
+        oc = ObjectContainer(title2="Change Email", message=None)
+        if query is None:
+            self.update_run()
+            # oc.add(DirectoryObject(key=Callback(self.ChangeEmail, query="USE_PLEX_EMAIL"),
+            #                        title="Use Plex Email", message=None))
+            if self.use_dumb_keyboard:
+                Log.Debug("Client does not support Input. Using DumbKeyboard")
+                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ChangeEmail, parent_call=Callback(self.SMainMenu),
+                             dktitle=L("Enter your email"))
+            elif Client.Product == "Plex Web":
+                oc.message = L("Type your email in the searchbox and press enter")
+                oc.add(InputDirectoryObject(key=Callback(self.ChangeEmail), title="Email",
+                                         prompt=L("Type in your email:")))
+            else:
+                oc.add(InputDirectoryObject(key=Callback(self.ChangeEmail), title="Email",
+                                            prompt=L("Type in your email:")))
+            return oc
+        # elif query == "USE_PLEX_EMAIL":
+        #     pass
+        elif not validateEmail(query):
+            return self.UserSettings(message="Not a valid email!")
+        else:
+            Dict['register'][self.user]['email'] = query
+            return self.UserSettings(message="Email changed")
+
+
+
 
     def SwitchKeyboard(self):
         self.use_dumb_keyboard = not self.use_dumb_keyboard
         return self.SMainMenu("Keyboard has been changed")
 
     def AddNewMovie(self, title=None):
+        self.update_run()
         if title is None:
             title = L("Request a Movie")
         Log.Debug("Client does support message overlays")
         oc = ObjectContainer(title2="Enter Movie")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
@@ -307,7 +361,6 @@ class Session:
                                    title=L("Please enter the movie name in the searchbox and press enter.")))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title=title, thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                          dktitle=title,
                          message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
@@ -319,15 +372,16 @@ class Session:
         return oc
 
     def SearchMovie(self, query=""):
+        self.update_run()
         oc = ObjectContainer(title1=L("Search Results"), title2=query, content=ContainerContent.Shows,
                              view_group="Details")
         query = String.Quote(query, usePlus=True)
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit']) > 0 and not self.is_admin:
-            if Dict['register'].get(self.token, None) and Dict['register'][self.token]['requests'] >= int(
+            if Dict['register'].get(self.user, None) and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.user in Dict['blocked'] or self.token in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."), title1=L("Main Menu"),
                                   title2=L("User Blocked"))
         if Prefs['movie_db'] == "TheMovieDatabase":
@@ -346,8 +400,10 @@ class Session:
                         continue
                     if key['release_date']:
                         year = key['release_date'][0:4]
+                        date = key['release_date']
                     else:
                         year = ""
+                        date = None
                     if key['poster_path']:
                         thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
                     else:
@@ -357,13 +413,19 @@ class Session:
                     else:
                         art = None
                     title_year = key['title']
-                    title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
+                    title_year += (" (" + year + ")" if year else "")
+                    if date:
+                        rel_date = Datetime.ParseDate(date)
+                        if rel_date:
+                            date = rel_date.date()
+                        else:
+                            date = None
                     oc.add(TVShowObject(
                         key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'],
                                      year=year, poster=thumb,
                                      backdrop=art,
                                      summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
-                        summary=key['overview'], art=art))
+                        summary=key['overview'], art=art, originally_available_at=date))
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
                     oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
@@ -372,8 +434,6 @@ class Session:
                 Log.Debug("No Results Found")
                 if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-                    #                        thumb=R('search.png')))
                     DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                                  dktitle=L("Search Again"),
                                  message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
@@ -410,8 +470,6 @@ class Session:
                     oc = ObjectContainer(title2="No results")
                 if self.use_dumb_keyboard:
                     Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-                    #                        thumb=R('search.png')))
                     DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                                  dktitle=L("Search Again"),
                                  message="Enter the name of the Movie", dkthumb=R('search.png'))
@@ -424,8 +482,6 @@ class Session:
                 return oc
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(DirectoryObject(key=Callback(Keyboard, callback=SearchMovie, parent_call=Callback(MainMenu,)), title="Search Again",
-            #                        thumb=R('search.png')))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
                          dktitle=L("Search Again"),
                          message="Enter the name of the Movie", dkthumb=R('search.png'))
@@ -435,7 +491,8 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
         return oc
 
-    def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
+    def ConfirmMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary="", imdb=None):
+        self.update_run()
         title_year = title + " (" + year + ")" if year else title
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Confirm Movie Request"), title2=title_year + "?", header=TITLE,
@@ -456,7 +513,7 @@ class Session:
                         oc.add(TVShowObject(
                             key=Callback(self.SMainMenu, message=L("Movie already in library."), title1=L("In Library"),
                                          title2=title),
-                            rating_key=video.attrib['ratingKey'], title="+ " + title, summary=summary,
+                            rating_key=video.attrib['ratingKey'], title="+ " + title_year, summary=summary,
                             thumb=video.attrib['thumb']))
                         found_match = True
                         break
@@ -473,50 +530,63 @@ class Session:
         if not found_match and Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
             oc.add(TVShowObject(
                 key=Callback(self.ConfirmMovieRequest, movie_id=movie_id, title=title, source=source, year=year,
-                             poster=poster, backdrop=backdrop,
-                             summary=summary), rating_key=movie_id, thumb=poster, summary=summary, title=title_year))
+                             poster=poster, backdrop=backdrop, summary=summary, imdb=imdb),
+                rating_key=movie_id, thumb=poster, summary=summary, title=title_year))
         oc.add(DirectoryObject(
             key=Callback(self.AddMovieRequest, movie_id=movie_id, source=source, title=title, year=year, poster=poster,
-                         backdrop=backdrop,
-                         summary=summary), title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
+                         backdrop=backdrop, summary=summary, imdb=imdb),
+            title=L("Add Anyways") if found_match else L("Yes"), thumb=R('check.png')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("No"), thumb=R('x-mark.png')))
 
         return oc
 
-    def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary=""):
+    def AddMovieRequest(self, movie_id, title, source='', year="", poster="", backdrop="", summary="", imdb=None):
+        self.update_run()
         if movie_id in Dict['movie']:
             Log.Debug("Movie is already requested")
             return self.SMainMenu(message=L("Movie has already been requested"), title1=title,
                                   title2=L("Already Requested"))
         else:
-            user = "Admin" if self.is_admin else ""
-            if self.token in Dict['register']:
-                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                user = userFromToken(self.token)
+            if self.is_admin:
+                user = "Admin"
+            elif self.user == self.token:
+                user = "guest_" + Hash.SHA1(token)[:10]
+            else:
+                user = self.user
+            if self.user in Dict['register']:
+                Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
             title_year = title
             title_year += (" (" + year + ")" if year else "")
             Dict['movie'][movie_id] = {'type': 'movie', 'id': movie_id, 'source': source, 'title': title, 'year': year,
                                        'title_year': title_year,
                                        'poster': poster, 'backdrop': backdrop, 'summary': summary, 'user': user,
                                        'token_hash': Hash.SHA1(self.token),
-                                       'automated': False}
+                                       'automated': False, 'completed': False,
+                                       'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
+                                       }
+            Dict['movie'][movie_id][source.lower()] = movie_id
+            if imdb:
+                Dict['movie'][movie_id]['imdb'] = imdb
             Dict.Save()
             if Prefs['couchpotato_autorequest']:
                 self.SendToCouchpotato(movie_id)
+            if Prefs['radarr_autorequest']:
+                self.SendToRadarr(movie_id)
             notifyRequest(req_id=movie_id, req_type='movie')
             return self.SMainMenu(message=L("Movie has been requested"), title1=L("Main Menu"),
                                   title2=L("Movie Requested"))
 
     # TVShow Functions
     def AddNewTVShow(self, title=None):
+        self.update_run()
         if title is None:
             title = L("Request a TV Show")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.user in Dict['blocked'] or self.token in Dict['blocked'] or self.user in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
@@ -540,8 +610,9 @@ class Session:
         return oc
 
     def SearchTV(self, query):
+        self.update_run()
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
@@ -634,6 +705,7 @@ class Session:
         return oc
 
     def ConfirmTVRequest(self, series_id, title, source="", year="", poster="", backdrop="", summary=""):
+        self.update_run()
         title_year = title + " " + "(" + year + ")" if year else title
 
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -664,7 +736,6 @@ class Session:
                         break
         except:
             pass
-
         if found_match:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L(
@@ -689,19 +760,27 @@ class Session:
         return oc
 
     def AddTVRequest(self, series_id, title, source='', year="", poster="", backdrop="", summary=""):
+        self.update_run()
         if series_id in Dict['tv']:
             Log.Debug("TV Show is already requested")
             return self.SMainMenu(message=L("TV Show has already been requested"), title1=title,
                                   title2=L("Already Requested"))
         else:
-            user = "Admin" if self.is_admin else ""
-            if self.token in Dict['register']:
-                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                user = userFromToken(self.token)
+            if self.is_admin:
+                user = "Admin"
+            elif self.user == self.token:
+                user = "guest_" + Hash.SHA1(token)[:10]
+            else:
+                user = self.user
+            if self.user in Dict['register']:
+                Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
             Dict['tv'][series_id] = {'type': 'tv', 'id': series_id, 'source': source, 'title': title, 'year': year,
                                      'poster': poster,
                                      'backdrop': backdrop, 'summary': summary, 'user': user,
-                                     'token_hash': Hash.SHA1(self.token), 'automated': False}
+                                     'token_hash': Hash.SHA1(self.token), 'automated': False,
+                                     'completed': False,
+                                     'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
+                                     }
             Dict.Save()
             notifyRequest(req_id=series_id, req_type='tv')
             if Prefs['sonarr_autorequest'] and Prefs['sonarr_url'] and Prefs['sonarr_api']:
@@ -719,14 +798,15 @@ class Session:
             # TVShow Functions
 
     def AddNewMusic(self, title=None):
+        self.update_run()
         if title is None:
             title = L("Request Music")
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.token in Dict['blocked'] or self.user in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         oc = ObjectContainer()
@@ -767,12 +847,13 @@ class Session:
         return oc
 
     def NewMusicSearch(self, searchtype, searchstr):
+        self.update_run()
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
-        if self.token in Dict['blocked']:
+        if self.token in Dict['blocked'] or self.user in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."),
                                   title1=L("Main Menu"), title2=L("User Blocked"))
         if Client.Product == "Plex Web":
@@ -796,8 +877,9 @@ class Session:
         return oc
 
     def SearchMusic(self, query, searchtype="release", searchstr="Album"):
+        self.update_run()
         if Prefs['weekly_limit'] and int(Prefs['weekly_limit'] > 0) and not self.is_admin:
-            if self.token in Dict['register'] and Dict['register'][self.token]['requests'] >= int(
+            if self.user in Dict['register'] and Dict['register'][self.user]['requests'] >= int(
                     Prefs['weekly_limit']):
                 return self.SMainMenu(message=F("weeklylimit", Prefs['weekly_limit']),
                                       title1=L("Main Menu"), title2=L("Weekly Limit"))
@@ -865,6 +947,7 @@ class Session:
         return oc
 
     def ConfirmMusicRequest(self, searchtype, music_id, music_name, music_date=None, music_image=None):
+        self.update_run()
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1="Confirm Music Request", title2=F("confirmmusicrequest", music_name),
                                  header=TITLE, message=F("requestmusic", music_name))
@@ -879,6 +962,7 @@ class Session:
         return oc
 
     def AddMusicRequest(self, searchtype, music_id, music_name, music_date=None, music_image=None):
+        self.update_run()
         title = music_name
         if music_date:
             title += " (" + music_date + ")"
@@ -887,13 +971,20 @@ class Session:
             return self.SMainMenu(message=L("Music has already been requested"), title1=music_name,
                                   title2=L("Already Requested"))
         else:
-            user = "Admin" if self.is_admin else ""
-            if self.token in Dict['register']:
-                Dict['register'][self.token]['requests'] = Dict['register'][self.token]['requests'] + 1
-                user = userFromToken(self.token)
+            if self.is_admin:
+                user = "Admin"
+            elif self.user == self.token:
+                user = "guest_" + Hash.SHA1(token)[:10]
+            else:
+                user = self.user
+            if self.user in Dict['register']:
+                Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
         Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'title': music_name,
                                    'date': music_date, 'year': music_date[:4], 'poster': music_image,
-                                   'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False}
+                                   'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False,
+                                   'completed': False,
+                                   'created_on': Datetime.TimestampFromDatetime(Datetime.Now())
+                                   }
         Dict.Save()
 
         notifyRequest(req_id=music_id, req_type='music')
@@ -902,6 +993,7 @@ class Session:
 
     # Request Functions
     def ViewRequests(self, query="", token_hash=None, message=None):
+        self.update_run()
         oc = ObjectContainer(title2=message)
         if not self.locked:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -926,6 +1018,7 @@ class Session:
         return oc
 
     def ViewRequestsPassword(self):
+        self.update_run()
         oc = ObjectContainer(header=TITLE, message=L("Please enter the password in the searchbox"))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
@@ -938,10 +1031,14 @@ class Session:
                                         prompt=L("Enter password:")))
         return oc
 
-    def ViewMovieRequests(self, token_hash):
-        oc = ObjectContainer()
+    def ViewMovieRequests(self, token_hash=None, message=None):
+        self.update_run()
+        oc = ObjectContainer(title2=message)
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
         if not Dict['movie']:
-            Log.Debug("There are no Movie requests")
+            Log.Debug("There are no movie requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no movie requests.")
             else:
@@ -951,16 +1048,25 @@ class Session:
             return oc
         else:
             requests = Dict['movie']
-            for req_id in sorted(requests, key=lambda k: requests[k]['title']):
+            if Dict['sortbyname']:
+                criteria = lambda k: requests[k].get('title', "")
+            else:
+                criteria = lambda k: requests[k].get('created_on', 0)
+            for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('automated', False):
+                if d.get('completed', False):           #Use * for completed
+                    title_year = "* " + title_year
+                elif d.get('automated', False):         #Use + for automated
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
-                summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
+                date = ""
+                if d.get('created_on'):
+                    date = " on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y")
+                summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + date + ")   " + (
                     d.get('summary', "") if d.get("summary") else "")
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
@@ -971,14 +1077,26 @@ class Session:
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='movie'),
+                oc.add(DirectoryObject(key=Callback(self.ConfirmAllRequests, req_type='movie'),
+                                       title=L("Add All Movie Requests"),
+                                       thumb=R('plus.png')))
+            if len(oc) > 1 and self.is_admin:
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie', token_hash=token_hash),
+                                       title=L("Clear All Completed Requests"),
+                                       thumb=R('trash.png')))
+            if len(oc) > 1 and self.is_admin:
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, req_type='movie'),
                                        title=L("Clear All Movie Requests"),
                                        thumb=R('trash.png')))
             return oc
 
-    def ViewTVRequests(self, token_hash):
-        oc = ObjectContainer()
-        if not Dict['movie']:
+    def ViewTVRequests(self, token_hash=None, message=None):
+        self.update_run()
+        oc = ObjectContainer(title2=message)
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
+        if not Dict['tv']:
             Log.Debug("There are no tv requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no TV requests.")
@@ -989,7 +1107,11 @@ class Session:
             return oc
         else:
             requests = Dict['tv']
-            for req_id in sorted(requests, key=lambda k: requests[k]['title']):
+            if Dict['sortbyname']:
+                criteria = lambda k: requests[k].get('title', "")
+            else:
+                criteria = lambda k: requests[k].get('created_on', 0)
+            for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
@@ -998,7 +1120,10 @@ class Session:
                 if d.get('automated', False):
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
-                summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   " + (
+                date = ""
+                if d.get('created_on'):
+                    date = " on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y")
+                summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + date + ")   " + (
                     d.get('summary', "") if d.get("summary") else "")
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
@@ -1009,13 +1134,17 @@ class Session:
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='tv'),
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, req_type='tv'),
                                        title=L("Clear All TV Requests"), thumb=R('trash.png')))
             return oc
 
-    def ViewMusicRequests(self, token_hash):
-        oc = ObjectContainer()
-        if not Dict['movie']:
+    def ViewMusicRequests(self, token_hash=None, message=None):
+        self.update_run()
+        oc = ObjectContainer(title2=message)
+        if isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
+        if not Dict['music']:
             Log.Debug("There are no music requests")
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc.message = L("There are currently no Music requests.")
@@ -1026,7 +1155,11 @@ class Session:
             return oc
         else:
             requests = Dict['music']
-            for req_id in sorted(requests, key=lambda k: requests[k]['title']):
+            if Dict['sortbyname']:
+                criteria = lambda k: requests[k].get('title', "")
+            else:
+                criteria = lambda k: requests[k].get('created_on', 0)
+            for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
@@ -1035,7 +1168,11 @@ class Session:
                 if d.get('automated', False):
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
-                summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + ")   "
+                date = ""
+                if d.get('created_on'):
+                    date = " on " + Datetime.FromTimestamp(d.get('created_on')).strftime("%m-%d-%Y")
+                summary = "(Requested by " + (d.get('user') if d.get('user') else 'Unknown') + date + ")   " + (
+                    d.get('summary', "") if d.get("summary") else "")
                 oc.add(ArtistObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
@@ -1045,34 +1182,155 @@ class Session:
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, type='music'),
+                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, req_type='music'),
                                        title=L("Clear All Music Requests"), thumb=R('trash.png')))
             return oc
 
-    def ConfirmDeleteRequests(self, type):
-        oc = ObjectContainer(title2=L("Are you sure you would like to clear all requests?"))
+    def ConfirmAllRequests(self, req_type):
+        self.update_run()
+        oc = ObjectContainer(title2=L("Are you sure you would like to add all " + req_type + " requests?"))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
-        oc.add(DirectoryObject(key=Callback(self.ClearRequests, type=type), title=L("Yes"), thumb=R('check.png')))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
+        oc.add(
+            DirectoryObject(key=Callback(self.AddAllRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        if req_type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif req_type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif req_type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
         return oc
 
-    def ClearRequests(self, type):
+    def AddAllRequests(self, req_type):
+        self.update_run()
+        for id in Dict[req_type]:
+            if req_type == 'movie':
+                hasCouchpotato = Prefs['couchpotato_url'] and Prefs['couchpotato_api']
+                hasRadarr = Prefs['radarr_url'] and Prefs['radarr_api']
+                if not (hasCouchpotato or hasRadarr):
+                    return self.ViewMovieRequests(L("Movie Service not setup, unable to add movies!"))
+                if hasCouchpotato:
+                    self.SendToCouchpotato(id)
+                elif hasRadarr:
+                    self.SendToRadarr(id)
+            elif req_type == 'tv':
+                hasSonarr = Prefs['sonarr_url'] and Prefs['sonarr_api']
+                hasSickbeard = Prefs['sickbeard_url'] and Prefs['sickbeard_api']
+                if not hasSonarr and not hasSickbeard:
+                    return self.ViewTVRequests(L("TV Service not setup, unable to add TV shows!"))
+                if hasSonarr:
+                    self.SendToSonarr(id)
+                elif hasSickbeard:
+                    self.SendToSickbeard(id)
+            elif req_type == 'music':
+                if not (Prefs['headphones_url'] and Prefs['headphones_api']):
+                    return self.ViewMusicRequests(L("Headphones not setup, unable to add albums!"))
+                self.SendToHeadphones(id)
+        if req_type == 'movie':
+            return self.ViewMovieRequests(message=L("All " + req_type + " have been added"))
+        elif req_type == 'tv':
+            return self.ViewTVRequests(message=L("All " + req_type + " have been added"))
+        elif req_type == 'music':
+            return self.ViewMusicRequests(message=L("All " + req_type + " have been added"))
+        else:
+            return self.ViewRequests(message=L("All " + req_type + " have been added"))
+
+    def ConfirmDeleteCompletedRequests(self, req_type, token_hash=None, parent=None):
+        self.update_run()
+        oc = ObjectContainer(title2=L("These completed " + req_type + " requests will be deleted"))
+        if req_type == 'movie':
+            checkCompletedMovieRequests()
+        if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
+            oc.add(DirectoryObject(key=None, title=""))
+        for req_id in Dict[req_type]:
+            if Dict[req_type][req_id].get('completed', False):
+                request = Dict[req_type][req_id]
+                oc.add(TVShowObject(
+                    key=Callback(self.ViewRequest, req_id=req_id, req_type=req_type, token_hash=token_hash),
+                    rating_key=req_id,
+                    title=request.get('title'), thumb=request.get('poster'), summary=request.get('summary'),
+                    art=request.get('backdrop')))
+        oc.add(
+            DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"),
+                            thumb=R('check.png')))
+        if req_type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+        elif req_type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+        elif req_type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+        return oc
+
+    def ClearCompletedRequests(self, req_type):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
-        Dict[type] = {}
+        try:
+            for req_id in Dict[req_type]:
+                if Dict[req_type][req_id].get('completed', False):
+                    self.DeleteRequest(req_id, req_type)
+        except Exception as e:
+            Log.Debug(e.message)
+        Thread.Sleep(0.1)
         Dict.Save()
-        return self.ViewRequests(message=L("All " + type + " have been cleared"))
+        if req_type == 'movie':
+            return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
+        elif req_type == 'tv':
+            return self.ViewTVRequests(message=L("All completed " + req_type + " requests have been cleared"))
+        elif req_type == 'music':
+            return self.ViewMusicRequests(message=L("All completed " + req_type + " requests have been cleared"))
+        else:
+            return self.ViewRequests(message=L("All completed " + req_type + "requests have been cleared"))
+
+    def ConfirmDeleteRequests(self, req_type, parent=None):
+        self.update_run()
+        oc = ObjectContainer(title2=L("Are you sure you would like to clear all " + req_type + "  requests?"))
+        if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If on android, add an empty first item because it gets truncated for some reason
+            oc.add(DirectoryObject(key=None, title=""))
+        oc.add(
+            DirectoryObject(key=Callback(self.ClearRequests, req_type=req_type), title=L("Yes"), thumb=R('check.png')))
+        if req_type == 'movie':
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif req_type == 'tv':
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("No"), thumb=R('x-mark.png')))
+        elif req_type == 'music':
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("No"), thumb=R('x-mark.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("No"), thumb=R('x-mark.png')))
+        return oc
+
+    def ClearRequests(self, req_type):
+        self.update_run()
+        if not self.is_admin:
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
+                                  title2=L("Admin only"))
+        Dict[req_type] = {}
+        Dict.Save()
+        if req_type == 'movie':
+            return self.ViewMovieRequests(message=L("All " + req_type + " have been cleared"))
+        elif req_type == 'tv':
+            return self.ViewTVRequests(message=L("All " + req_type + " have been cleared"))
+        elif req_type == 'music':
+            return self.ViewMusicRequests(message=L("All " + req_type + " have been cleared"))
+        else:
+            return self.ViewRequests(message=L("All " + req_type + " have been cleared"))
 
     def ViewRequest(self, req_id, req_type, token_hash=None):
+        self.update_run()
         key = Dict[req_type][req_id]
         title_year = key['title']
         title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else \
-        key[
-            'title']  # If there is already a year in the title, just use title
-        summary = " (Requested by " + (key.get('user') if key.get('user') else 'Unknown') + ")   " + (
-            key.get('summary', "") if key.get('summary') else "")
+            key['title']  # If there is already a year in the title, just use title
+        date = ""
+        if key.get('created_on'):
+            date = " on " + Datetime.FromTimestamp(key.get('created_on')).strftime("%m-%d-%Y")
+        summary = "(Requested by " + (key.get('user') if key.get('user') else 'Unknown') + date + ")   " + (
+            key.get('summary', "") if key.get("summary") else "")
         oc = ObjectContainer(title2=title_year)
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
@@ -1081,7 +1339,9 @@ class Session:
                                 rating_key=req_id,
                                 thumb=key.get('poster', None),
                                 summary=summary, title=title_year))
-        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token):
+
+        Log.Debug("Req Type: " + req_type + "  Key Type: " + key['type'] + "  Req ID: " + req_id)
+        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token) or key.get('user') == self.user:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year,
                              token_hash=token_hash),
@@ -1089,12 +1349,17 @@ class Session:
         if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id),
-                                       title=F("sendto", "CouchPotato"),
-                                       thumb=R('couchpotato.png')))
+                                       title=F("sendto", "CouchPotato"), thumb=R('couchpotato.png')))
+            if Prefs['radarr_url'] and Prefs['radarr_api']:
+                oc.add(DirectoryObject(key=Callback(self.SendToRadarr, movie_id=req_id,
+                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='movie',
+                                                                      token_hash=token_hash)),
+                                       title=F("sendto", "Radarr"), thumb=R('radarr.png')))
         if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['sonarr_url'] and Prefs['sonarr_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToSonarr, tvdbid=req_id,
-                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='tv',
+                                                    callback=Callback(self.ViewRequest, req_id=req_id,
+                                                                      req_type='tv',
                                                                       token_hash=token_hash)),
                                        title=F("sendto", "Sonarr"), thumb=R('sonarr.png')))
             if Prefs['sickbeard_url'] and Prefs['sickbeard_api']:
@@ -1103,8 +1368,8 @@ class Session:
                                                                       token_hash=token_hash)),
                                        title=F("sendto", Prefs['sickbeard_fork']),
                                        thumb=R(Prefs['sickbeard_fork'].lower() + '.png')))
-        if key['type'] == 'tv' and (self.is_admin or Prefs['usersviewrequests']):
-            if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
+        if key['type'] == 'music' and (self.is_admin or Prefs['usersviewrequests']):
+            if Prefs['headphones_url'] and Prefs['headphones_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
                                        title=F("sendto", "Headphones"),
                                        thumb=R('headphones.png')))
@@ -1120,6 +1385,7 @@ class Session:
         return oc
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
+        self.update_run()
         oc = ObjectContainer(title2=F("confirmdelete", title_year))
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
@@ -1133,32 +1399,47 @@ class Session:
         return oc
 
     def DeleteRequest(self, req_id, req_type, token_hash=None):
+        self.update_run()
         if req_id in Dict[req_type]:
-            message = L("Request was deleted")
-            del Dict[req_type][req_id]
+            Dict[req_type].pop(req_id)
+            Thread.Sleep(0.03)          #Wait 30ms to save dict
             Dict.Save()
+            message = L("Request was deleted")
         else:
             message = L("Request could not be deleted")
-        return self.ViewRequests(token_hash=token_hash, message=message)
+        if req_type == 'movie':
+            return self.ViewMovieRequests(message=message, token_hash=token_hash)
+        elif req_type == 'tv':
+            return self.ViewTVRequests(message=message, token_hash=token_hash)
+        elif req_type == 'music':
+            return self.ViewMusicRequests(message=message, token_hash=token_hash)
+        else:
+            return self.ViewRequests(message=message, token_hash=token_hash)
 
     # CouchPotato Functions
     def SendToCouchpotato(self, movie_id):
+        self.update_run()
         if movie_id not in Dict['movie']:
             return MessageContainer(L("Error"), L("The movie id was not found in the database"))
         movie = Dict['movie'][movie_id]
-        if 'source' in movie and movie['source'].upper() == 'TMDB':  # Check if id source is tmdb
+        if movie.get('source', "").lower() == "tmdb":  # Check if id source is tmdb
             # we need to convert tmdb id to imdb
-            json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
-                                      headers={'Accept': 'application/json'})
-            if 'imdb_id' in json and json['imdb_id']:
-                imdb_id = json['imdb_id']
+            if movie.get('imdb', "").startswith("tt"):
+                imdb_id = movie.get('imdb')
             else:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
+                                          headers={'Accept': 'application/json'})
+                if json.get('imdb_id'):
+                    imdb_id = json['imdb_id']
+                    Dict['movie'][movie_id]['imdb'] = imdb_id
+                    Dict.Save()
                 else:
-                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                return oc
+                    if isClient(MESSAGE_OVERLAY_CLIENTS):
+                        oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                    else:
+                        oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                    oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                    return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
@@ -1215,11 +1496,12 @@ class Session:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year),
                 title=L("Delete Request")))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+        oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("Return to Movie Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageCouchpotato(self):
+        self.update_run()
         if not Prefs['couchpotato_url'].startswith("http"):
             couchpotato_url = "http://" + Prefs['couchpotato_url']
         else:
@@ -1233,31 +1515,33 @@ class Session:
             if Dict['debug']:
                 Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
+            return self.SMainMenu(message=L("Error loading CouchPotato"))
 
         oc = ObjectContainer(title2="Manage Couchpotato")
 
         if movie_list['success'] and not movie_list['empty']:
             for movie in movie_list['movies']:
-                title = movie.get('title')
-                movie_id = movie.get('_id')
-                title_year = title
-                movie_info = movie.get('info', {})
-                year = movie_info.get('year')
-                imdb_id = movie_info.get('imdb', "0")
-                poster = movie_info.get('images', {}).get('poster')
-                if poster:
-                    poster = poster[0]
-                summary = movie_info.get('plot')
-                title_year += " (" + str(year) + ")" if year else ""
-                oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title),
-                                    rating_key=imdb_id, title=title_year,
-                                    thumb=poster, summary=summary))
+                if movie.get('title'):
+                    title = movie.get('title')
+                    movie_id = movie.get('_id')
+                    title_year = title
+                    movie_info = movie.get('info', {})
+                    year = movie_info.get('year')
+                    imdb_id = movie_info.get('imdb', "0")
+                    poster = movie_info.get('images', {}).get('poster')
+                    if poster:
+                        poster = poster[0]
+                    summary = movie_info.get('plot')
+                    title_year += " (" + str(year) + ")" if year else ""
+                    oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title),
+                                        rating_key=imdb_id, title=title_year,
+                                        thumb=poster, summary=summary))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
 
     def ManageCouchPotatoMovie(self, movie_id, title=""):
+        self.update_run()
         oc = ObjectContainer(title1=L("Manage Couchpotato"), title2=title)
         oc.add(
             DirectoryObject(key=Callback(self.DeleteCouchPotatoMovie, movie_id=movie_id),
@@ -1268,6 +1552,7 @@ class Session:
         return oc
 
     def DeleteCouchPotatoMovie(self, movie_id):
+        self.update_run()
         if not Prefs['couchpotato_url'].startswith("http"):
             couchpotato_url = "http://" + Prefs['couchpotato_url']
         else:
@@ -1288,8 +1573,87 @@ class Session:
         else:
             return MessageContainer(header=TITLE, message=L("Could not delete movie from Couchpotato"))
 
+            # Sonarr Methods
+
+    def SendToRadarr(self, movie_id, callback=None):
+        self.update_run()
+        title = Dict['movie'][movie_id]['title']
+        radarr_movie_id = Radarr.getMovieById(movie_id, imdb=movie_id.startswith('tt'))
+        if radarr_movie_id > 0:
+            Dict['movie'][movie_id]['automated'] = True
+            Dict.Save()
+            if callback:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Movie already exists in Radarr"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Movie already exists!"))
+                oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+                return oc
+            else:
+                return self.SMainMenu(message=L("Movie already exists in Radarr"))
+
+        movie = Dict['movie'][movie_id]
+
+        profile_id = 1
+        if Prefs['radarr_profile']:
+            profile_id = Radarr.getProfileIDfomName(Prefs['radarr_profile'])
+            if profile_id < 0:
+                profile_id = 1
+
+        if Prefs['radarr_path']:
+            rootFolderPath = Prefs['radarr_path']
+        else:
+            rootFolderPath = Radarr.getRootFolderPath()
+
+        Log.Debug("Profile id: " + str(profile_id))
+
+        lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
+        # Log.Debug(str(lookup))
+        if not lookup:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
+            else:
+                oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
+        else:
+            if not movie.get('tmdb'):
+                movie['tmdb'] = lookup['tmdbId']
+
+            result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'),
+                                     titleSlug=lookup.get('titleSlug'),
+                                     profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                                     cleanTitle=lookup.get('cleanTitle'), images=lookup.get('images'),
+                                     searchNow=Prefs['radarr_searchnow'])
+            if result:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Success"))
+                Log.Debug("Setting movie automated to true")
+                Dict['movie'][movie_id]['automated'] = True
+                Dict.Save()
+            else:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
+                else:
+                    oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
+
+        if self.is_admin:
+            oc.add(DirectoryObject(
+                key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie',
+                             title_year=movie.get('title')),
+                title=L("Delete Request"), thumb=R('trash.png')))
+        if callback:
+            oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+        else:
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests), title=L("Return to Movie Requests"),
+                                   thumb=R('return.png')))
+            oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
+                                   thumb=R('plexrequestchannel.png')))
+        return oc
+
     # Sonarr Methods
     def SendToSonarr(self, tvdbid, callback=None):
+        self.update_run()
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
         else:
@@ -1327,16 +1691,21 @@ class Session:
             if root:
                 rootFolderPath = root[0]['path']
 
+        # Log.Debug(str(found_show))
+
         Log.Debug("Profile id: " + str(profile_id))
-        options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'qualityProfileId': int(profile_id),
-                   'titleSlug': found_show['titleSlug'], 'rootFolderPath': rootFolderPath,
-                   'seasons': found_show['seasons'], 'monitored': True,
-                   'seasonFolder': Prefs['sonarr_seasonfolder']}
+        options = {'title': found_show['title'], 'tvdbId': found_show['tvdbId'], 'tvRageId': found_show['tvRageId'],
+                   'imdbId': found_show['imdbId'], 'cleanTitle': found_show['cleanTitle'],
+                   'images': found_show['images'],
+                   'qualityProfileId': int(profile_id), 'titleSlug': found_show['titleSlug'],
+                   'rootFolderPath': rootFolderPath,
+                   'seasons': found_show['seasons'], 'monitored': True, 'seasonFolder': Prefs['sonarr_seasonfolder']}
 
         add_options = {'ignoreEpisodesWithFiles': False,
                        'ignoreEpisodesWithoutFiles': False,
                        'searchForMissingEpisodes': True
                        }
+
         if Prefs['sonarr_monitor'] == 'manual':
             add_options['ignoreEpisodesWithFiles'] = True
             add_options['ignoreEpisodesWithoutFiles'] = True
@@ -1359,7 +1728,8 @@ class Session:
         options['addOptions'] = add_options
         values = JSON.StringFromObject(options)
         try:
-            resp = HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
+            # Log.Debug("Options: " + str(options))
+            HTTP.Request(sonarr_url + "api/Series", data=values, headers=api_header)
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Show has been sent to Sonarr"))
             else:
@@ -1368,17 +1738,19 @@ class Session:
             Dict['tv'][tvdbid]['automated'] = True
             Dict.Save()
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Options: " + str(options))
             Log.Debug(e.message)
             Log.Debug("Response Status: " + str(Response.Status))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Could not send show to Sonarr!"))
             else:
                 oc = ObjectContainer(title1="Sonarr", title2=L("Send Failed"))
-        series_id = self.SonarrShowExists(tvdbid)
-        if Prefs['sonarr_monitor'] == "manual" and series_id:
-            return self.ManageSonarrShow(series_id, title=title, callback=callback)
+        if Prefs['sonarr_monitor'] == "manual":
+            Thread.Sleep(0.2)
+            series_id = self.SonarrShowExists(tvdbid)
+            if series_id:
+                return self.ManageSonarrShow(series_id, title=title, callback=callback)
         if self.is_admin:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=series_id, req_type='tv', title_year=title),
@@ -1386,13 +1758,14 @@ class Session:
         if callback:
             oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests"),
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("Return to TV Requests"),
                                    thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
                                    thumb=R('plexrequestchannel.png')))
         return oc
 
     def ManageSonarr(self):
+        self.update_run()
         oc = ObjectContainer(title1=TITLE, title2="Manage Sonarr")
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
@@ -1406,8 +1779,7 @@ class Session:
         try:
             shows = JSON.ObjectFromURL(sonarr_url + "/api/Series", headers=api_header)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=L("Error retrieving Sonarr Shows"))
         for show in shows:
@@ -1415,10 +1787,10 @@ class Session:
             for image in show['images']:
                 if image['coverType'] == 'poster':
                     try:
-                        poster = sonarr_url + image['url'][image['url'].find('/MediaCover/'):]
+                        poster = sonarr_url + "/api" + image['url'][image['url'].find('/MediaCover/'):] + "&apikey=" + \
+                                 Prefs['sonarr_api']
                     except Exception:
-                        if Dict['debug']:
-                            Log.Error(str(traceback.format_exc()))  # raise e
+                        Log.Error(str(traceback.format_exc()))  # raise e
             oc.add(TVShowObject(key=Callback(self.ManageSonarrShow, series_id=show['id'], title=show['title']),
                                 rating_key=show.get('tvdbId', 0),
                                 title=show['title'], thumb=poster, summary=show.get('overview', "")))
@@ -1427,6 +1799,7 @@ class Session:
         return oc
 
     def ManageSonarrShow(self, series_id, title="", callback=None, message=None):
+        self.update_run()
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
         else:
@@ -1439,8 +1812,7 @@ class Session:
         try:
             show = JSON.ObjectFromURL(sonarr_url + "/api/Series/" + str(series_id), headers=api_header)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=F("errorsonarrshow", title))
         if isClient(MESSAGE_OVERLAY_CLIENTS):
@@ -1466,6 +1838,7 @@ class Session:
         return oc
 
     def ManageSonarrSeason(self, series_id, season, message=None, callback=None):
+        self.update_run()
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
         else:
@@ -1506,6 +1879,7 @@ class Session:
         return oc
 
     def SonarrMonitorShow(self, series_id, seasons, episodes='all', callback=None):
+        self.update_run()
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
         else:
@@ -1518,8 +1892,7 @@ class Session:
         try:
             show = JSON.ObjectFromURL(sonarr_url + "/api/series/" + series_id, headers=api_header)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=F("errorsonarrshow", str(series_id)))
         if seasons == 'all':
@@ -1536,7 +1909,8 @@ class Session:
                                              message=L("Series sent to Sonarr"))
             except Exception as e:
                 if Dict['debug']:
-                    Log.Error(str(traceback.format_exc()))  # raise e
+                    Log(str(show))
+                Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending show to Sonarr"))
         elif episodes == 'all':
@@ -1556,7 +1930,8 @@ class Session:
                                              message=L("Season(s) sent sent to Sonarr"))
             except Exception as e:
                 if Dict['debug']:
-                    Log.Error(str(traceback.format_exc()))  # raise e
+                    Log.Debug(str(data))
+                Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending season to Sonarr"))
         else:
@@ -1572,13 +1947,13 @@ class Session:
                 return self.ManageSonarrSeason(series_id=series_id, season=seasons, callback=callback,
                                                message=L("Episode sent to Sonarr"))
             except Exception as e:
-                if Dict['debug']:
-                    Log.Error(str(traceback.format_exc()))  # raise e
+                Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending episode to Sonarr"))
                 # return self.MainMenu()
 
     def SonarrShowExists(self, tvdbid):
+        self.update_run()
         if not Prefs['sonarr_url'].startswith("http"):
             sonarr_url = "http://" + Prefs['sonarr_url']
         else:
@@ -1596,6 +1971,7 @@ class Session:
 
     # Sickbeard Functions
     def SendToSickbeard(self, tvdbid, callback=None):
+        self.update_run()
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
         else:
@@ -1646,7 +2022,8 @@ class Session:
                     oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2=L("Error"))
         except Exception as e:
             if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+                Log.Debug(str(data))
+            Log.Error(str(traceback.format_exc()))  # raise e
             oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
             Log.Debug(e.message)
         # Thread.Sleep(2)
@@ -1655,18 +2032,20 @@ class Session:
             while count < 5:
                 if self.SickbeardShowExists(tvdbid):
                     return self.ManageSickbeardShow(tvdbid, title=title, callback=callback)
-                Thread.Sleep(1)
+                Thread.Sleep(0.5)
                 Log.Debug("Slept for " + str(count) + " seconds")
                 count += 1
         if self.is_admin:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=tvdbid, type='tv', title_year=title),
-                                title=L("Delete Request")))
-        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                DirectoryObject(
+                    key=Callback(self.ConfirmDeleteRequest, series_id=tvdbid, req_type='tv', title_year=title),
+                    title=L("Delete Request")))
+        oc.add(DirectoryObject(key=Callback(self.ViewTVRequests), title=L("Return to TV Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageSickbeard(self):
+        self.update_run()
         oc = ObjectContainer(title1=TITLE, title2="Manage " + Prefs['sickbeard_fork'])
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
@@ -1690,7 +2069,8 @@ class Session:
                         rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
         except Exception as e:
             if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+                Log.Debug(str(data))
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=F("sickbeardshowserror", Prefs['sickbeard_fork']))
         oc.objects.sort(key=lambda obj: obj.title.lower())
@@ -1698,6 +2078,8 @@ class Session:
         return oc
 
     def ManageSickbeardShow(self, series_id, title="", callback=None, message=None):
+        self.update_run()
+        self.update_run()
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
         else:
@@ -1717,8 +2099,7 @@ class Session:
                                         message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (
                                             title if title else str(series_id)))
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show: " + (
@@ -1747,6 +2128,7 @@ class Session:
         return oc
 
     def ManageSickbeardSeason(self, series_id, season, message=None, callback=None):
+        self.update_run()
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
         else:
@@ -1767,8 +2149,7 @@ class Session:
                                             series_id) + " Season " + str(
                                             season))
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE,
                                     message="Error retrieving " + Prefs['sickbeard_fork'] + " Show ID: " + str(
@@ -1796,6 +2177,7 @@ class Session:
         return oc
 
     def SickbeardMonitorShow(self, series_id, seasons, episodes='all', callback=None):
+        self.update_run()
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
         else:
@@ -1816,7 +2198,8 @@ class Session:
                                                method='GET' if use_sickrage else 'POST')
                         except:
                             if Dict['debug']:
-                                Log.Error(str(traceback.format_exc()))  # raise e
+                                Log.Debug(str(resp))
+                            Log.Error(str(traceback.format_exc()))  # raise e
                             Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
                 else:
                     Log.Debug(JSON.StringFromObject(resp))
@@ -1825,8 +2208,7 @@ class Session:
                 return self.ManageSickbeardShow(series_id=series_id, title="", callback=callback,
                                                 message="Series sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
-                if Dict['debug']:
-                    Log.Error(str(traceback.format_exc()))  # raise e
+                Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug(
                     Prefs['sickbeard_fork'] + " Status change failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message="Error sending series to " + Prefs['sickbeard_fork'])
@@ -1840,8 +2222,7 @@ class Session:
                 return self.ManageSickbeardShow(series_id=series_id, callback=callback,
                                                 message="Season(s) sent sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
-                if Dict['debug']:
-                    Log.Error(str(traceback.format_exc()))  # raise e
+                Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending season to " + Prefs['sickbeard_fork'])
         else:
@@ -1854,13 +2235,13 @@ class Session:
                 return self.ManageSickbeardSeason(series_id=series_id, season=seasons, callback=callback,
                                                   message="Episode(s) sent to " + Prefs['sickbeard_fork'])
             except Exception as e:
-                if Dict['debug']:
-                    Log.Error(str(traceback.format_exc()))  # raise e
+                Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug(Prefs['sickbeard_fork'] + " Status Change failed: " + e.message)
                 return MessageContainer(header=TITLE, message="Error sending episode to " + Prefs['sickbeard_fork'])
                 # return self.MainMenu()
 
     def SickbeardShowExists(self, tvdbid):
+        self.update_run()
         if not Prefs['sickbeard_url'].startswith("http"):
             sickbeard_url = "http://" + Prefs['sickbeard_url']
         else:
@@ -1878,8 +2259,7 @@ class Session:
                     Log.Debug("TVDB id " + str(tvdbid) + " exists")
                     return True
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
         Log.Debug("TVDB id " + str(tvdbid) + " does not exist")
         return False
@@ -1889,15 +2269,20 @@ class Session:
             headphones_url = "http://" + Prefs['headphones_url']
         else:
             headphones_url = Prefs['headphones_url']
-        if not headphones.endswith("/"):
+        if not headphones_url.endswith("/"):
             headphones_url += "/"
         try:
-            resp = JSON.ObjectFromURL(
+            data = {'apikey': Prefs['headphones_api'],
+                    'cmd': 'addAlbum',
+                    'id': str(music_id)
+                    }
+            resp = HTTP.Request(
                 headphones_url + "api/?apikey=" + Prefs['headphones_api'] + "&cmd=addAlbum&id=" + str(music_id))
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Album was added to Headphones"))
             else:
                 oc = ObjectContainer(title1=Headphones, title2=L("Success"))
+            Log.Debug(str(resp))
             Dict['music'][music_id]['automated'] = True
             Dict.Save()
         except Exception as e:
@@ -1908,16 +2293,17 @@ class Session:
                 oc = ObjectContainer(header=TITLE, message=L("Album was not added to Headphones"))
             else:
                 oc = ObjectContainer(title1=Headphones, title2=L("Failure"))
-        title = Dict['music']['title']
+        title = Dict['music'][music_id].get('title')
         if self.is_admin:
-            oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, type='music',
+            oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequest, req_id=music_id, req_type='music',
                                                 title_year=title), title=L("Delete Request"), ))
         oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests), title=L("Return to Music Requests")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
-        return False
+        return oc
 
     # ManageChannel Functions
     def ManageChannel(self, message=None, title1=TITLE, title2="Manage Channel"):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
@@ -1925,15 +2311,19 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message)
         else:
             oc = ObjectContainer(title1=L("Manage"), title2=message)
+        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.ManageUsers), title=L("Manage Users")))
         oc.add(
-            DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "Off" if Dict['debug'] else "On")))
+            DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "On" if Dict['debug'] else "Off")))
+        oc.add(
+            DirectoryObject(key=Callback(self.ToggleSorting),
+                            title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
     def ManageUsers(self, message=None):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
@@ -1942,19 +2332,27 @@ class Session:
         else:
             oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
-            for toke in Dict['register']:
-                user = userFromToken(toke)
+            for key in Dict['register']:
+                if Dict['register'][key].get('type', 'token') == 'token':
+                    user = "guest_" + Hash.SHA1(key)[:10]
+                else:
+                    user = key
                 oc.add(
-                    DirectoryObject(key=Callback(self.ManageUser, toke=toke),
-                                    title=user + ": " + str(Dict['register'][toke]['requests'])))
+                    DirectoryObject(key=Callback(self.ManageUser, toke=key),
+                                    title=user + ": " + str(Dict['register'][key].get('requests',0))))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
     def ManageUser(self, toke, message=None):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
-        user = userFromToken(toke)
+        if toke in Dict['register']:
+            if Dict['register'][toke].get('nickname'):
+                user = Dict['register'][toke].get('nickname')
+            else:
+                user = toke
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
@@ -1963,10 +2361,6 @@ class Session:
                                title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
         oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
         tv_auto = ""
-        # if Prefs['sonarr_api']:
-        #     tv_auto = "Sonarr"
-        # elif Prefs['sickbeard_api']:
-        #     tv_auto = Prefs['sickbeard_fork']
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'),
                                    title=F("removetvmanage", tv_auto)))
@@ -1984,6 +2378,7 @@ class Session:
         return oc
 
     def RenameUser(self, toke, message=""):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
@@ -1997,7 +2392,7 @@ class Session:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=RegisterUserName,
                          parent_call=Callback(self.ManageUser, toke=toke),
-                         dktitle=L(L("Enter the user's name")),
+                         dktitle=L("Enter the user's name"),
                          message=L("Enter the user's name"), toke=toke)
             # return MessageContainer(header=TITLE, message="You must use a keyboard enabled client (Plex Web) to use this feature")
         else:
@@ -2007,6 +2402,7 @@ class Session:
         return oc
 
     def RegisterUserName(self, query="", toke=""):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
@@ -2017,21 +2413,23 @@ class Session:
         return self.ManageUser(toke=toke, message=L("Username has been set"))
 
     def BlockUser(self, toke, setter):
+        self.update_run()
         if setter == 'True':
             if toke in Dict['blocked']:
                 return self.ManageUser(toke=toke, message=L("User is already blocked."))
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
-                return self.ManageUser(toke == toke, message="User has been blocked.")
+                return self.ManageUser(toke == toke, message=L("User has been blocked."))
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['blocked'].remove(toke)
                 Dict.Save()
-                return self.ManageUser(toke=toke, message="User has been unblocked.")
+                return self.ManageUser(toke=toke, message=L("User has been unblocked."))
         return self.ManageUser(toke=toke)
 
     def SonarrUser(self, toke, setter):
+        self.update_run()
         tv_auto = ""
         if Prefs['sonarr_api']:
             tv_auto = "Sonarr"
@@ -2052,9 +2450,10 @@ class Session:
         return self.ManageUser(toke=toke)
 
     def DeleteUser(self, toke, confirmed='False'):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
-        oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'])
+        oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'] if toke in Dict['register'] else "User Does Not Exist")
         if confirmed == 'False':
             oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title=L("Yes")))
             oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke), title=L("No")))
@@ -2065,6 +2464,7 @@ class Session:
         return oc
 
     def ResetDict(self, confirm='False'):
+        self.update_run()
         if not self.is_admin:
             return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
         if confirm == 'False':
@@ -2091,7 +2491,9 @@ class Session:
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
+
     def Changelog(self):
+        self.update_run()
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
         clog = HTTP.Request(CHANGELOG_URL)
         changes = clog.content
@@ -2108,22 +2510,50 @@ class Session:
                                thumb=R('return.png')))
         return oc
 
-    def ToggleDebug(self):
-        Dict['debug'] = not Dict['debug']
+
+    def ToggleDebug(self, toggle=None):
+        self.update_run()
+        oc = ObjectContainer(title1=TITLE, title2=L("Set Debugging"))
+        if toggle is None:
+            pon = "* " if Dict['debug'] else ""
+            poff = "* " if not Dict['debug'] else ""
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=True), title=(pon + L("On"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleDebug, toggle=False), title=(poff + L("Off"))))
+            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+            return oc
+        elif toggle == "True":
+            Dict['debug'] = True
+        elif toggle == "False":
+            Dict['debug'] = False
         Dict.Save()
         return self.ManageChannel(message="Debug is " + ("on" if Dict['debug'] else "off"))
+
+    def ToggleSorting(self, toggle=None):
+        self.update_run()
+        oc = ObjectContainer(title1=TITLE, title2=L("Change Sorting"))
+        if toggle is None:
+            pname = "* " if Dict['sortbyname'] else ""
+            ptime = "* " if not Dict['sortbyname'] else ""
+            oc.add(DirectoryObject(key=Callback(self.ToggleSorting, toggle=True), title=(pname + L("Sort by Name"))))
+            oc.add(DirectoryObject(key=Callback(self.ToggleSorting, toggle=False), title=(ptime + L("Sort by Time"))))
+            oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+            return oc
+        elif toggle == "True":
+            Dict['sortbyname'] = True
+        elif toggle == "False":
+            Dict['sortbyname'] = False
+        Dict.Save()
+        return self.ManageChannel(message="Sorting requests by " + ("name" if Dict['sortbyname'] else "time"))
 
     def ShowMessage(self, header, message):
         return MessageContainer(header=header, message=message)
 
     def ReportProblem(self):
+        self.update_run()
         oc = ObjectContainer(title1=TITLE, title2=L("Report a Problem"))
         oc.add(DirectoryObject(key=Callback(self.NavigateMedia), title=L("Report Problem with Media")))
         if self.use_dumb_keyboard:  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            # oc.add(
-            #     DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem, title="Report General Problem",
-            #                                  message="What is the problem?"), title="Report General Problem"))
             DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.ConfirmReportProblem,
                          parent_call=Callback(self.ReportProblem),
                          dktitle=L("Report General Problem"),
@@ -2137,17 +2567,17 @@ class Session:
         return oc
 
     def NavigateMedia(self, path=None):
+        self.update_run()
         if not path:
             path = "/library/sections"
             parent = None
         else:
             parent = path[:path.rfind("/") - 1]
-        # headers = {'X-Plex-Token': self.token}
+        headers = {'X-Plex-Token': self.token}
         try:
-            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=Request.Headers)
+            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=headers)
         except:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
         container = page.xpath("/MediaContainer")[0]
         view_group = container.get('viewGroup', 'secondary')
@@ -2165,14 +2595,14 @@ class Session:
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
-                type = d.attrib.get('type', None)
-                if type == 'show' and 'filters' not in d.attrib:
+                dir_type = d.attrib.get('type', None)
+                if dir_type == 'show' and 'filters' not in d.attrib:
                     oc.add(
                         TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']),
                                      title=d.attrib.get('title'),
                                      rating_key=d.attrib.get('ratingKey', "0"),
                                      summary=d.attrib.get('summary'), thumb=d.attrib.get('thumb')))
-                elif type == 'season':
+                elif dir_type == 'season':
                     oc.add(
                         TVShowObject(key=Callback(self.NavigateMedia, path=d.attrib['key']),
                                      title=d.attrib.get('title'),
@@ -2185,16 +2615,13 @@ class Session:
         vids = page.xpath("//Video")
         if len(vids) > 0:
             for v in vids:
-                type = v.attrib.get('type', None)
-                if type == 'movie':
+                dir_type = v.attrib.get('type', None)
+                if dir_type == 'movie':
                     oc.add(TVShowObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'],
                                                      title=v.attrib.get('title')),
                                         rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
                                         summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
-                elif type == 'episode':
-                    # oc.add(EpisodeObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'], title=v.attrib.get('title')),
-                    #                      rating_key=v.attrib.get('ratingKey', "0"), title=v.attrib.get('title'),
-                    #                      summary=v.attrib.get('summary'), thumb=v.attrib.get('thumb')))
+                elif dir_type == 'episode':
                     oc.add(DirectoryObject(key=Callback(self.ReportProblemMedia, rating_key=v.attrib['ratingKey'],
                                                         title=v.attrib.get('title')),
                                            title=v.attrib.get('title'), summary=v.attrib.get('summary'),
@@ -2202,19 +2629,20 @@ class Session:
         return oc
 
     def ReportProblemMedia(self, rating_key, title):
+        self.update_run()
         oc = ObjectContainer(title1="What is the problem?", title2=title)
         page = XML.ElementFromURL("http://127.0.0.1:32400/library/metadata/" + rating_key)
         container = page.xpath("/MediaContainer")[0]
         libraryTitle = container.attrib.get("librarySectionTitle", "Unknown")
         vid = page.xpath("//Video")[0]
-        type = vid.attrib.get('type', 'unknown')
+        vid_type = vid.attrib.get('type', 'unknown')
         thumb = vid.attrib.get('thumb', None)
         name = ""
-        if type == 'movie':
+        if vid_type == 'movie':
             if 'year' in vid.attrib:
                 title += " (" + vid.attrib['year'] + ")"
             name = title
-        elif type == 'episode':
+        elif vid_type == 'episode':
             ep_num = int(vid.attrib.get('index', "1"))
             sea_num = int(vid.attrib.get('parentIndex', "1"))
             show_title = vid.attrib.get('grandparentTitle', "")
@@ -2228,8 +2656,9 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title="Cancel"))
         for problem in COMMON_MEDIA_PROBLEMS:
             oc.add(
-                DirectoryObject(key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, type='media'),
-                                title=problem))
+                DirectoryObject(
+                    key=Callback(self.ConfirmReportProblem, query=report + " - " + problem, rep_type='media'),
+                    title=problem))
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
             # oc.add(DirectoryObject(key=Callback(Keyboard, callback=self.ConfirmReportProblem, parent=ReportProblem),
@@ -2249,6 +2678,7 @@ class Session:
         return oc
 
     def ReportProblemMediaOther(self, query="", report=""):
+        self.update_run()
         if not query:
             oc = ObjectContainer(title2=L("Report Problem with Media"))
             if Client.Product == "Plex Web":
@@ -2258,9 +2688,10 @@ class Session:
                                      title=L("Other Problem"),
                                      prompt=L("What is the problem?")))
             return oc
-        return self.ConfirmReportProblem(query=report + " - " + query, type='media')
+        return self.ConfirmReportProblem(query=report + " - " + query, rep_type='media')
 
     def ReportGeneralProblem(self):
+        self.update_run()
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=L("Enter your problem in the search box."))
         else:
@@ -2275,13 +2706,14 @@ class Session:
                          message=L("What is the problem?"))
         else:
             oc.add(
-                InputDirectoryObject(key=Callback(self.ConfirmReportProblem, type='general'),
+                InputDirectoryObject(key=Callback(self.ConfirmReportProblem, rep_type='general'),
                                      title=L("Report a General Problem"),
                                      prompt=L("What is the problem?")))
         return oc
 
-    def ConfirmReportProblem(self, query="", type='general'):
-        if type == 'general':
+    def ConfirmReportProblem(self, query="", rep_type='general'):
+        self.update_run()
+        if rep_type == 'general':
             query = "Issue: " + query
         oc = ObjectContainer(title1=L("Confirm"), title2=query)
         oc.add(DirectoryObject(key=Callback(self.NotifyProblem, problem=query), title=L("Yes"), thumb=R('check.png')))
@@ -2289,12 +2721,15 @@ class Session:
         return oc
 
     def NotifyProblem(self, problem):
-        title = "Plex Request Channel - Problem Reported"
-        user = "A user"
-        if self.token in Dict['register'] and Dict['register'][self.token]['nickname']:
-            user = Dict['register'][self.token]['nickname']
+        title = "Request Channel - Problem Reported"
+        if self.user in Dict['register'] and Dict['register'][self.user]['nickname']:
+            user = Dict['register'][self.user]['nickname']
+        elif self.user == self.token:
+            user = "guest_" + Hash.SHA1(token)[:10]
+        else:
+            user = self.user
         body = user + " has reported a problem with the Plex Server. \n" + problem
-        Notify(title=title, body=body, devices=Prefs['pushbullet_devices'])
+        Notify(title=title, body=body)
         return self.SMainMenu(message="The admin has been notified", title1="Main Menu",
                               title2="Admin notified of problem")
 
@@ -2307,9 +2742,6 @@ def checkAdmin(toke):
         # resp = urllib2.urlopen(req)
         html = HTTP.Request(url, headers={'X-Plex-Token': toke})
         if html.content:
-            if Dict['debug']:
-                # Log.Debug(str(html.content))
-                pass
             return True
     except:
         if Dict['debug']:
@@ -2335,23 +2767,30 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
             else:
                 return
             if Prefs['pushbullet_devices']:
                 devices = Prefs['pushbullet_devices'].split(",")
                 for d in devices:
-                    response = sendPushBullet(title, message, d)
+                    response = sendPushBullet(title, message, d.strip())
                     if response:
                         Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
             else:
@@ -2359,8 +2798,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 if response:
                     Log.Debug("Pushbullet notification sent for: " + req_id)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushbullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
@@ -2369,25 +2807,31 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
             else:
                 return
             response = sendPushover(title, message)
             if response:
                 Log.Debug("Pushover notification sent for :" + req_id)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
     if Prefs['pushalot_api']:
         try:
@@ -2396,26 +2840,69 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 title_year = movie['title']
                 title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
                 user = movie['user'] if movie['user'] else "A user"
-                title = "Plex Request Channel - New Movie Request"
+                title = "Request Channel - New Movie Request"
                 message = user + " has requested a new movie.\n" + title_year + "\n" + \
                           movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
                           movie['poster']
             elif req_type == 'tv':
                 tv = Dict['tv'][req_id]
                 user = tv['user'] if tv['user'] else "A user"
-                title = "Plex Request Channel - New TV Show Request"
+                title = "Request Channel - New TV Show Request"
                 message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
                           tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
                           tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                title = "Request Channel - New Album Request"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
             else:
                 return
             response = sendPushalot(title, message)
             if response:
                 Log.Debug("Pushalot notification sent for :" + req_id)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushalot failed: " + e.message)
+    if Prefs['slack_api']:
+        try:
+            if req_type == 'movie':
+                movie = Dict['movie'][req_id]
+                title_year = movie['title']
+                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
+                user = movie['user'] if movie['user'] else "A user"
+                message = user + " has requested a new movie.\n" + title_year + "\n" + \
+                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
+                          movie['poster']
+            elif req_type == 'tv':
+                tv = Dict['tv'][req_id]
+                user = tv['user'] if tv['user'] else "A user"
+                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
+                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
+                          tv['poster']
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                user = music['user'] if music['user'] else "A user"
+                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
+                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
+                          music['poster']
+            else:
+                return
+            if Prefs['slack_channels']:
+                channels = Prefs['slack_channels'].split(",")
+                for c in channels:
+                    response = sendSlack(message, c.strip())
+                    if response:
+                        Log.Debug("Slack notification sent to channel: " + c.strip() + " for: " + req_id)
+            else:
+                response = sendSlack(message)
+                if response:
+                    Log.Debug("Slack notification sent for: " + req_id)
+        except Exception as e:
+            Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Slack failed: " + e.message)
     if Prefs['email_to']:
         try:
             if req_type == 'movie':
@@ -2424,7 +2911,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 poster = movie['poster']
                 user = movie['user'] if movie['user'] else "A user"
                 id_type = movie.get('source', "IMDB")
-                subject = "Plex Request Channel - New Movie Request"
+                subject = "Request Channel - New Movie Request"
                 summary = ""
                 if movie['summary']:
                     summary = movie['summary'] + "<br>\n"
@@ -2434,10 +2921,18 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 user = tv['user'] if tv['user'] else "A user"
                 id_type = tv.get('source', "TVDB")
                 poster = tv['poster']
-                subject = "Plex Request Channel - New TV Show Request"
+                subject = "Request Channel - New TV Show Request"
                 summary = ""
                 if tv['summary']:
                     summary = tv['summary'] + "<br>\n"
+            elif req_type == 'music':
+                music = Dict['music'][req_id]
+                title = music.get('title')
+                user = music.get('user', "A user")
+                id_type = music.get('source', "musicbrainz")
+                poster = music['poster']
+                subject = "Request Channel - New Album Request"
+                summary = ""
             else:
                 return
             message = user + " has made a new request! <br><br>\n" + \
@@ -2448,53 +2943,65 @@ def notifyRequest(req_id, req_type, title="", message=""):
             sendEmail(subject, message, 'html')
             Log.Debug("Email notification sent for: " + req_id)
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Email failed: " + e.message)
 
 
-def Notify(title, body, devices=None):
+def Notify(title, body):
     if Prefs['email_to']:
         try:
             if not sendEmail(title, body, 'html'):
                 Log.Debug("Email notification sent")
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Email failed: " + e.message)
     if Prefs['pushbullet_api']:
         try:
-            if devices:
-                for d in devices.split(','):
-                    if sendPushBullet(title, body, d):
+            if Prefs['pushbullet_devices']:
+                for d in Prefs['pushbullet_devices'].split(','):
+                    if sendPushBullet(title, body, d.strip()):
                         Log.Debug("Pushbullet notification sent to " + d)
             elif sendPushBullet(title, body):
                 Log.Debug("Pushbullet notification sent")
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("PushBullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
             if sendPushover(title, body):
                 Log.Debug("Pushover notification sent")
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug("Pushover failed: " + e.message)
+    if Prefs['slack_api']:
+        try:
+            if Prefs['slack_channels']:
+                for c in Prefs['slack_channels'].split(','):
+                    if sendSlack(body, c.strip()):
+                        Log.Debug("Slack notification sent to " + c.strip())
+            elif sendSlack(body):
+                Log.Debug("Slack notification sent")
+        except Exception as e:
+            Log.Error(str(traceback.format_exc()))  # raise e
+            Log.Debug("Slack failed: " + e.message)
 
 
 def sendPushBullet(title, body, device_iden=""):
     api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
                   'Content-Type': 'application/json'
                   }
+    # api_header = {'Authorization': 'Bearer ' + Prefs['pushbullet_api'],
+    #             'Content-Type': 'application/json'
+    #            }
     data = {'type': 'note', 'title': title, 'body': body}
     if device_iden:
         data['device_iden'] = device_iden
     if Prefs['pushbullet_channel']:
         data['channel_tag'] = Prefs['pushbullet_channel']
     values = JSON.StringFromObject(data)
-    return HTTP.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    pushbulletrequest = urllib2.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+    return urllib2.urlopen(pushbulletrequest, context=ctx)
 
 
 def sendPushover(title, message):
@@ -2506,6 +3013,17 @@ def sendPushalot(title, message):
     data = {'AuthorizationToken': Prefs['pushalot_api'], 'Title': title, 'Body': message, 'IsImportant': 'false',
             'IsSilent': 'false'}
     return HTTP.Request(PUSHALOT_API_URL, values=data)
+
+
+def sendSlack(message, channel=None):
+    data = {
+        'token': Prefs['slack_api'],
+        'username': Prefs['slack_user'],
+        'text': message
+    }
+    if channel:
+        data['channel'] = channel
+    return JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
 
 
 # noinspection PyUnresolvedReferences
@@ -2545,3 +3063,111 @@ def userFromToken(token):
         else:
             return "guest_" + Hash.SHA1(token)[:10]
     return ""
+
+def getPlexTVUser(token):
+    url = "https://plex.tv"
+    try:
+        xml = XML.ObjectFromURL(url, headers={'X-Plex-Token': token})
+        plexTVUser = xml.get("myPlexUsername")
+        return plexTVUser
+    except:
+        return None
+
+# Check if movies are marked as done in CouchPotato
+def checkCompletedMovieRequests():
+    if Prefs['couchpotato_url'] and Prefs["couchpotato_api"]:
+        cp_movie_list = None
+        try:
+            if not Prefs['couchpotato_url'].startswith("http"):
+                couchpotato_url = "http://" + Prefs['couchpotato_url']
+            else:
+                couchpotato_url = Prefs['couchpotato_url']
+            if not couchpotato_url.endswith("/"):
+                couchpotato_url += "/"
+            cp_movie_list = JSON.ObjectFromURL(
+                couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list?&status=done")
+        except Exception:
+            Log.Debug("Unable to load CouchPotato movie list")
+    radarr_movie_list = None
+    if Prefs['radarr_url'] and Prefs["radarr_api"]:
+        try:
+            if not Prefs['radarr_url'].startswith("http"):
+                radarr_url = "http://" + Prefs['radarr_url']
+            else:
+                radarr_url = Prefs['radarr_url']
+            if not radarr_url.endswith("/"):
+                radarr_url += "/"
+            radarr_movie_list = JSON.ObjectFromURL(
+                radarr_url + "api/movie/", headers={'X-Api-Key': Prefs['radarr_api']})
+        except Exception:
+            Log.Debug("Unable to load Radarr movie list")
+    for req_id in Dict['movie']:
+        if Dict['movie'][req_id].get('completed', False):
+            if Dict['debug']:
+                Log.Debug(str(req_id) + " is already completed.")
+            continue
+        if Dict['debug']:
+            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
+        if Prefs['couchpotato_url'] and Prefs["couchpotato_api"] and cp_movie_list:
+            for movie in cp_movie_list['movies']:
+                if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
+                        movie['info'].get('tmdb_id')) == Dict['movie'][req_id].get('tmdb', req_id):
+                    Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
+                        'id'] + ") marked as done in CouchPotato")
+                    Dict['movie'][req_id]['completed'] = True
+        if Prefs['radarr_url'] and Prefs["radarr_api"] and radarr_movie_list:
+            for movie in radarr_movie_list:
+                if str(movie.get('imdbId')) == Dict['movie'][req_id].get('imdb', req_id) or str(
+                        movie.get('tmdbId')) == Dict['movie'][req_id].get('tmdb', req_id):
+                    if movie.get('downloaded'):
+                        Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id][
+                            'id'] + ") marked as done in Radarr")
+                        Dict['movie'][req_id]['completed'] = True
+    Dict.Save()
+
+
+def checkCompletedMovies():
+    if 'movie' not in Dict:
+        if Dict['debug']:
+            Log.Debug("movie is not in Dict struture!")
+        return
+    for movie_id in Dict['movie']:
+        movie = Dict['movie'][movie_id]
+        if not movie.get('completed', False):
+            matches = Plex.matchMovie(movie.get('title'), movie.get('year'), local=1, secure=False, )
+            if len(matches) == 1:
+                movie['completed'] = True
+                if Dict['debug']:
+                    Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
+                if Prefs['notifyusercompletedmovie'] and movie.get('user'):
+                    if Dict['debug']:
+                        Log.Debug(str(movie.get('user')))
+                    if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
+                        if Dict['debug']:
+                            Log.Debug(str(Dict['register'][movie['user']].get('email')))
+                        subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
+                        message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
+                        "<font style='font-size:20px; font-weight:bold'> " + movie.get('title') + " </font><br>\n" + \
+                        "(" + movie.get('source',"") + " id: " + str(movie_id) + ") <br>\n" + \
+                        movie.get('summary', "") + " <br>\n" \
+                        "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
+                        if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie['user']].get('email'), subject, message, Prefs['email_server'],
+                                        Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                        Prefs['email_secure']):
+                            Log.Debug("Email sent to " + Dict['register'][movie['user']].get('email') + " for request " + str(movie_id))
+                        else:
+                            Log.Debug("Unable to send email notification to " + movie.get('user'))
+            elif len(matches) > 1:
+                Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
+                if Dict['debug']:
+                    Log.Debug(str(matches))
+            else:
+                if Dict['debug']:
+                    Log.Debug("No library matches found for " + str(movie_id))
+
+
+def validateEmail(email):
+ if len(email) > 7:
+    if re.match("^[A-z0-9._%+-]+@[A-z0-9.-]+\.[A-z]{2,}$", email) is not None:
+        return True
+ return False

@@ -4,7 +4,7 @@
     "label": "Movie Database  ",
     "type": "enum",
     "values": ["OpenMovieDatabase", "TheMovieDatabase"],
-    "default": "OpenMovieDatabase"
+    "default": "TheMovieDatabase"
   },
   {
     "id": "search_language",
@@ -38,6 +38,24 @@
     "default": "English"
   },
   {
+    "id": "movierequests",
+    "label": "Allow users to see requests Movies?",
+    "type": "bool",
+    "default": true
+  },
+  {
+    "id": "tvrequests",
+    "label": "Allow users to request TV Shows?",
+    "type": "bool",
+    "default": true
+  },
+  {
+    "id": "musicrequests",
+    "label": "Allow users to request Music Albums?",
+    "type": "bool",
+    "default": false
+  },
+  {
     "id": "usersviewrequests",
     "label": "Allow users to see requests page?",
     "type": "bool",
@@ -56,6 +74,18 @@
     "option": "hidden",
     "default": "",
     "secure": true
+  },
+  {
+    "id": "checkcompletedmoviesperiod",
+    "label": "Interval in hours to scan Plex Library for completed requests (set to 0 to disable)",
+    "type": "text",
+    "default": "0"
+  },
+  {
+    "id": "notifyusercompletedmovie",
+    "label": "Notify user when movie marked complete? (Requires email notification setup)",
+    "type": "bool",
+    "default": "false"
   },
   {
     "id": "register",
@@ -99,6 +129,42 @@
     "label": "CouchPotato Category Name (optional)",
     "type": "text",
     "default": ""
+  },
+  {
+    "id": "radarr_url",
+    "label": "Radarr URL",
+    "type": "text",
+    "default": "http://127.0.0.1:7878/"
+  },
+  {
+    "id": "radarr_api",
+    "label": "Radarr API Key",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "radarr_autorequest",
+    "label": "Automatically add request to Radarr?",
+    "type": "bool",
+    "default": false
+  },
+  {
+    "id": "radarr_profile",
+    "label": "Radarr Quality Profile",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "radarr_path",
+    "label": "Root folder for Movie to be placed in (optional)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "radarr_searchnow",
+    "label": "Search for movie on add?",
+    "type": "bool",
+    "default": false
   },
   {
     "id": "sonarr_url",
@@ -252,6 +318,24 @@
     "label": "Pushalot API Key",
     "type": "text",
     "default": ""
+  },
+  {
+    "id": "slack_api",
+    "label": "Slack Access Token",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "slack_user",
+    "label": "Slack User (optional)",
+    "type": "text",
+    "default": "Plex Request Channel"
+  },
+  {
+    "id": "slack_channels",
+    "label": "Slack Channels, comma separated (optional) (Example: #general,#mychannel)",
+    "type": "text",
+    "default": "#general"
   },
   {
     "id": "email_from",

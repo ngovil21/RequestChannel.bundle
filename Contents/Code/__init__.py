@@ -1,16 +1,11 @@
-from Keyboard import Keyboard, DUMB_KEYBOARD_CLIENTS, MESSAGE_OVERLAY_CLIENTS
-from DumbTools import DumbKeyboard, MESSAGE_OVERLAY_CLIENTS
-
-import re
-
-TITLE = 'Plex Request Channel'
-PREFIX = '/video/plexrequestchannel'
+TITLE = 'Request Channel'
+PREFIX = '/video/requestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-from Session import VERSION
-CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/PlexRequestChannel.bundle/master/CHANGELOG"
+from Session import VERSION, checkCompletedMovies
+from api import Plex, Email
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -41,6 +36,10 @@ TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
 from LocalePatch import SetAvailableLanguages
 
 LANGUAGES = ['en', 'fr', 'nl', 'de', 'it']
+
+runs = 0
+lastrun = Datetime.Now()
+
 
 ########################################################
 #   Start Code
@@ -83,7 +82,11 @@ def Start():
         Dict['debug'] = False
     if 'DumbKeyboard-History' not in Dict:
         Dict['DumbKeyboard-History'] = []
+    if 'sortbyname' not in Dict:
+        Dict['sortbyname'] = True
     Dict.Save()
+    Log.Debug(Network.Address)
+    PeriodicScan()
 
 
 def ValidatePrefs():
@@ -92,14 +95,46 @@ def ValidatePrefs():
 
 from Session import Session
 
+sessions = {}
+
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
 @handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
-    sesh = Session(session_id=Hash.MD5(str(Datetime.Now())))
+    toke = Request.Headers.get("X-Plex-Token", "")
+    if toke:
+        session_id = Hash.MD5(toke)       #Hash by token to create user session.
+    else:
+        session_id = Hash.MD5(str(Datetime.Now()))
+    if session_id in sessions:  # Prior session started, continue
+        sesh = sessions[session_id]
+    else:  # Create a new session
+        sesh = Session(session_id=session_id)
+        sessions[session_id] = sesh
+        RemoveOldSessions()
     return sesh.SMainMenu()
+
+
+def PeriodicScan():
+    RemoveOldSessions()
+    if Prefs['checkcompletedmoviesperiod'] and Prefs['checkcompletedmoviesperiod'].isdigit() and int(Prefs['checkcompletedmoviesperiod']) > 0:
+        checkCompletedMovies()
+        if Dict['debug']:
+            Log.Debug("Scanning library every %s hours for completed movies." % Prefs['checkcompletedmoviesperiod'])
+        Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
+
+
+def RemoveOldSessions():
+    for session_id in sessions:
+        if not sessions[session_id].lastrun:
+            continue
+        if (Datetime.Now() - sessions[session_id].lastrun).total_seconds() > 3600:      #if session last run over an hour ago then remove it
+            sessions.pop(session_id)
+            if Dict['debug']:
+                Log.Debug("Removing session " + str(session_id))
+
 
 """
 List of Client.Product and Client.Platform

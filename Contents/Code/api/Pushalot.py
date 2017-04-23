@@ -1,0 +1,1 @@
+PUSHALOT_API_URL = "https://pushalot.com/api/sendmessage"
