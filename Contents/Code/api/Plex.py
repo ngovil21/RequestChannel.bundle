@@ -21,6 +21,9 @@ def getURL(secure=False):
         else:
             return "http://" + PLEX_IP + ":" + PLEX_PORT + "/"
 
+def getSections(secure=False, headers={}):
+    return XML.ElementFromURL(url=getURL(secure) + "/library/sections", headers=headers)
+
 
 #search library for query and return xml
 def searchLibrary(query, local=1, secure=False, headers={}):

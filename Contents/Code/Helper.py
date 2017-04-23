@@ -33,6 +33,8 @@ def setupApi():
     Radarr.setURL(Prefs['radarr_url'])
     TheMovieDatabase.setAPI(TMDB_API_KEY)
     Pushbullet.setAPI(Prefs['pushbullet_api'])
+    Pushalot.setAPI(Prefs['pushalot_api'])
+    Pushover.setAPI(Prefs['pushover_api'])
     Slack.setAPI(Prefs['slack_api'])
     Slack.setUser(Prefs['slack_user'])
 
