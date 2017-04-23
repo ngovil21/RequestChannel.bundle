@@ -143,6 +143,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/blockuser' % session_id, self.BlockUser)
         Route.Connect(PREFIX + '/%s/sonarruser' % session_id, self.SonarrUser)
         Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
+        Route.Connect(PREFIX + '/%s/restrictsections' % session_id, self.RestrictSections)
         Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
         Route.Connect(PREFIX + '/%s/togglesorting' % session_id, self.ToggleSorting)
