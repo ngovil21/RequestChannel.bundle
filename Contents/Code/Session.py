@@ -2347,6 +2347,7 @@ class Session:
                 Dict['restrictedsections'].append(section)
                 if Dict['debug']:
                     Log.Debug(str(Dict['restrictedsections']))
+            Dict.Save()
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
