@@ -144,6 +144,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/sonarruser' % session_id, self.SonarrUser)
         Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
         Route.Connect(PREFIX + '/%s/restrictsections' % session_id, self.RestrictSections)
+        Route.Connect(PREFIX + '/%s/restrictsection' % session_id, self.RestrictSection)
         Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
         Route.Connect(PREFIX + '/%s/togglesorting' % session_id, self.ToggleSorting)
@@ -2324,7 +2325,7 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
-    def RestrictSections(self, section=None, message=None):
+    def RestrictSections(self, message=None):
         self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2333,17 +2334,6 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message, replace_parent=True, no_history=True, no_cache=True)
         else:
             oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True, no_history=True, no_cache=True)
-
-        debug(str(Request.Headers))
-        if section:
-            debug("Before: " + str(Dict['restrictedsections']))
-            if section in Dict['restrictedsections']:
-                Dict['restrictedsections'].remove(section)
-                debug("After: " + str(Dict['restrictedsections']))
-            else:
-                Dict['restrictedsections'].append(section)
-                debug("After: " + str(Dict['restrictedsections']))
-            Dict.Save()
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
@@ -2352,11 +2342,23 @@ class Session:
                     header = "*"
                 else:
                     header = ""
-                oc.add(DirectoryObject(key=Callback(self.RestrictSections, section=s),
+                oc.add(DirectoryObject(key=Callback(self.RestrictSection, section=s),
                                        title=header + d.attrib.get('title', "Unknown Section"),
                                        thumb=d.attrib.get('thumb', None)))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
+
+    def RestrictSection(self, section):
+        debug("Before: " + str(Dict['restrictedsections']))
+        message = None
+        if section in Dict['restrictedsections']:
+            Dict['restrictedsections'].remove(section)
+            debug("After: " + str(Dict['restrictedsections']))
+        else:
+            Dict['restrictedsections'].append(section)
+            debug("After: " + str(Dict['restrictedsections']))
+        Dict.Save()
+        return self.RestrictSections(message)
 
     def ManageUsers(self, message=None):
         self.update_run()
