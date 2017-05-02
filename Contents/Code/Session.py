@@ -2618,7 +2618,7 @@ class Session:
     def NavigateMedia(self, path=None):
         self.update_run()
         if not path:
-            path = "/library/sections"
+            path = "/library/sections/"
             parent = None
         else:
             parent = path[:path.rfind("/") - 1]
@@ -2632,7 +2632,7 @@ class Session:
         view_group = container.get('viewGroup', 'secondary')
         if 'parentKey' in container.attrib:
             parent = container.attrib.get("parentKey", None)
-        elif 'librarySectionID' in container.attrib:
+        elif 'librarySectionID' in container.attrib and 'librarySectionTitle' in container.attrib:
             parent = "/library/sections/" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
