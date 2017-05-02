@@ -2365,7 +2365,7 @@ class Session:
             Dict['restrictedsections'].append(section)
             debug("After: " + str(Dict['restrictedsections']))
         Dict.Save()
-        self.counter = counter
+        self.counter = int(counter)
         return self.RestrictSections(message)
 
     def ManageUsers(self, message=None):
