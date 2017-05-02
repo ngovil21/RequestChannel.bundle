@@ -2618,7 +2618,7 @@ class Session:
     def NavigateMedia(self, path=None):
         self.update_run()
         if not path:
-            path = "/library/sections/"
+            path = "/library/sections"
             parent = None
         else:
             parent = path[:path.rfind("/") - 1]
