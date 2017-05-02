@@ -671,7 +671,7 @@ class Session:
                 except Exception as e:
                     Log.Debug(e)
                     debug(str(traceback.format_exc()))
-                        # raise e
+                    # raise e
                 count += 1
             if series_id == "":
                 Log.Debug("No id found!")
@@ -1487,7 +1487,7 @@ class Session:
                     oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
         except:
             debug(str(traceback.format_exc()))
-                # raise e
+            # raise e
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
             else:
@@ -2318,6 +2318,7 @@ class Session:
             sections = " (All)"
         else:
             sections = " (" + ", ".join(Dict['restrictedsections']) + ")"
+        self.restrictsection = True
         oc.add(
             DirectoryObject(key=Callback(self.RestrictSections),
                             title=L("Restrict Sections") + sections))
@@ -2333,7 +2334,8 @@ class Session:
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message, replace_parent=True, no_history=True, no_cache=True)
         else:
-            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True, no_history=True, no_cache=True)
+            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True, no_history=True,
+                                 no_cache=True)
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
@@ -2342,15 +2344,19 @@ class Session:
                     header = "*"
                 else:
                     header = ""
-                oc.add(DirectoryObject(key=Callback(self.RestrictSection, section=s),
-                                       title=header + d.attrib.get('title', "Unknown Section"),
-                                       thumb=d.attrib.get('thumb', None)))
+                oc.add(DirectoryObject(
+                    key=Callback(self.RestrictSection, section=s),
+                    title=header + d.attrib.get('title', "Unknown Section"),
+                    thumb=d.attrib.get('thumb', None)))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
     def RestrictSection(self, section):
         debug("Before: " + str(Dict['restrictedsections']))
         message = None
+        if not self.restrictsection:
+            self.restrictsection = True
+            return self.RestrictSections()
         if section in Dict['restrictedsections']:
             Dict['restrictedsections'].remove(section)
             debug("After: " + str(Dict['restrictedsections']))
@@ -2358,6 +2364,7 @@ class Session:
             Dict['restrictedsections'].append(section)
             debug("After: " + str(Dict['restrictedsections']))
         Dict.Save()
+        self.restrictsection = False
         return self.RestrictSections(message)
 
     def ManageUsers(self, message=None):
@@ -2458,7 +2465,7 @@ class Session:
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
-                return self.ManageUser(toke= toke, message=L("User has been blocked."))
+                return self.ManageUser(toke=toke, message=L("User has been blocked."))
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['blocked'].remove(toke)
@@ -3217,11 +3224,13 @@ def checkCompletedMovies():
                 Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
                 debug(str(matches))
             else:
-               debug("No library matches found for " + str(movie_id))
+                debug("No library matches found for " + str(movie_id))
+
 
 def debug(message):
     if Dict['debug']:
         Log.Debug(message)
+
 
 def validateEmail(email):
     if len(email) > 7:
