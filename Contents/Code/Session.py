@@ -2356,7 +2356,8 @@ class Session:
     def RestrictSection(self, section, counter):
         debug("Before: " + str(Dict['restrictedsections']))
         message = None
-        if counter < self.counter:
+        if counter <= self.counter:
+            debug("Self counter is " + str(self.counter))
             return self.RestrictSections(message)
         if section in Dict['restrictedsections']:
             Dict['restrictedsections'].remove(section)
