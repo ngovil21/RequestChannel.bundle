@@ -11,7 +11,7 @@ from api import *
 import Helper
 
 TITLE = 'Request Channel'
-PREFIX = '/requestchannel'
+PREFIX = '/video/requestchannel'
 
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
