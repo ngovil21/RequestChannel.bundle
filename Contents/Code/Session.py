@@ -2330,9 +2330,9 @@ class Session:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(header=TITLE, message=message)
+            oc = ObjectContainer(header=TITLE, message=message, replace_parent = true)
         else:
-            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message)
+            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent = true)
         if section:
             debug("Before: " + str(Dict['restrictedsections']))
             if section in Dict['restrictedsections']:
@@ -2346,8 +2346,6 @@ class Session:
         if page:
             for d in page.xpath("//Directory"):
                 s = d.attrib.get('key')
-                if Dict['debug']:
-                    Log.Debug(s)
                 if s in Dict['restrictedsections']:
                     header = "*"
                 else:
@@ -2456,7 +2454,7 @@ class Session:
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
-                return self.ManageUser(toke == toke, message=L("User has been blocked."))
+                return self.ManageUser(toke= toke, message=L("User has been blocked."))
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['blocked'].remove(toke)
