@@ -2333,6 +2333,8 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message, replace_parent=True, no_history=True, no_cache=True)
         else:
             oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True, no_history=True, no_cache=True)
+
+        debug(str(Request.Headers))
         if section:
             debug("Before: " + str(Dict['restrictedsections']))
             if section in Dict['restrictedsections']:
