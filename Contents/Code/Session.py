@@ -2332,7 +2332,7 @@ class Session:
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message, replace_parent = true)
         else:
-            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent = true)
+            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True)
         if section:
             debug("Before: " + str(Dict['restrictedsections']))
             if section in Dict['restrictedsections']:
