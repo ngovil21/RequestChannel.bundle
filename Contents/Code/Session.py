@@ -2358,9 +2358,6 @@ class Session:
         message = None
         if counter < self.counter:
             return None
-        if not self.restrictsection:
-            self.restrictsection = True
-            return self.RestrictSections()
         if section in Dict['restrictedsections']:
             Dict['restrictedsections'].remove(section)
             debug("After: " + str(Dict['restrictedsections']))
