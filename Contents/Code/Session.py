@@ -16,8 +16,8 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.9.0"
-BRANCH = "master"
+VERSION = "0.9.1"
+BRANCH = "MASTER"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -27,6 +27,7 @@ TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/"
 POSTER_SIZE = "w500/"
 BACKDROP_SIZE = "original/"
 ########################################################
+
 
 ### URL Constants for OpenMovieDataBase ################
 OMDB_API_URL = "http://www.omdbapi.com/"
@@ -143,6 +144,8 @@ class Session:
         Route.Connect(PREFIX + '/%s/blockuser' % session_id, self.BlockUser)
         Route.Connect(PREFIX + '/%s/sonarruser' % session_id, self.SonarrUser)
         Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
+        Route.Connect(PREFIX + '/%s/allowedsections' % session_id, self.AllowedSections)
+        Route.Connect(PREFIX + '/%s/allowsection' % session_id, self.AllowSection)
         Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
         Route.Connect(PREFIX + '/%s/togglesorting' % session_id, self.ToggleSorting)
@@ -160,7 +163,7 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         if not self.is_admin:
             self.user = getPlexTVUser(self.token)
-            if not self.user:     #Fallback if we are unable to get the username
+            if not self.user:  # Fallback if we are unable to get the username
                 Log.Debug("Unable to get username from Plex.tv, using token...")
                 self.user = self.token
         else:
@@ -169,6 +172,7 @@ class Session:
         self.product = Client.Product
         self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
         self.lastrun = Datetime.Now()
+        self.counter = 0
         Log.Debug("User is " + str(self.user))
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
@@ -188,14 +192,14 @@ class Session:
                 Dict['register'].pop(self.token)
         elif self.user and self.user not in Dict['register']:
             if self.token in Dict['register'] and self.user != self.token:
-                Dict['register'][self.user] = Dict['register'][self.token]  #Copy token info over to username
-                Dict['register'].pop(self.token, None)  #remove token from register (deprecated)
+                Dict['register'][self.user] = Dict['register'][self.token]  # Copy token info over to username
+                Dict['register'].pop(self.token, None)  # remove token from register (deprecated)
                 Dict['register'][self.user]['type'] = 'user'
             elif self.user == self.token:
                 Dict['register'][self.token] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'token'}
                 if Prefs['register']:
                     return self.Register()
-            else: #new user, register by username
+            else:  # new user, register by username
                 Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'user'}
             Dict.Save()
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
@@ -323,7 +327,7 @@ class Session:
             elif Client.Product == "Plex Web":
                 oc.message = L("Type your email in the searchbox and press enter")
                 oc.add(InputDirectoryObject(key=Callback(self.ChangeEmail), title="Email",
-                                         prompt=L("Type in your email:")))
+                                            prompt=L("Type in your email:")))
             else:
                 oc.add(InputDirectoryObject(key=Callback(self.ChangeEmail), title="Email",
                                             prompt=L("Type in your email:")))
@@ -335,9 +339,6 @@ class Session:
         else:
             Dict['register'][self.user]['email'] = query
             return self.UserSettings(message="Email changed")
-
-
-
 
     def SwitchKeyboard(self):
         self.use_dumb_keyboard = not self.use_dumb_keyboard
@@ -506,7 +507,8 @@ class Session:
             if local_search:
                 videos = local_search.xpath("//Video")
                 for video in videos:
-                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib['type'] == 'movie':
+                    if video.attrib['title'] == title and video.attrib['year'] == year and video.attrib[
+                        'type'] == 'movie':
                         Log.Debug("Possible match found: " + str(video.attrib['ratingKey']))
                         summary = "(In Library: " + video.attrib['librarySectionTitle'] + ") " + (
                             video.attrib['summary'] if video.attrib['summary'] else "")
@@ -669,10 +671,9 @@ class Session:
                     if poster_text:
                         poster = TVDB_BANNER_URL + poster_text[0]
                 except Exception as e:
-                    if Dict['debug']:
-                        Log.Error(str(traceback.format_exc()))
-                        # raise e
                     Log.Debug(e)
+                    debug(str(traceback.format_exc()))
+                    # raise e
                 count += 1
             if series_id == "":
                 Log.Debug("No id found!")
@@ -1058,9 +1059,9 @@ class Session:
                     continue
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('completed', False):           #Use * for completed
+                if d.get('completed', False):  # Use * for completed
                     title_year = "* " + title_year
-                elif d.get('automated', False):         #Use + for automated
+                elif d.get('automated', False):  # Use + for automated
                     title_year = "+ " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 date = ""
@@ -1081,9 +1082,10 @@ class Session:
                                        title=L("Add All Movie Requests"),
                                        thumb=R('plus.png')))
             if len(oc) > 1 and self.is_admin:
-                oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie', token_hash=token_hash),
-                                       title=L("Clear All Completed Requests"),
-                                       thumb=R('trash.png')))
+                oc.add(DirectoryObject(
+                    key=Callback(self.ConfirmDeleteCompletedRequests, req_type='movie', token_hash=token_hash),
+                    title=L("Clear All Completed Requests"),
+                    thumb=R('trash.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmDeleteRequests, req_type='movie'),
                                        title=L("Clear All Movie Requests"),
@@ -1256,13 +1258,17 @@ class Session:
             DirectoryObject(key=Callback(self.ClearCompletedRequests, req_type=req_type), title=L("Yes"),
                             thumb=R('check.png')))
         if req_type == 'movie':
-            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash), title=L("No"),
+                                   thumb=R('x-mark.png')))
         elif req_type == 'tv':
-            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash), title=L("No"),
+                                   thumb=R('x-mark.png')))
         elif req_type == 'music':
-            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash), title=L("No"),
+                                   thumb=R('x-mark.png')))
         else:
-            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title=L("No"), thumb=R('x-mark.png')))
+            oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash), title=L("No"),
+                                   thumb=R('x-mark.png')))
         return oc
 
     def ClearCompletedRequests(self, req_type):
@@ -1402,7 +1408,7 @@ class Session:
         self.update_run()
         if req_id in Dict[req_type]:
             Dict[req_type].pop(req_id)
-            Thread.Sleep(0.03)          #Wait 30ms to save dict
+            Thread.Sleep(0.03)  # Wait 30ms to save dict
             Dict.Save()
             message = L("Request was deleted")
         else:
@@ -1482,9 +1488,8 @@ class Session:
                 else:
                     oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
         except:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))
-                # raise e
+            debug(str(traceback.format_exc()))
+            # raise e
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
             else:
@@ -1512,8 +1517,7 @@ class Session:
             movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list",
                                             values=dict(status="active"))
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return self.SMainMenu(message=L("Error loading CouchPotato"))
 
@@ -1563,8 +1567,7 @@ class Session:
             movie_delete = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.delete",
                                               values=dict(id=movie_id, delete_from="wanted"))
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
 
@@ -1908,8 +1911,7 @@ class Session:
                 return self.ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback,
                                              message=L("Series sent to Sonarr"))
             except Exception as e:
-                if Dict['debug']:
-                    Log(str(show))
+                debug(str(show))
                 Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending show to Sonarr"))
@@ -1929,8 +1931,7 @@ class Session:
                 return self.ManageSonarrShow(series_id=series_id, callback=callback,
                                              message=L("Season(s) sent sent to Sonarr"))
             except Exception as e:
-                if Dict['debug']:
-                    Log.Debug(str(data))
+                debug(str(data))
                 Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending season to Sonarr"))
@@ -2021,11 +2022,10 @@ class Session:
                 else:
                     oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2=L("Error"))
         except Exception as e:
-            if Dict['debug']:
-                Log.Debug(str(data))
-            Log.Error(str(traceback.format_exc()))  # raise e
-            oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
             Log.Debug(e.message)
+            debug(str(data))
+            debug(str(traceback.format_exc()))  # raise e
+            oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
         # Thread.Sleep(2)
         if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
             count = 0
@@ -2068,10 +2068,9 @@ class Session:
                                      callback=Callback(self.ManageSickbeard)),
                         rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
         except Exception as e:
-            if Dict['debug']:
-                Log.Debug(str(data))
-            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
+            debug(str(data))
+            debug(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message=F("sickbeardshowserror", Prefs['sickbeard_fork']))
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
@@ -2197,9 +2196,8 @@ class Session:
                             JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data2,
                                                method='GET' if use_sickrage else 'POST')
                         except:
-                            if Dict['debug']:
-                                Log.Debug(str(resp))
-                            Log.Error(str(traceback.format_exc()))  # raise e
+                            debug(str(resp))
+                            debug(str(traceback.format_exc()))  # raise e
                             Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
                 else:
                     Log.Debug(JSON.StringFromObject(resp))
@@ -2318,9 +2316,59 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.ToggleSorting),
                             title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
+        if len(Dict['allowedsections']) < 1:
+            sections = " (All)"
+        else:
+            sections = " (" + ", ".join(Dict['allowedsections']) + ")"
+
+        self.counter = 0
+        oc.add(
+            DirectoryObject(key=Callback(self.AllowedSections),
+                            title=L("Allow Sections for Reporting") + sections))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
+
+    def AllowedSections(self, message=None):
+        self.update_run()
+        if not self.is_admin:
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
+                                  title2=L("Admin only"))
+        if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc = ObjectContainer(header=TITLE, message=message, replace_parent=True, no_history=True, no_cache=True)
+        else:
+            oc = ObjectContainer(title1=L("Allow Sections"), title2=message, replace_parent=True, no_history=True,
+                                 no_cache=True)
+        page = Plex.getSections(headers={'X-Plex-Token': self.token})
+        if page:
+            for d in page.xpath("//Directory"):
+                s = d.attrib.get('key')
+                if s in Dict['allowedsections']:
+                    header = "*"
+                else:
+                    header = ""
+                oc.add(DirectoryObject(
+                    key=Callback(self.AllowSection, section=s, counter=self.counter + 1),
+                    title=header + d.attrib.get('title', "Unknown Section"),
+                    thumb=d.attrib.get('thumb', None)))
+        oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
+        return oc
+
+    def AllowSection(self, section, counter):
+        debug("Before: " + str(Dict['allowedsections']))
+        message = None
+        if int(counter) <= self.counter:
+            debug("Self counter is " + str(self.counter))
+            return self.AllowedSections(message)
+        if section in Dict['allowedsections']:
+            Dict['allowedsections'].remove(section)
+            debug("After: " + str(Dict['allowedsections']))
+        else:
+            Dict['allowedsections'].append(section)
+            debug("After: " + str(Dict['allowedsections']))
+        Dict.Save()
+        self.counter = int(counter)
+        return self.AllowedSections(message)
 
     def ManageUsers(self, message=None):
         self.update_run()
@@ -2339,7 +2387,7 @@ class Session:
                     user = key
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=key),
-                                    title=user + ": " + str(Dict['register'][key].get('requests',0))))
+                                    title=user + ": " + str(Dict['register'][key].get('requests', 0))))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
@@ -2350,9 +2398,11 @@ class Session:
                                   title2=L("Admin only"))
         if toke in Dict['register']:
             if Dict['register'][toke].get('nickname'):
-                user = Dict['register'][toke].get('nickname')
+                user = Dict['register'][toke].get('nicknamFe')
             else:
                 user = toke
+        else:
+            user = None
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
@@ -2420,7 +2470,7 @@ class Session:
             else:
                 Dict['blocked'].append(toke)
                 Dict.Save()
-                return self.ManageUser(toke == toke, message=L("User has been blocked."))
+                return self.ManageUser(toke=toke, message=L("User has been blocked."))
         elif setter == 'False':
             if toke in Dict['blocked']:
                 Dict['blocked'].remove(toke)
@@ -2453,7 +2503,9 @@ class Session:
         self.update_run()
         if not self.is_admin:
             return self.SMainMenu("Only an admin can manage the channel!", title1="Main Menu", title2="Admin only")
-        oc = ObjectContainer(title1=L("Confirm Delete User?"), title2=Dict['register'][toke]['nickname'] if toke in Dict['register'] else "User Does Not Exist")
+        oc = ObjectContainer(title1=L("Confirm Delete User?"),
+                             title2=Dict['register'][toke]['nickname'] if toke in Dict[
+                                 'register'] else "User Does Not Exist")
         if confirmed == 'False':
             oc.add(DirectoryObject(key=Callback(self.DeleteUser, toke=toke, confirmed='True'), title=L("Yes")))
             oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke), title=L("No")))
@@ -2491,7 +2543,6 @@ class Session:
 
         return MessageContainer(header=TITLE, message="Unknown response")
 
-
     def Changelog(self):
         self.update_run()
         oc = ObjectContainer(title1=TITLE, title2=L("Changelog"))
@@ -2509,7 +2560,6 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel"),
                                thumb=R('return.png')))
         return oc
-
 
     def ToggleDebug(self, toggle=None):
         self.update_run()
@@ -2572,7 +2622,12 @@ class Session:
             path = "/library/sections"
             parent = None
         else:
-            parent = path[:path.rfind("/") - 1]
+            if path.rfind("/") > -1:
+                parent = path[:path.rfind("/") - 1]
+                if parent == "/library/section":
+                    parent = "/library/sections"
+            else:
+                parent = None
         headers = {'X-Plex-Token': self.token}
         try:
             page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=headers)
@@ -2583,7 +2638,7 @@ class Session:
         view_group = container.get('viewGroup', 'secondary')
         if 'parentKey' in container.attrib:
             parent = container.attrib.get("parentKey", None)
-        elif 'librarySectionID' in container.attrib:
+        elif 'librarySectionID' in container.attrib and 'librarySectionTitle' in container.attrib:
             parent = "/library/sections/" + container.attrib['librarySectionID']
         title = container.attrib.get('title1', "")
         oc = ObjectContainer(title1="Report Problem", title2=title)
@@ -2595,6 +2650,10 @@ class Session:
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
+                if path == "/library/sections":
+                    if 'allowedsections' in Dict and len(Dict['allowedsections']) > 0:
+                        if d.attrib.get('key') not in Dict['allowedsections']:
+                            continue
                 dir_type = d.attrib.get('type', None)
                 if dir_type == 'show' and 'filters' not in d.attrib:
                     oc.add(
@@ -3064,6 +3123,7 @@ def userFromToken(token):
             return "guest_" + Hash.SHA1(token)[:10]
     return ""
 
+
 def getPlexTVUser(token):
     url = "https://plex.tv"
     try:
@@ -3072,6 +3132,7 @@ def getPlexTVUser(token):
         return plexTVUser
     except:
         return None
+
 
 # Check if movies are marked as done in CouchPotato
 def checkCompletedMovieRequests():
@@ -3139,35 +3200,51 @@ def checkCompletedMovies():
                 movie['completed'] = True
                 if Dict['debug']:
                     Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
-                if Prefs['notifyusercompletedmovie'] and movie.get('user'):
+                if Prefs['email_server'] and Prefs['email_port'] and Prefs['notifyusercompletedmovie'] and movie.get(
+                        'user'):
                     if Dict['debug']:
                         Log.Debug(str(movie.get('user')))
+                    subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
+                    message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
+                              "<font style='font-size:20px; font-weight:bold'> " + movie.get(
+                        'title') + " </font><br>\n" + \
+                              "(" + movie.get('source', "") + " id: " + str(movie_id) + ") <br>\n" + \
+                              movie.get('summary', "") + " <br>\n" \
+                                                         "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
                     if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
                         if Dict['debug']:
                             Log.Debug(str(Dict['register'][movie['user']].get('email')))
-                        subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
-                        message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
-                        "<font style='font-size:20px; font-weight:bold'> " + movie.get('title') + " </font><br>\n" + \
-                        "(" + movie.get('source',"") + " id: " + str(movie_id) + ") <br>\n" + \
-                        movie.get('summary', "") + " <br>\n" \
-                        "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
-                        if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie['user']].get('email'), subject, message, Prefs['email_server'],
-                                        Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
-                                        Prefs['email_secure']):
-                            Log.Debug("Email sent to " + Dict['register'][movie['user']].get('email') + " for request " + str(movie_id))
+                        if not Email.sendEmail(Prefs['email_from'], Dict['register'][movie['user']].get('email'),
+                                               subject, message, Prefs['email_server'],
+                                               Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                               Prefs['email_secure']):
+                            Log.Debug(
+                                "Email sent to " + Dict['register'][movie['user']].get('email') + " for request " + str(
+                                    movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
+                    if not Email.sendEmail(Prefs['email_from'], Prefs['email_to'], subject,
+                                           message, Prefs['email_server'],
+                                           Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                           Prefs['email_secure']):
+                        Log.Debug("Email sent to " + Prefs['email_to'] + " for request " + str(movie_id))
+                    else:
+                        Log.Debug("Unable to send email notification to " + Prefs['email_to'])
+
             elif len(matches) > 1:
                 Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
-                if Dict['debug']:
-                    Log.Debug(str(matches))
+                debug(str(matches))
             else:
-                if Dict['debug']:
-                    Log.Debug("No library matches found for " + str(movie_id))
+                debug("No library matches found for " + str(movie_id))
+
+
+def debug(message):
+    if Dict['debug']:
+        Log.Debug(message)
 
 
 def validateEmail(email):
- if len(email) > 7:
-    if re.match("^[A-z0-9._%+-]+@[A-z0-9.-]+\.[A-z]{2,}$", email) is not None:
-        return True
- return False
+    if len(email) > 7:
+        if re.match("^[A-z0-9._%+-]+@[A-z0-9.-]+\.[A-z]{2,}$", email) is not None:
+            return True
+    return False

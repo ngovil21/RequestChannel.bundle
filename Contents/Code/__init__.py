@@ -84,6 +84,8 @@ def Start():
         Dict['DumbKeyboard-History'] = []
     if 'sortbyname' not in Dict:
         Dict['sortbyname'] = True
+    if 'allowedsections' not in Dict:
+        Dict['allowedsections'] = []
     Dict.Save()
     Log.Debug(Network.Address)
     PeriodicScan()
