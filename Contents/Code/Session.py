@@ -171,6 +171,7 @@ class Session:
         self.product = Client.Product
         self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
         self.lastrun = Datetime.Now()
+        self.counter = 0
         Log.Debug("User is " + str(self.user))
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
@@ -2318,7 +2319,8 @@ class Session:
             sections = " (All)"
         else:
             sections = " (" + ", ".join(Dict['restrictedsections']) + ")"
-        self.restrictsection = True
+
+        self.counter=0
         oc.add(
             DirectoryObject(key=Callback(self.RestrictSections),
                             title=L("Restrict Sections") + sections))
@@ -2345,15 +2347,17 @@ class Session:
                 else:
                     header = ""
                 oc.add(DirectoryObject(
-                    key=Callback(self.RestrictSection, section=s),
+                    key=Callback(self.RestrictSection, section=s, counter=self.counter),
                     title=header + d.attrib.get('title', "Unknown Section"),
                     thumb=d.attrib.get('thumb', None)))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
-    def RestrictSection(self, section):
+    def RestrictSection(self, section, counter):
         debug("Before: " + str(Dict['restrictedsections']))
         message = None
+        if counter < self.counter:
+            return None
         if not self.restrictsection:
             self.restrictsection = True
             return self.RestrictSections()
@@ -2364,7 +2368,7 @@ class Session:
             Dict['restrictedsections'].append(section)
             debug("After: " + str(Dict['restrictedsections']))
         Dict.Save()
-        self.restrictsection = False
+        self.counter += 1
         return self.RestrictSections(message)
 
     def ManageUsers(self, message=None):
