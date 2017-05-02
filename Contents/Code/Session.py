@@ -143,8 +143,8 @@ class Session:
         Route.Connect(PREFIX + '/%s/blockuser' % session_id, self.BlockUser)
         Route.Connect(PREFIX + '/%s/sonarruser' % session_id, self.SonarrUser)
         Route.Connect(PREFIX + '/%s/deleteuser' % session_id, self.DeleteUser)
-        Route.Connect(PREFIX + '/%s/restrictsections' % session_id, self.RestrictSections)
-        Route.Connect(PREFIX + '/%s/restrictsection' % session_id, self.RestrictSection)
+        Route.Connect(PREFIX + '/%s/allowedsections' % session_id, self.AllowedSections)
+        Route.Connect(PREFIX + '/%s/allowsection' % session_id, self.AllowSection)
         Route.Connect(PREFIX + '/%s/resetdict' % session_id, self.ResetDict)
         Route.Connect(PREFIX + '/%s/changelog' % session_id, self.Changelog)
         Route.Connect(PREFIX + '/%s/togglesorting' % session_id, self.ToggleSorting)
@@ -2315,20 +2315,20 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.ToggleSorting),
                             title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
-        if len(Dict['restrictedsections']) < 1:
+        if len(Dict['allowedsections']) < 1:
             sections = " (All)"
         else:
-            sections = " (" + ", ".join(Dict['restrictedsections']) + ")"
+            sections = " (" + ", ".join(Dict['allowedsections']) + ")"
 
         self.counter = 0
         oc.add(
-            DirectoryObject(key=Callback(self.RestrictSections),
-                            title=L("Restrict Sections") + sections))
+            DirectoryObject(key=Callback(self.AllowedSections),
+                            title=L("Allow Sections for Reporting") + sections))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
-    def RestrictSections(self, message=None):
+    def AllowedSections(self, message=None):
         self.update_run()
         if not self.is_admin:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
@@ -2336,38 +2336,38 @@ class Session:
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(header=TITLE, message=message, replace_parent=True, no_history=True, no_cache=True)
         else:
-            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True, no_history=True,
+            oc = ObjectContainer(title1=L("Allow Sections"), title2=message, replace_parent=True, no_history=True,
                                  no_cache=True)
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
             for d in page.xpath("//Directory"):
                 s = d.attrib.get('key')
-                if s in Dict['restrictedsections']:
+                if s in Dict['allowedsections']:
                     header = "*"
                 else:
                     header = ""
                 oc.add(DirectoryObject(
-                    key=Callback(self.RestrictSection, section=s, counter=self.counter+1),
+                    key=Callback(self.AllowSection, section=s, counter=self.counter + 1),
                     title=header + d.attrib.get('title', "Unknown Section"),
                     thumb=d.attrib.get('thumb', None)))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
         return oc
 
-    def RestrictSection(self, section, counter):
-        debug("Before: " + str(Dict['restrictedsections']))
+    def AllowSection(self, section, counter):
+        debug("Before: " + str(Dict['allowedsections']))
         message = None
         if int(counter) <= self.counter:
             debug("Self counter is " + str(self.counter))
-            return self.RestrictSections(message)
-        if section in Dict['restrictedsections']:
-            Dict['restrictedsections'].remove(section)
-            debug("After: " + str(Dict['restrictedsections']))
+            return self.AllowedSections(message)
+        if section in Dict['allowedsections']:
+            Dict['allowedsections'].remove(section)
+            debug("After: " + str(Dict['allowedsections']))
         else:
-            Dict['restrictedsections'].append(section)
-            debug("After: " + str(Dict['restrictedsections']))
+            Dict['allowedsections'].append(section)
+            debug("After: " + str(Dict['allowedsections']))
         Dict.Save()
         self.counter = int(counter)
-        return self.RestrictSections(message)
+        return self.AllowedSections(message)
 
     def ManageUsers(self, message=None):
         self.update_run()
@@ -2645,8 +2645,8 @@ class Session:
         if len(dirs) > 0:
             for d in dirs:
                 if path == "/library/sections":
-                    if 'restrictedsections' in Dict and len(Dict['restrictedsections']) > 0:
-                        if d.attrib.get('key') not in Dict['restrictedsections']:
+                    if 'allowedsections' in Dict and len(Dict['allowedsections']) > 0:
+                        if d.attrib.get('key') not in Dict['allowedsections']:
                             continue
                 dir_type = d.attrib.get('type', None)
                 if dir_type == 'show' and 'filters' not in d.attrib:
