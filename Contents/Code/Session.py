@@ -2644,9 +2644,10 @@ class Session:
         dirs = page.xpath("//Directory")
         if len(dirs) > 0:
             for d in dirs:
-                if 'restrictedsections' in Dict and len(Dict['restrictedsections']) > 0:
-                    if d.attrib.get('key') not in Dict['restrictedsections']:
-                        continue
+                if path == "/library/sections":
+                    if 'restrictedsections' in Dict and len(Dict['restrictedsections']) > 0:
+                        if d.attrib.get('key') not in Dict['restrictedsections']:
+                            continue
                 dir_type = d.attrib.get('type', None)
                 if dir_type == 'show' and 'filters' not in d.attrib:
                     oc.add(
