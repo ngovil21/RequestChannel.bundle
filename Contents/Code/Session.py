@@ -668,10 +668,9 @@ class Session:
                     if poster_text:
                         poster = TVDB_BANNER_URL + poster_text[0]
                 except Exception as e:
-                    if Dict['debug']:
-                        Log.Error(str(traceback.format_exc()))
-                        # raise e
                     Log.Debug(e)
+                    debug(str(traceback.format_exc()))
+                        # raise e
                 count += 1
             if series_id == "":
                 Log.Debug("No id found!")
@@ -1486,8 +1485,7 @@ class Session:
                 else:
                     oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
         except:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))
+            debug(str(traceback.format_exc()))
                 # raise e
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
@@ -1516,8 +1514,7 @@ class Session:
             movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list",
                                             values=dict(status="active"))
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return self.SMainMenu(message=L("Error loading CouchPotato"))
 
@@ -1567,8 +1564,7 @@ class Session:
             movie_delete = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.delete",
                                               values=dict(id=movie_id, delete_from="wanted"))
         except Exception as e:
-            if Dict['debug']:
-                Log.Error(str(traceback.format_exc()))  # raise e
+            debug(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
             return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
 
@@ -1912,8 +1908,7 @@ class Session:
                 return self.ManageSonarrShow(series_id=series_id, title=show['title'], callback=callback,
                                              message=L("Series sent to Sonarr"))
             except Exception as e:
-                if Dict['debug']:
-                    Log(str(show))
+                debug(str(show))
                 Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + str(Response.Status) + " - " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending show to Sonarr"))
@@ -1933,8 +1928,7 @@ class Session:
                 return self.ManageSonarrShow(series_id=series_id, callback=callback,
                                              message=L("Season(s) sent sent to Sonarr"))
             except Exception as e:
-                if Dict['debug']:
-                    Log.Debug(str(data))
+                debug(str(data))
                 Log.Error(str(traceback.format_exc()))  # raise e
                 Log.Debug("Sonarr Monitor failed: " + e.message)
                 return MessageContainer(header=Title, message=L("Error sending season to Sonarr"))
@@ -2025,11 +2019,10 @@ class Session:
                 else:
                     oc = ObjectContainer(title1=Prefs['sickbeard_fork'], title2=L("Error"))
         except Exception as e:
-            if Dict['debug']:
-                Log.Debug(str(data))
-            Log.Error(str(traceback.format_exc()))  # raise e
-            oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
             Log.Debug(e.message)
+            debug(str(data))
+            debug(str(traceback.format_exc()))  # raise e
+            oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
         # Thread.Sleep(2)
         if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
             count = 0
@@ -2072,10 +2065,9 @@ class Session:
                                      callback=Callback(self.ManageSickbeard)),
                         rating_key=show_id, title=resp['data'][show_id].get('show_name', ""), thumb=poster))
         except Exception as e:
-            if Dict['debug']:
-                Log.Debug(str(data))
-            Log.Error(str(traceback.format_exc()))  # raise e
             Log.Debug(e.message)
+            debug(str(data))
+            debug(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message=F("sickbeardshowserror", Prefs['sickbeard_fork']))
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
@@ -2201,9 +2193,8 @@ class Session:
                             JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data2,
                                                method='GET' if use_sickrage else 'POST')
                         except:
-                            if Dict['debug']:
-                                Log.Debug(str(resp))
-                            Log.Error(str(traceback.format_exc()))  # raise e
+                            debug(str(resp))
+                            debug(str(traceback.format_exc()))  # raise e
                             Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
                 else:
                     Log.Debug(JSON.StringFromObject(resp))
@@ -2339,14 +2330,13 @@ class Session:
         else:
             oc = ObjectContainer(title1=L("Restrict Sections"), title2=message)
         if section:
+            debug("Before: " + str(Dict['restrictedsections']))
             if section in Dict['restrictedsections']:
-                if Dict['debug']:
-                    Log.Debug(str(Dict['restrictedsections']))
                 Dict['restrictedsections'].remove(section)
+                debug("After: " + str(Dict['restrictedsections']))
             else:
                 Dict['restrictedsections'].append(section)
-                if Dict['debug']:
-                    Log.Debug(str(Dict['restrictedsections']))
+                debug("After: " + str(Dict['restrictedsections']))
             Dict.Save()
         page = Plex.getSections(headers={'X-Plex-Token': self.token})
         if page:
@@ -3219,12 +3209,13 @@ def checkCompletedMovies():
 
             elif len(matches) > 1:
                 Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
-                if Dict['debug']:
-                    Log.Debug(str(matches))
+                debug(str(matches))
             else:
-                if Dict['debug']:
-                    Log.Debug("No library matches found for " + str(movie_id))
+               debug("No library matches found for " + str(movie_id))
 
+def debug(message):
+    if Dict['debug']:
+        Log.Debug(message)
 
 def validateEmail(email):
     if len(email) > 7:
