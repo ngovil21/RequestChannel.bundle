@@ -2330,9 +2330,9 @@ class Session:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         if not message or isClient(MESSAGE_OVERLAY_CLIENTS):
-            oc = ObjectContainer(header=TITLE, message=message, replace_parent=True)
+            oc = ObjectContainer(header=TITLE, message=message, replace_parent=True, no_history=True)
         else:
-            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True)
+            oc = ObjectContainer(title1=L("Restrict Sections"), title2=message, replace_parent=True, no_history=True)
         if section:
             debug("Before: " + str(Dict['restrictedsections']))
             if section in Dict['restrictedsections']:
