@@ -102,7 +102,7 @@ sessions = {}
 
 ###################################################################################################
 # This tells Plex how to list you in the available channels and what type of channels this is
-#@handler(PREFIX, TITLE, art=ART, thumb=ICON)
+@handler(PREFIX, TITLE, art=ART, thumb=ICON)
 @route(PREFIX + '/main')
 def MainMenu():
     toke = Request.Headers.get("X-Plex-Token", "")
