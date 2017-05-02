@@ -2313,9 +2313,13 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.ToggleSorting),
                             title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
+        if len(Dict['restrictedsections'] < 1):
+            sections = " (All)"
+        else:
+            sections = " (" + ", ".join(Dict['restrictedsections']) + ")"
         oc.add(
             DirectoryObject(key=Callback(self.RestrictSections),
-                            title=L("Restrict Sections")))
+                            title=L("Restrict Sections") + sections))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
