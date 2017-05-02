@@ -2623,6 +2623,8 @@ class Session:
         else:
             if path.rfind("/") > -1:
                 parent = path[:path.rfind("/") - 1]
+                if parent == "/library/section":
+                    parent = "/library/sections"
             else:
                 parent = None
         headers = {'X-Plex-Token': self.token}
