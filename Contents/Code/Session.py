@@ -16,7 +16,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.9.0"
+VERSION = "0.9.1"
 BRANCH = "TEST"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
@@ -27,6 +27,7 @@ TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/"
 POSTER_SIZE = "w500/"
 BACKDROP_SIZE = "original/"
 ########################################################
+
 
 ### URL Constants for OpenMovieDataBase ################
 OMDB_API_URL = "http://www.omdbapi.com/"
