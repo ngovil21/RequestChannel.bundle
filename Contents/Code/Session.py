@@ -2313,7 +2313,7 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.ToggleSorting),
                             title=F("togglesorting", "name" if Dict['sortbyname'] else "time")))
-        if len(Dict['restrictedsections'] < 1):
+        if len(Dict['restrictedsections']) < 1:
             sections = " (All)"
         else:
             sections = " (" + ", ".join(Dict['restrictedsections']) + ")"
