@@ -2320,7 +2320,7 @@ class Session:
         else:
             sections = " (" + ", ".join(Dict['restrictedsections']) + ")"
 
-        self.counter=0
+        self.counter = 0
         oc.add(
             DirectoryObject(key=Callback(self.RestrictSections),
                             title=L("Restrict Sections") + sections))
@@ -2347,7 +2347,7 @@ class Session:
                 else:
                     header = ""
                 oc.add(DirectoryObject(
-                    key=Callback(self.RestrictSection, section=s, counter=self.counter),
+                    key=Callback(self.RestrictSection, section=s, counter=self.counter+1),
                     title=header + d.attrib.get('title', "Unknown Section"),
                     thumb=d.attrib.get('thumb', None)))
         oc.add(DirectoryObject(key=Callback(self.ManageChannel), title=L("Return to Manage Channel")))
@@ -2357,7 +2357,7 @@ class Session:
         debug("Before: " + str(Dict['restrictedsections']))
         message = None
         if counter < self.counter:
-            return None
+            return self.RestrictSections(message)
         if section in Dict['restrictedsections']:
             Dict['restrictedsections'].remove(section)
             debug("After: " + str(Dict['restrictedsections']))
@@ -2365,7 +2365,7 @@ class Session:
             Dict['restrictedsections'].append(section)
             debug("After: " + str(Dict['restrictedsections']))
         Dict.Save()
-        self.counter =self.counter + 1
+        self.counter = counter
         return self.RestrictSections(message)
 
     def ManageUsers(self, message=None):
@@ -2396,9 +2396,11 @@ class Session:
                                   title2=L("Admin only"))
         if toke in Dict['register']:
             if Dict['register'][toke].get('nickname'):
-                user = Dict['register'][toke].get('nickname')
+                user = Dict['register'][toke].get('nicknamFe')
             else:
                 user = toke
+        else:
+            user = None
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
