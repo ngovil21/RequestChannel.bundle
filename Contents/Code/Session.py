@@ -2796,8 +2796,7 @@ class Session:
 def checkAdmin(toke):
     # import urllib2
     try:
-        debug(Network.Address)
-        url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://" + Network.Address + ":32400/myplex/account" #remove option for local authentication
+        url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://" + Network.Address + ":32400/myplex/account"
         # req = urllib2.Request(url, headers={'X-Plex-Token': toke})
         # resp = urllib2.urlopen(req)
         html = HTTP.Request(url, headers={'X-Plex-Token': toke})
