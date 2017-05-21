@@ -2630,7 +2630,7 @@ class Session:
                 parent = None
         headers = {'X-Plex-Token': self.token}
         try:
-            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=headers)
+            page = XML.ElementFromURL("http://" + Network.Address + ":32400" + path, headers=headers)
         except:
             Log.Error(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
