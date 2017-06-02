@@ -2406,8 +2406,8 @@ class Session:
                                   title2=L("Admin only"))
         if toke in Dict['register']:
             if Dict['register'][toke].get('nickname'):
-                user = Dict['register'][key]['nickname']
-            if Dict['register'][toke].get('type', 'token') == 'token':
+                user = Dict['register'][toke]['nickname']
+            elif Dict['register'][toke].get('type', 'token') == 'token':
                 user = "guest_" + Hash.SHA1(toke)[:10]
             else:
                 user = toke
