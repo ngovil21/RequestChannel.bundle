@@ -180,7 +180,7 @@ class Session:
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
-        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
+        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List", nocache)
         self.update_run()
         if not self.user:  # Fallback if we are unable to get the username
             Log.Debug("Unable to get username from Plex.tv, using token...")
@@ -2387,12 +2387,12 @@ class Session:
             oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
             for key in Dict['register']:
-                if Dict['register'][key].get('nickname'):
-                    user = Dict['register'][key]['nickname']
                 if Dict['register'][key].get('type', 'token') == 'token':
                     user = "guest_" + Hash.SHA1(key)[:10]
                 else:
                     user = key
+                if Dict['register'][key].get('nickname'):
+                    user += " (" + Dict['register'][key]['nickname'] + ")"
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=key),
                                     title=user + ": " + str(Dict['register'][key].get('requests', 0))))
