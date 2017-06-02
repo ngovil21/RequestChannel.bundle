@@ -203,7 +203,8 @@ class Session:
                 Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'user'}
             Dict.Save()
         elif self.user != self.token and self.user in Dict['register']:
-            Dict['register'][self.user]['type'] = 'user'        #if self.user not equal to token, then set the register type to 'user'
+            if Dict['register'][self.user]['type'] == 'token':
+                Dict['register'][self.user]['type'] = 'user'        #if self.user not equal to token and not admin, then set the register type to 'user'
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
             resetRegister()
