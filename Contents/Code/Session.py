@@ -163,9 +163,6 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         if not self.is_admin:
             self.user = getPlexTVUser(self.token)
-            if not self.user:  # Fallback if we are unable to get the username
-                Log.Debug("Unable to get username from Plex.tv, using token...")
-                self.user = self.token
         else:
             self.user = "Admin"
         self.platform = Client.Platform
@@ -173,7 +170,7 @@ class Session:
         self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
         self.lastrun = Datetime.Now()
         self.counter = 0
-        Log.Debug("User is " + str(self.user))
+        Log.Debug("User is " + (str(self.user) if self.user else userFromToken(self.token)))
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
@@ -185,6 +182,9 @@ class Session:
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
         self.update_run()
+        if not self.user:  # Fallback if we are unable to get the username
+            Log.Debug("Unable to get username from Plex.tv, using token...")
+            self.user = self.token
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc.message = message
         if self.is_admin:
@@ -202,6 +202,8 @@ class Session:
             else:  # new user, register by username
                 Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'user'}
             Dict.Save()
+        elif self.user != self.token and self.user in Dict['register']:
+            Dict['register'][self.user]['type'] = 'user'        #if self.user not equal to token, then set the register type to 'user'
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
             resetRegister()
@@ -2381,6 +2383,8 @@ class Session:
             oc = ObjectContainer(title1=L("Manage Users"), title2=message)
         if len(Dict['register']) > 0:
             for key in Dict['register']:
+                if Dict['register'][key].get('nickname'):
+                    user = Dict['register'][key]['nickname']
                 if Dict['register'][key].get('type', 'token') == 'token':
                     user = "guest_" + Hash.SHA1(key)[:10]
                 else:
@@ -2398,11 +2402,13 @@ class Session:
                                   title2=L("Admin only"))
         if toke in Dict['register']:
             if Dict['register'][toke].get('nickname'):
-                user = Dict['register'][toke].get('nicknamFe')
+                user = Dict['register'][key]['nickname']
+            if Dict['register'][toke].get('type', 'token') == 'token':
+                user = "guest_" + Hash.SHA1(toke)[:10]
             else:
                 user = toke
         else:
-            user = None
+            return self.ManageUsers("User not registered!")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
@@ -2410,13 +2416,12 @@ class Session:
         oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke),
                                title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
         oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
-        tv_auto = ""
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'),
-                                   title=F("removetvmanage", tv_auto)))
+                                   title=F("removetvmanage", "Download")))
         elif Prefs['sonarr_api'] or Prefs['sickbeard_api'] or Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='True'),
-                                   title=F("allowtvmanage", tv_auto)))
+                                   title=F("allowtvmanage", "Download")))
         if toke in Dict['blocked']:
             oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, setter='False'), title=L("Unblock User")))
         else:
