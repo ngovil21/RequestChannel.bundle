@@ -2419,7 +2419,7 @@ class Session:
             oc = ObjectContainer(title1=L("Manage User"), title2=message)
         oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke),
                                title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
-        oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
+        oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Set Nickname"))
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'),
                                    title=F("removetvmanage", "Download")))
