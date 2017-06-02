@@ -180,7 +180,7 @@ class Session:
 
     # @handler(PREFIX, TITLE, art=ART, thumb=ICON)
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
-        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List", nocache)
+        oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
         self.update_run()
         if not self.user:  # Fallback if we are unable to get the username
             Log.Debug("Unable to get username from Plex.tv, using token...")
