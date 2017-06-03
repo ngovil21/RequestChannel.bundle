@@ -1285,9 +1285,11 @@ class Session:
         try:
             for req_id in Dict[req_type]:
                 if Dict[req_type][req_id].get('completed', False):
+                    debug("Removing " + str(req_id) + ".")
                     Dict[req_type].pop(req_id)
         except Exception as e:
             Log.Debug(e.message)
+            debug(str(traceback.format_exc()))
         Thread.Sleep(0.1)
         Dict.Save()
         if req_type == 'movie':
