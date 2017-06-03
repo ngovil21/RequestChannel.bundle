@@ -1283,14 +1283,15 @@ class Session:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         try:
+            removal = []
             for req_id in Dict[req_type]:
                 if Dict[req_type][req_id].get('completed', False):
-                    debug("Removing " + str(req_id) + ".")
-                    Dict[req_type].pop(req_id)
+                    removal.append(req_id)
+            for i in removal:
+                Dict[req_type].pop(i)
         except Exception as e:
             Log.Debug(e.message)
             debug(str(traceback.format_exc()))
-        Thread.Sleep(0.1)
         Dict.Save()
         if req_type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
