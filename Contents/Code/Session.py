@@ -1285,7 +1285,7 @@ class Session:
         try:
             for req_id in Dict[req_type]:
                 if Dict[req_type][req_id].get('completed', False):
-                    self.DeleteRequest(req_id, req_type)
+                    Dict[req_type].pop(req_id)
         except Exception as e:
             Log.Debug(e.message)
         Thread.Sleep(0.1)
@@ -3173,11 +3173,9 @@ def checkCompletedMovieRequests():
             Log.Debug("Unable to load Radarr movie list")
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
-            if Dict['debug']:
-                Log.Debug(str(req_id) + " is already completed.")
+            debug(str(req_id) + " is already completed.")
             continue
-        if Dict['debug']:
-            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
+        debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
         if Prefs['couchpotato_url'] and Prefs["couchpotato_api"] and cp_movie_list:
             for movie in cp_movie_list['movies']:
                 if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
@@ -3198,8 +3196,7 @@ def checkCompletedMovieRequests():
 
 def checkCompletedMovies():
     if 'movie' not in Dict:
-        if Dict['debug']:
-            Log.Debug("movie is not in Dict struture!")
+        debug("movie is not in Dict structure!")
         return
     for movie_id in Dict['movie']:
         movie = Dict['movie'][movie_id]
