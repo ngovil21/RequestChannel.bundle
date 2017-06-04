@@ -16,8 +16,8 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.9.1"
-BRANCH = "DEVELOPMENT"
+VERSION = "0.9.2"
+BRANCH = "development"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -163,9 +163,6 @@ class Session:
         self.is_admin = checkAdmin(self.token)
         if not self.is_admin:
             self.user = getPlexTVUser(self.token)
-            if not self.user:  # Fallback if we are unable to get the username
-                Log.Debug("Unable to get username from Plex.tv, using token...")
-                self.user = self.token
         else:
             self.user = "Admin"
         self.platform = Client.Platform
@@ -173,7 +170,7 @@ class Session:
         self.use_dumb_keyboard = isClient(DumbKeyboard.CLIENTS)
         self.lastrun = Datetime.Now()
         self.counter = 0
-        Log.Debug("User is " + str(self.user))
+        Log.Debug("User is " + (str(self.user) if self.user else userFromToken(self.token)))
         Log.Debug("Platform: " + str(self.platform))
         Log.Debug("Product: " + str(self.product))
         Log.Debug("Accept-Language: " + str(Request.Headers.get('Accept-Language')))
@@ -185,6 +182,9 @@ class Session:
     def SMainMenu(self, message=None, title1=TITLE, title2="Main Menu"):
         oc = ObjectContainer(replace_parent=True, title1=title1, title2=title2, view_group="List")
         self.update_run()
+        if not self.user:  # Fallback if we are unable to get the username
+            Log.Debug("Unable to get username from Plex.tv, using token...")
+            self.user = self.token
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc.message = message
         if self.is_admin:
@@ -202,6 +202,12 @@ class Session:
             else:  # new user, register by username
                 Dict['register'][self.user] = {'nickname': "", 'requests': 0, 'email': None, 'type': 'user'}
             Dict.Save()
+        elif self.user != self.token and self.user in Dict['register']:
+            if Dict['register'][self.user].get('type') != 'user':
+                Dict['register'][self.user]['type'] = 'user'        #if self.user not equal to token and not admin, then set the register type to 'user'
+        elif self.user == self.token and self.user in Dict['register']:
+            if Dict['register'][self.user].get('type') != 'token':
+                Dict['register'][self.user]['type'] = 'token'        #if self.user equal to token and not admin, then set the register type to 'token'
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
             resetRegister()
@@ -1277,12 +1283,15 @@ class Session:
             return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
                                   title2=L("Admin only"))
         try:
+            removal = []
             for req_id in Dict[req_type]:
                 if Dict[req_type][req_id].get('completed', False):
-                    self.DeleteRequest(req_id, req_type)
+                    removal.append(req_id)
+            for i in removal:
+                Dict[req_type].pop(i)
         except Exception as e:
             Log.Debug(e.message)
-        Thread.Sleep(0.1)
+            debug(str(traceback.format_exc()))
         Dict.Save()
         if req_type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
@@ -2385,6 +2394,8 @@ class Session:
                     user = "guest_" + Hash.SHA1(key)[:10]
                 else:
                     user = key
+                if Dict['register'][key].get('nickname'):
+                    user += " (" + Dict['register'][key]['nickname'] + ")"
                 oc.add(
                     DirectoryObject(key=Callback(self.ManageUser, toke=key),
                                     title=user + ": " + str(Dict['register'][key].get('requests', 0))))
@@ -2398,25 +2409,26 @@ class Session:
                                   title2=L("Admin only"))
         if toke in Dict['register']:
             if Dict['register'][toke].get('nickname'):
-                user = Dict['register'][toke].get('nicknamFe')
+                user = Dict['register'][toke]['nickname']
+            elif Dict['register'][toke].get('type', 'token') == 'token':
+                user = "guest_" + Hash.SHA1(toke)[:10]
             else:
                 user = toke
         else:
-            user = None
+            return self.ManageUsers("User not registered!")
         if isClient(MESSAGE_OVERLAY_CLIENTS):
             oc = ObjectContainer(title1=L("Manage User"), title2=user, message=message)
         else:
             oc = ObjectContainer(title1=L("Manage User"), title2=message)
         oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke),
-                               title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests."))
-        oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Rename User"))
-        tv_auto = ""
+                               title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests this week."))
+        oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Set Nickname"))
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'),
-                                   title=F("removetvmanage", tv_auto)))
+                                   title=F("removetvmanage", "Download")))
         elif Prefs['sonarr_api'] or Prefs['sickbeard_api'] or Prefs['couchpotato_api']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='True'),
-                                   title=F("allowtvmanage", tv_auto)))
+                                   title=F("allowtvmanage", "Download")))
         if toke in Dict['blocked']:
             oc.add(DirectoryObject(key=Callback(self.BlockUser, toke=toke, setter='False'), title=L("Unblock User")))
         else:
@@ -2630,7 +2642,7 @@ class Session:
                 parent = None
         headers = {'X-Plex-Token': self.token}
         try:
-            page = XML.ElementFromURL("http://127.0.0.1:32400" + path, headers=headers)
+            page = XML.ElementFromURL("http://" + Network.Address + ":32400" + path, headers=headers)
         except:
             Log.Error(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message="Unable to navigate path!")
@@ -2796,7 +2808,6 @@ class Session:
 def checkAdmin(toke):
     # import urllib2
     try:
-        debug(HTTP.Headers)
         url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://127.0.0.1:32400/myplex/account"
         # req = urllib2.Request(url, headers={'X-Plex-Token': toke})
         # resp = urllib2.urlopen(req)
@@ -3165,11 +3176,9 @@ def checkCompletedMovieRequests():
             Log.Debug("Unable to load Radarr movie list")
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
-            if Dict['debug']:
-                Log.Debug(str(req_id) + " is already completed.")
+            debug(str(req_id) + " is already completed.")
             continue
-        if Dict['debug']:
-            Log.Debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
+        debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
         if Prefs['couchpotato_url'] and Prefs["couchpotato_api"] and cp_movie_list:
             for movie in cp_movie_list['movies']:
                 if str(movie['info'].get('imdb')) == Dict['movie'][req_id].get('imdb', req_id) or str(
@@ -3190,8 +3199,7 @@ def checkCompletedMovieRequests():
 
 def checkCompletedMovies():
     if 'movie' not in Dict:
-        if Dict['debug']:
-            Log.Debug("movie is not in Dict struture!")
+        debug("movie is not in Dict structure!")
         return
     for movie_id in Dict['movie']:
         movie = Dict['movie'][movie_id]
