@@ -17,7 +17,7 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 VERSION = "0.9.2"
-BRANCH = "TEST"
+BRANCH = "test"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
