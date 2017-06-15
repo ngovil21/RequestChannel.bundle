@@ -1444,19 +1444,23 @@ class Session:
             if movie.get('imdb', "").startswith("tt"):
                 imdb_id = movie.get('imdb')
             else:
-                json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
+                try:
+                    json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
                                           headers={'Accept': 'application/json'})
-                if json.get('imdb_id'):
-                    imdb_id = json['imdb_id']
-                    Dict['movie'][movie_id]['imdb'] = imdb_id
-                    Dict.Save()
-                else:
-                    if isClient(MESSAGE_OVERLAY_CLIENTS):
-                        oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                    if json.get('imdb_id'):
+                        imdb_id = json['imdb_id']
+                        Dict['movie'][movie_id]['imdb'] = imdb_id
+                        Dict.Save()
                     else:
-                        oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                    oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                    return oc
+                        if isClient(MESSAGE_OVERLAY_CLIENTS):
+                            oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                        else:
+                            oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                except Exception as e:
+                    Log.Debug('Unable to load TMDB!')
+
+                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
@@ -1468,21 +1472,29 @@ class Session:
             couchpotato_url += "/"
         values = {'identifier': imdb_id}
         if Prefs['couchpotato_profile']:
-            cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
-            if cat['success']:
-                for key in cat['list']:
-                    if key['label'] == Prefs['couchpotato_profile']:
-                        values['profile_id'] = key['_id']
-            else:
+            try:
+                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
+                if cat['success']:
+                    for key in cat['list']:
+                        if key['label'] == Prefs['couchpotato_profile']:
+                            values['profile_id'] = key['_id']
+                else:
+                    Log.Debug("Unable to open up Couchpotato Profile List")
+            except Exception as e:
                 Log.Debug("Unable to open up Couchpotato Profile List")
+                debug(str(traceback.format_exc()))
         if Prefs['couchpotato_category']:
-            cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
-            if cat['success']:
-                for key in cat['categories']:
-                    if key['label'] == Prefs['couchpotato_category']:
-                        values['category_id'] = key['_id']
-            else:
+            try:
+                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
+                if cat['success']:
+                    for key in cat['categories']:
+                        if key['label'] == Prefs['couchpotato_category']:
+                            values['category_id'] = key['_id']
+                else:
+                    Log.Debug("Unable to open up Couchpotato Category List")
+            except Exception as e:
                 Log.Debug("Unable to open up Couchpotato Category List")
+                debug(str(traceback.format_exc()))
         try:
             json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/",
                                       values=values)
