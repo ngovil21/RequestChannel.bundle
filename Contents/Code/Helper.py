@@ -31,6 +31,8 @@ def setupApi():
     Plex.setPort("32400")
     Radarr.setAPI(Prefs['radarr_api'])
     Radarr.setURL(Prefs['radarr_url'])
+    Couchpotato.setAPI(Prefs['couchpotato_api'])
+    Couchpotato.setURL(Prefs['couchpotato_url'])
     if Prefs['pushbullet_api']:
         Pushbullet.setAPI(Prefs['pushbullet_api'])
     if Prefs['pushalot_api']:

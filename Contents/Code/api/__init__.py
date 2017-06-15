@@ -4,7 +4,7 @@
 import sys
 
 import Couchpotato
-sys.modules["api.Couchpoato"] = Couchpotato
+sys.modules["api.Couchpotato"] = Couchpotato
 
 import Email
 sys.modules["api.Email"] = Email
