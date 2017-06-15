@@ -204,10 +204,12 @@ class Session:
             Dict.Save()
         elif self.user != self.token and self.user in Dict['register']:
             if Dict['register'][self.user].get('type') != 'user':
-                Dict['register'][self.user]['type'] = 'user'        #if self.user not equal to token and not admin, then set the register type to 'user'
+                Dict['register'][self.user][
+                    'type'] = 'user'  # if self.user not equal to token and not admin, then set the register type to 'user'
         elif self.user == self.token and self.user in Dict['register']:
             if Dict['register'][self.user].get('type') != 'token':
-                Dict['register'][self.user]['type'] = 'token'        #if self.user equal to token and not admin, then set the register type to 'token'
+                Dict['register'][self.user][
+                    'type'] = 'token'  # if self.user equal to token and not admin, then set the register type to 'token'
         register_date = Datetime.FromTimestamp(Dict['register_reset'])
         if (register_date + Datetime.Delta(days=7)) < Datetime.Now():
             resetRegister()
@@ -414,7 +416,7 @@ class Session:
                     if key['poster_path']:
                         thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
                     else:
-                        thumb = None
+                        thumb = ""
                     if key['backdrop_path']:
                         art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
                     else:
@@ -986,7 +988,7 @@ class Session:
                 user = self.user
             if self.user in Dict['register']:
                 Dict['register'][self.user]['requests'] = Dict['register'][self.user]['requests'] + 1
-        Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'musicbrainz', 'title': music_name,
+        Dict['music'][music_id] = {'type': 'music', 'id': music_id, 'source': 'MusicBrainz', 'title': music_name,
                                    'date': music_date, 'year': music_date[:4], 'poster': music_image,
                                    'user': user, 'token_hash': Hash.SHA1(self.token), 'automated': False,
                                    'completed': False,
@@ -1442,19 +1444,30 @@ class Session:
             if movie.get('imdb', "").startswith("tt"):
                 imdb_id = movie.get('imdb')
             else:
-                json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
+                try:
+                    json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
                                           headers={'Accept': 'application/json'})
-                if json.get('imdb_id'):
-                    imdb_id = json['imdb_id']
-                    Dict['movie'][movie_id]['imdb'] = imdb_id
-                    Dict.Save()
-                else:
-                    if isClient(MESSAGE_OVERLAY_CLIENTS):
-                        oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                    if json.get('imdb_id'):
+                        imdb_id = json['imdb_id']
+                        Dict['movie'][movie_id]['imdb'] = imdb_id
+                        Dict.Save()
                     else:
-                        oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                        if isClient(MESSAGE_OVERLAY_CLIENTS):
+                            oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                        else:
+                            oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+
                     oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
                     return oc
+                except Exception as e:
+                    Log.Debug('Unable to load TMDB!')
+
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                else:
+                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
@@ -1466,21 +1479,29 @@ class Session:
             couchpotato_url += "/"
         values = {'identifier': imdb_id}
         if Prefs['couchpotato_profile']:
-            cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
-            if cat['success']:
-                for key in cat['list']:
-                    if key['label'] == Prefs['couchpotato_profile']:
-                        values['profile_id'] = key['_id']
-            else:
+            try:
+                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
+                if cat['success']:
+                    for key in cat['list']:
+                        if key['label'] == Prefs['couchpotato_profile']:
+                            values['profile_id'] = key['_id']
+                else:
+                    Log.Debug("Unable to open up Couchpotato Profile List")
+            except Exception as e:
                 Log.Debug("Unable to open up Couchpotato Profile List")
+                debug(str(traceback.format_exc()))
         if Prefs['couchpotato_category']:
-            cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
-            if cat['success']:
-                for key in cat['categories']:
-                    if key['label'] == Prefs['couchpotato_category']:
-                        values['category_id'] = key['_id']
-            else:
+            try:
+                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
+                if cat['success']:
+                    for key in cat['categories']:
+                        if key['label'] == Prefs['couchpotato_category']:
+                            values['category_id'] = key['_id']
+                else:
+                    Log.Debug("Unable to open up Couchpotato Category List")
+            except Exception as e:
                 Log.Debug("Unable to open up Couchpotato Category List")
+                debug(str(traceback.format_exc()))
         try:
             json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/",
                                       values=values)
@@ -2421,7 +2442,8 @@ class Session:
         else:
             oc = ObjectContainer(title1=L("Manage User"), title2=message)
         oc.add(DirectoryObject(key=Callback(self.ManageUser, toke=toke),
-                               title=user + " has made " + str(Dict['register'][toke]['requests']) + " requests this week."))
+                               title=user + " has made " + str(
+                                   Dict['register'][toke]['requests']) + " requests this week."))
         oc.add(DirectoryObject(key=Callback(self.RenameUser, toke=toke), title="Set Nickname"))
         if toke in Dict['sonarr_users']:
             oc.add(DirectoryObject(key=Callback(self.SonarrUser, toke=toke, setter='False'),
@@ -2808,7 +2830,8 @@ class Session:
 def checkAdmin(toke):
     # import urllib2
     try:
-        url = "https://plex.tv/users/account" if Prefs['plextv'] else "http://127.0.0.1:32400/myplex/account"
+        url = "https://plex.tv/users/account" if Prefs[
+            'plextv'] else "http://" + Network.Address + ":32400/myplex/account"
         # req = urllib2.Request(url, headers={'X-Plex-Token': toke})
         # resp = urllib2.urlopen(req)
         html = HTTP.Request(url, headers={'X-Plex-Token': toke})
@@ -2829,232 +2852,106 @@ def resetRegister():
 
 # Notifications Functions
 
+#Format notification for req_id of req_type and return title and message in dict
+def formatRequestNotification(req_id="", req_type=""):
+    notification_types = {'movie': "Movie", 'tv': "TV Show", 'music': "Album"}
+    if req_type in Dict and req_id in Dict[req_type]:
+        req = Dict[req_type][req_id]
+        req_title = req['title']
+        note_type = notification_types.get(req_type)
+        source_default = ""
+        if req_type == 'movie':
+            req_title += (" (" + req['year'] + ")" if req.get('year', None) else "")
+            source_default = 'IMDB'
+        elif req_type == 'tv':
+            source_default = 'TVDB'
+        elif req_type == 'music':
+            source_default = 'MusicBrainz'
+        user = req['user'] if req.get('user') else "A user"
+
+        title = "Request Channel - New " + note_type + " Request"
+        message = user + " has requested a new " + note_type.lower() + ".\n" + req_title + "\n" + \
+                  req.get('source', source_default) + " id: " + req_id + "\nPoster: " + \
+                  req.get('poster', "")
+        message_html = user + " has made a new request! <br><br>\n" + \
+                       "<font style='font-size:20px; font-weight:bold'> " + req_title + " </font><br>\n" + \
+                       "(" + req.get('source', source_default) + " id: " + req_id + ") <br>\n" + \
+                       req.get('summary', "") + \
+                       "<Poster:><img src= '" + req.get('poster', "") + "' width='300'>"
+        return {'title': title, 'message': message, 'message_html': message_html}
+    else:
+        return None
+
+
 # Notify user of requests
 def notifyRequest(req_id, req_type, title="", message=""):
+    notification = formatRequestNotification(req_id, req_type)
+    if not notification:    # Unable to format notification so return
+        Log.Debug('Invalid request sent. Please send a bug report on GitHub')
+        return
     if Prefs['pushbullet_api']:
-        try:
-            if req_type == 'movie':
-                movie = Dict['movie'][req_id]
-                title_year = movie['title']
-                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
-                user = movie['user'] if movie['user'] else "A user"
-                title = "Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + \
-                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
-                          movie['poster']
-            elif req_type == 'tv':
-                tv = Dict['tv'][req_id]
-                user = tv['user'] if tv['user'] else "A user"
-                title = "Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
-                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
-                          tv['poster']
-            elif req_type == 'music':
-                music = Dict['music'][req_id]
-                user = music['user'] if music['user'] else "A user"
-                title = "Request Channel - New Album Request"
-                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
-                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
-                          music['poster']
-            else:
-                return
-            if Prefs['pushbullet_devices']:
-                devices = Prefs['pushbullet_devices'].split(",")
-                for d in devices:
-                    response = sendPushBullet(title, message, d.strip())
-                    if response:
-                        Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
-            else:
-                response = sendPushBullet(title, message)
+        if Prefs['pushbullet_devices']:
+            devices = Prefs['pushbullet_devices'].split(",")
+            for d in devices:
+                response = Pushbullet.send(notification['title'], notification['message'], channel=Prefs['pushbullet_channel'], device_iden=d.strip())
                 if response:
-                    Log.Debug("Pushbullet notification sent for: " + req_id)
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Pushbullet failed: " + e.message)
+                    Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
+        else:
+            response = Pushbullet.send(notification['title'], notification['message'], channel=Prefs['pushbullet_channel'])
+            if response:
+                Log.Debug("Pushbullet notification sent for: " + req_id)
     if Prefs['pushover_user']:
-        try:
-            if req_type == 'movie':
-                movie = Dict['movie'][req_id]
-                title_year = movie['title']
-                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
-                user = movie['user'] if movie['user'] else "A user"
-                title = "Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + \
-                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
-                          movie['poster']
-            elif req_type == 'tv':
-                tv = Dict['tv'][req_id]
-                user = tv['user'] if tv['user'] else "A user"
-                title = "Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
-                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
-                          tv['poster']
-            elif req_type == 'music':
-                music = Dict['music'][req_id]
-                user = music['user'] if music['user'] else "A user"
-                title = "Request Channel - New Album Request"
-                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
-                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
-                          music['poster']
-            else:
-                return
-            response = sendPushover(title, message)
-            if response:
-                Log.Debug("Pushover notification sent for :" + req_id)
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Pushover failed: " + e.message)
+        response = Pushover.send(notification['title'], notification['message'], Prefs['pushover_user'], Prefs['pushover_sound'])
+        if response:
+            Log.Debug("Pushover notification sent for: " + req_id)
     if Prefs['pushalot_api']:
-        try:
-            if req_type == 'movie':
-                movie = Dict['movie'][req_id]
-                title_year = movie['title']
-                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
-                user = movie['user'] if movie['user'] else "A user"
-                title = "Request Channel - New Movie Request"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + \
-                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
-                          movie['poster']
-            elif req_type == 'tv':
-                tv = Dict['tv'][req_id]
-                user = tv['user'] if tv['user'] else "A user"
-                title = "Request Channel - New TV Show Request"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
-                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
-                          tv['poster']
-            elif req_type == 'music':
-                music = Dict['music'][req_id]
-                user = music['user'] if music['user'] else "A user"
-                title = "Request Channel - New Album Request"
-                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
-                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
-                          music['poster']
-            else:
-                return
-            response = sendPushalot(title, message)
-            if response:
-                Log.Debug("Pushalot notification sent for :" + req_id)
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Pushalot failed: " + e.message)
+        response = PushAlot.send(notification['title'], notification['message'])
+        if response:
+            Log.Debug("Pushalot notification sent for: " + req_id)
     if Prefs['slack_api']:
-        try:
-            if req_type == 'movie':
-                movie = Dict['movie'][req_id]
-                title_year = movie['title']
-                title_year += (" (" + movie['year'] + ")" if movie.get('year', None) else "")
-                user = movie['user'] if movie['user'] else "A user"
-                message = user + " has requested a new movie.\n" + title_year + "\n" + \
-                          movie.get('source', "IMDB") + " id: " + req_id + "\nPoster: " + \
-                          movie['poster']
-            elif req_type == 'tv':
-                tv = Dict['tv'][req_id]
-                user = tv['user'] if tv['user'] else "A user"
-                message = user + " has requested a new tv show.\n" + tv['title'] + "\n" + \
-                          tv.get('source', "TVDB") + " id: " + req_id + "\nPoster: " + \
-                          tv['poster']
-            elif req_type == 'music':
-                music = Dict['music'][req_id]
-                user = music['user'] if music['user'] else "A user"
-                message = user + " has requested a new album.\n" + music['title'] + "\n" + \
-                          music.get('source', "MusicBrainz") + " id: " + req_id + "\nPoster: " + \
-                          music['poster']
-            else:
-                return
-            if Prefs['slack_channels']:
-                channels = Prefs['slack_channels'].split(",")
-                for c in channels:
-                    response = sendSlack(message, c.strip())
-                    if response:
-                        Log.Debug("Slack notification sent to channel: " + c.strip() + " for: " + req_id)
-            else:
-                response = sendSlack(message)
+        if Prefs['slack_channels']:
+            channels = Prefs['slack_channels'].split(",")
+            for c in channels:
+                c = c.strip()                   #remove leading and trailing spaces after split
+                if c.startswith('#'):           #remove leading hashtag
+                    c = c[1:]
+                response = Slack.send(notification['message'], c)
                 if response:
-                    Log.Debug("Slack notification sent for: " + req_id)
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Slack failed: " + e.message)
+                    Log.Debug("Slack notification sent to channel: " + c.strip() + " for: " + req_id)
+        else:
+            response = Slack.send(notification['message'])
+            if response:
+                Log.Debug("Slack notification sent for: " + req_id)
     if Prefs['email_to']:
-        try:
-            if req_type == 'movie':
-                movie = Dict['movie'][req_id]
-                title = movie['title'] + " (" + movie['year'] + ")"
-                poster = movie['poster']
-                user = movie['user'] if movie['user'] else "A user"
-                id_type = movie.get('source', "IMDB")
-                subject = "Request Channel - New Movie Request"
-                summary = ""
-                if movie['summary']:
-                    summary = movie['summary'] + "<br>\n"
-            elif req_type == 'tv':
-                tv = Dict['tv'][req_id]
-                title = tv['title']
-                user = tv['user'] if tv['user'] else "A user"
-                id_type = tv.get('source', "TVDB")
-                poster = tv['poster']
-                subject = "Request Channel - New TV Show Request"
-                summary = ""
-                if tv['summary']:
-                    summary = tv['summary'] + "<br>\n"
-            elif req_type == 'music':
-                music = Dict['music'][req_id]
-                title = music.get('title')
-                user = music.get('user', "A user")
-                id_type = music.get('source', "musicbrainz")
-                poster = music['poster']
-                subject = "Request Channel - New Album Request"
-                summary = ""
-            else:
-                return
-            message = user + " has made a new request! <br><br>\n" + \
-                      "<font style='font-size:20px; font-weight:bold'> " + title + " </font><br>\n" + \
-                      "(" + id_type + " id: " + req_id + ") <br>\n" + \
-                      summary + \
-                      "<Poster:><img src= '" + poster + "' width='300'>"
-            sendEmail(subject, message, 'html')
-            Log.Debug("Email notification sent for: " + req_id)
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Email failed: " + e.message)
+        Email.send(Prefs['email_from'], Prefs['email_to'], notification['title'], notification['message_html'], secure=Prefs['email_secure'], email_type='html')
+        Log.Debug("Email notification sent for: " + req_id)
 
 
 def Notify(title, body):
     if Prefs['email_to']:
-        try:
-            if not sendEmail(title, body, 'html'):
+            if not Email.send(Prefs['email_from'],Prefs['email_to'], title, body, secure=Prefs['email_secure'], email_type='html'):
                 Log.Debug("Email notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Email failed: " + e.message)
     if Prefs['pushbullet_api']:
-        try:
-            if Prefs['pushbullet_devices']:
-                for d in Prefs['pushbullet_devices'].split(','):
-                    if sendPushBullet(title, body, d.strip()):
-                        Log.Debug("Pushbullet notification sent to " + d)
-            elif sendPushBullet(title, body):
-                Log.Debug("Pushbullet notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("PushBullet failed: " + e.message)
+        if Prefs['pushbullet_devices']:
+            for d in Prefs['pushbullet_devices'].split(','):
+                if Pushbullet.send(title, body, channel=Prefs['pushbullet_channel'], device_iden=d.strip()):
+                    Log.Debug("Pushbullet notification sent to " + d)
+        elif Pushbullet.send(title, body, channel=Prefs['pushbullet_channel']):
+            Log.Debug("Pushbullet notification sent")
     if Prefs['pushover_user']:
-        try:
-            if sendPushover(title, body):
-                Log.Debug("Pushover notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Pushover failed: " + e.message)
+        if Pushover.send(title, body, Prefs['pushover_user'], Prefs['pushover_sound']):
+            Log.Debug("Pushover notification sent")
+    if Prefs['pushalot_api']:
+        response = PushAlot.send(title, body)
+        if response:
+            Log.Debug("Pushalot notification sent")
     if Prefs['slack_api']:
-        try:
-            if Prefs['slack_channels']:
-                for c in Prefs['slack_channels'].split(','):
-                    if sendSlack(body, c.strip()):
-                        Log.Debug("Slack notification sent to " + c.strip())
-            elif sendSlack(body):
-                Log.Debug("Slack notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Slack failed: " + e.message)
+        if Prefs['slack_channels']:
+            for c in Prefs['slack_channels'].split(','):
+                if Slack.send(body, c.strip()):
+                    Log.Debug("Slack notification sent to " + c.strip())
+        elif Slack.send(body):
+            Log.Debug("Slack notification sent")
 
 
 def sendPushBullet(title, body, device_iden=""):

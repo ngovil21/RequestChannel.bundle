@@ -3,7 +3,7 @@
     "id": "movie_db",
     "label": "Movie Database  ",
     "type": "enum",
-    "values": ["OpenMovieDatabase", "TheMovieDatabase"],
+    "values": ["TheMovieDatabase", "OpenMovieDatabase"],
     "default": "TheMovieDatabase"
   },
   {
@@ -39,7 +39,7 @@
   },
   {
     "id": "movierequests",
-    "label": "Allow users to see requests Movies?",
+    "label": "Allow users to request Movies?",
     "type": "bool",
     "default": true
   },
@@ -305,14 +305,21 @@
     "id": "pushover_api",
     "label": "Pushover API Key",
     "type": "text",
-    "default": "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
+    "default": ""
   },
   {
     "id": "pushover_user",
     "label": "Pushover User Key",
     "type": "text",
     "default": ""
-  },  
+  },
+  {
+    "id": "pushover_sound",
+    "label": "Pushover Sound",
+    "type": "enum",
+    "values": ["default", "pushover", "none (silent)", "bike", "bugle", "classical", "cosmic", "falling", "gamelan", "incoming", "intermission", "magic", "mechanical", "pianobar", "siren", "spacealarm", "tugboat", "alien", "climb", "persistent", "echo", "updown"],
+    "default": "default"
+  },
   {
     "id": "pushalot_api",
     "label": "Pushalot API Key",
