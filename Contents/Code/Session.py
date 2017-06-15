@@ -2898,7 +2898,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
                           music['poster']
             else:
                 return
-            response = sendPushover(title, message)
+            response = Pushover.send(title, message, Prefs['pushover_user'], Prefs['pushover_sound'])
             if response:
                 Log.Debug("Pushover notification sent for :" + req_id)
         except Exception as e:
@@ -3039,7 +3039,7 @@ def Notify(title, body):
             Log.Debug("PushBullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
-            if sendPushover(title, body):
+            if Pushover.send(title, message, Prefs['pushover_user']):
                 Log.Debug("Pushover notification sent")
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e

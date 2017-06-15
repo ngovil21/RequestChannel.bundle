@@ -305,14 +305,21 @@
     "id": "pushover_api",
     "label": "Pushover API Key",
     "type": "text",
-    "default": "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
+    "default": ""
   },
   {
     "id": "pushover_user",
     "label": "Pushover User Key",
     "type": "text",
     "default": ""
-  },  
+  },
+  {
+    "id": "pushover_sound",
+    "label": "Pushover Sound",
+    "type": "enum",
+    "values": ["none","pushover", "bike", "bugle", "classical", "cosmic", "falling", "gamelan", "incoming", "intermission", "magic", "mechanical", "pianobar", "siren", "spacealarm", "tugboat", "alien", "climb", "persistent", "echo", "updown"],
+    "default": "none"
+  },
   {
     "id": "pushalot_api",
     "label": "Pushalot API Key",
