@@ -3,7 +3,7 @@
     "id": "movie_db",
     "label": "Movie Database  ",
     "type": "enum",
-    "values": ["OpenMovieDatabase", "TheMovieDatabase"],
+    "values": ["TheMovieDatabase", "OpenMovieDatabase"],
     "default": "TheMovieDatabase"
   },
   {
