@@ -2839,7 +2839,7 @@ def formatRequestNotification(req_id="", req_type="", text='plain'):
     if req_type in Dict and req_id in Dict[req_type]:
         req = Dict[req_type][req_id]
         req_title = req['title']
-        note_type = notification_types.get('req_id')
+        note_type = notification_types.get(req_type)
         source_default = ""
         if req_type == 'movie':
             req_title += (" (" + req['year'] + ")" if req.get('year', None) else "")
