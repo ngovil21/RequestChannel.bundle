@@ -2873,7 +2873,7 @@ def formatRequestNotification(req_id="", req_type=""):
         html_message = user + " has made a new request! <br><br>\n" + \
                   "<font style='font-size:20px; font-weight:bold'> " + req_title + " </font><br>\n" + \
                   "(" + req.get('source', source_default) + " id: " + req_id + ") <br>\n" + \
-                  summary + \
+                  req.get('summary', "") + \
                   "<Poster:><img src= '" + req.get('poster', "") + "' width='300'>"
         message = user + " has requested a new " + note_type.lower() + ".\n" + req_title + "\n" + \
                   req.get('source', source_default) + " id: " + req_id + "\nPoster: " + \
