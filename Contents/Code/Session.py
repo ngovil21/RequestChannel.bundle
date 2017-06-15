@@ -2904,7 +2904,6 @@ def notifyRequest(req_id, req_type, title="", message=""):
         response = Pushover.send(notification['title'], notification['message'], Prefs['pushover_user'], Prefs['pushover_sound'])
         if response:
             Log.Debug("Pushover notification sent for: " + req_id)
-            Log.Debug("Pushover failed: " + e.message)
     if Prefs['pushalot_api']:
         response = PushAlot.send(notification['title'], notification['message'])
         if response:
