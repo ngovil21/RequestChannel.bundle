@@ -2912,7 +2912,10 @@ def notifyRequest(req_id, req_type, title="", message=""):
         if Prefs['slack_channels']:
             channels = Prefs['slack_channels'].split(",")
             for c in channels:
-                response = Slack.send(notification['message'], c.strip())
+                c = c.strip()                   #remove leading and trailing spaces after split
+                if c.startswith('#'):           #remove leading hashtag
+                    c = c[1:]
+                response = Slack.send(notification['message'], c)
                 if response:
                     Log.Debug("Slack notification sent to channel: " + c.strip() + " for: " + req_id)
         else:
@@ -2920,47 +2923,35 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if response:
                 Log.Debug("Slack notification sent for: " + req_id)
     if Prefs['email_to']:
-        Email.send(Prefs['email_from'],Prefs['email_to'], notification['title'], notification['message_html'], secure=Prefs['email_secure'], email_type='html')
+        Email.send(Prefs['email_from'], Prefs['email_to'], notification['title'], notification['message_html'], secure=Prefs['email_secure'], email_type='html')
         Log.Debug("Email notification sent for: " + req_id)
 
 
 def Notify(title, body):
     if Prefs['email_to']:
-        try:
             if not Email.send(Prefs['email_from'],Prefs['email_to'], title, body, secure=Prefs['email_secure'], email_type='html'):
                 Log.Debug("Email notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Email failed: " + e.message)
     if Prefs['pushbullet_api']:
-        try:
-            if Prefs['pushbullet_devices']:
-                for d in Prefs['pushbullet_devices'].split(','):
-                    if sendPushBullet(title, body, d.strip()):
-                        Log.Debug("Pushbullet notification sent to " + d)
-            elif sendPushBullet(title, body):
-                Log.Debug("Pushbullet notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("PushBullet failed: " + e.message)
+        if Prefs['pushbullet_devices']:
+            for d in Prefs['pushbullet_devices'].split(','):
+                if Pushbullet.send(title, body, channel=Prefs['pushbullet_channel'], device_iden=d.strip()):
+                    Log.Debug("Pushbullet notification sent to " + d)
+        elif Pushbullet.send(title, body, channel=Prefs['pushbullet_channel']):
+            Log.Debug("Pushbullet notification sent")
     if Prefs['pushover_user']:
-        try:
-            if Pushover.send(title, body, Prefs['pushover_user'], Prefs['pushover_sound']):
-                Log.Debug("Pushover notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Pushover failed: " + e.message)
+        if Pushover.send(title, body, Prefs['pushover_user'], Prefs['pushover_sound']):
+            Log.Debug("Pushover notification sent")
+    if Prefs['pushalot_api']:
+        response = PushAlot.send(title, body)
+        if response:
+            Log.Debug("Pushalot notification sent")
     if Prefs['slack_api']:
-        try:
-            if Prefs['slack_channels']:
-                for c in Prefs['slack_channels'].split(','):
-                    if sendSlack(body, c.strip()):
-                        Log.Debug("Slack notification sent to " + c.strip())
-            elif sendSlack(body):
-                Log.Debug("Slack notification sent")
-        except Exception as e:
-            Log.Error(str(traceback.format_exc()))  # raise e
-            Log.Debug("Slack failed: " + e.message)
+        if Prefs['slack_channels']:
+            for c in Prefs['slack_channels'].split(','):
+                if Slack.send(body, c.strip()):
+                    Log.Debug("Slack notification sent to " + c.strip())
+        elif Slack.send(body):
+            Log.Debug("Slack notification sent")
 
 
 def sendPushBullet(title, body, device_iden=""):
