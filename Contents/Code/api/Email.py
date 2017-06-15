@@ -37,3 +37,14 @@ def sendEmail(email_from, email_to, subject, body, server, port, username="", pa
     return True
 
 
+class template:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def format(req_id="", req_type="", title="", user="", source="", poster="", **kwargs):
+        return user + " has requested a new " + req_type + ".\n" + \
+               title + "\n" + \
+               source + " id: " + req_id + "\n" \
+                                           "Poster: " + poster
+
