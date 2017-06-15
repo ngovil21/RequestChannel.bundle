@@ -1456,9 +1456,16 @@ class Session:
                             oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
                         else:
                             oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+
+                    oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                    return oc
                 except Exception as e:
                     Log.Debug('Unable to load TMDB!')
 
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                else:
+                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
                 oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
                 return oc
         else:  # Assume we have an imdb_id by default
