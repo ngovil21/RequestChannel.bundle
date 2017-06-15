@@ -3039,7 +3039,7 @@ def Notify(title, body):
             Log.Debug("PushBullet failed: " + e.message)
     if Prefs['pushover_user']:
         try:
-            if Pushover.send(title, message, Prefs['pushover_user']):
+            if Pushover.send(title, message, Prefs['pushover_user'], Prefs['pushover_sound']):
                 Log.Debug("Pushover notification sent")
         except Exception as e:
             Log.Error(str(traceback.format_exc()))  # raise e
