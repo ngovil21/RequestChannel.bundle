@@ -416,7 +416,7 @@ class Session:
                     if key['poster_path']:
                         thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
                     else:
-                        thumb = None
+                        thumb = ""
                     if key['backdrop_path']:
                         art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
                     else:
