@@ -4,6 +4,8 @@ from email.Utils import formatdate
 import smtplib
 import traceback
 
+DEFAULT_SERVER = ""
+DEFAULT_PORT = 25
 
 def validateEmail(email):
     if len(email) > 7:
@@ -11,8 +13,19 @@ def validateEmail(email):
             return True
     return False
 
+def setDefaultServer(server):
+    global DEFAULT_SERVER
+    DEFAULT_SERVER = server
 
-def sendEmail(email_from, email_to, subject, body, server, port, username="", password="", secure=False, email_type='html'):
+def setDefaultPort(port):
+    global DEFAULT_PORT
+    DEFAULT_PORT = port
+
+def send(email_from, email_to, subject, body, server=None, port=-1, username="", password="", secure=False, email_type='html'):
+    if not server:
+        server = DEFAULT_SERVER
+    if port < 0:
+        port = DEFAULT_PORT
     msg = MIMEMultipart()
     msg['From'] = email_from
     msg['To'] = email_to
@@ -35,16 +48,3 @@ def sendEmail(email_from, email_to, subject, body, server, port, username="", pa
         Log.Debug("Error in sendEMail: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return True
-
-
-class template:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def format(req_id="", req_type="", title="", user="", source="", poster="", **kwargs):
-        return user + " has requested a new " + req_type + ".\n" + \
-               title + "\n" + \
-               source + " id: " + req_id + "\n" \
-                                           "Poster: " + poster
-
