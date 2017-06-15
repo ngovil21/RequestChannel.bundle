@@ -87,7 +87,6 @@ def Start():
     if 'allowedsections' not in Dict:
         Dict['allowedsections'] = []
     Dict.Save()
-    Log.Debug(Network.Address)
     PeriodicScan()
 
 

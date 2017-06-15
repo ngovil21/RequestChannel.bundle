@@ -3,17 +3,17 @@ import urllib2
 
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 
-PUSHOVER_API_KEY = None
+PUSHBULLET_API_KEY = ""
 
 def setAPI(api):
-    global PUSHOVER_API_KEY
+    global PUSHBULLET_API_KEY
     PUSHBULLET_API_KEY = api
 
-def Send(title, body, channel="", device_iden=""):
-    api_header = {'Authorization': 'Bearer ' + PUSHOVER_API_KEY,
+def send(title, body, pb_type='note', channel="", device_iden=""):
+    api_header = {'Authorization': 'Bearer ' + PUSHBULLET_API_KEY,
                   'Content-Type': 'application/json'
                   }
-    data = {'type': 'note', 'title': title, 'body': body}
+    data = {'type': pb_type, 'title': title, 'body': body}
     if device_iden:
         data['device_iden'] = device_iden
     if channel:

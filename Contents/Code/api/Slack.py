@@ -13,7 +13,7 @@ def setUser(user):
     SLACK_USER = user
 
 
-def sendSlack(message, channel=None):
+def send(message, channel=None):
     data = {
         'token': SLACK_API,
         'username': SLACK_USER,
@@ -24,6 +24,6 @@ def sendSlack(message, channel=None):
     try:
         return JSON.ObjectFromURL(SLACK_API_URL + "chat.postMessage", values=data)
     except Exception as e:
-        Log.Debug("Error in sendSlack: " + e.message)
+        Log.Debug("Error in send: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return None

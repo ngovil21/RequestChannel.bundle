@@ -31,12 +31,15 @@ def setupApi():
     Plex.setPort("32400")
     Radarr.setAPI(Prefs['radarr_api'])
     Radarr.setURL(Prefs['radarr_url'])
-    TheMovieDatabase.setAPI(TMDB_API_KEY)
-    Pushbullet.setAPI(Prefs['pushbullet_api'])
-    Pushalot.setAPI(Prefs['pushalot_api'])
-    Pushover.setAPI(Prefs['pushover_api'])
-    Slack.setAPI(Prefs['slack_api'])
-    Slack.setUser(Prefs['slack_user'])
+    if Prefs['pushbullet_api']:
+        Pushbullet.setAPI(Prefs['pushbullet_api'])
+    if Prefs['pushalot_api']:
+        Pushalot.setAPI(Prefs['pushalot_api'])
+    if Prefs['pushover_api']:
+        Pushover.setAPI(Prefs['pushover_api'])
+    if Prefs['slack_api']:
+        Slack.setAPI(Prefs['slack_api'])
+        Slack.setUser(Prefs['slack_user'])
 
 
 
