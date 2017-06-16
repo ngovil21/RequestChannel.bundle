@@ -1,6 +1,4 @@
 import traceback
-import urllib2
-import urllib2.Request
 
 PLEX_IP = "127.0.0.1"
 PLEX_PORT = "32400"
@@ -60,9 +58,10 @@ def addCollection(library_key, rating_key, collection_name, headers={}):
     }
 
     try:
-        req = urllib2.Request(url=getURL() + "library/sections/%s/all" % library_key, data=data, headers=headers)
-        req.get_method = lambda: 'PUT'
-        urllib2.urlopen(req)
+        resp = HTTP.Request(url=getURL() + "library/sections/%s/all" % library_key, data=data, headers=headers,
+                            method='PUT', immediate=True)
+        if resp:
+            Log.Debug(resp.content)
     except Exception as e:
         Log.Debug("Error in addCollection: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
