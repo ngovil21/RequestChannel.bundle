@@ -2339,7 +2339,7 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message)
         else:
             oc = ObjectContainer(title1=L("Manage"), title2=message)
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
+        oc.add(PopupDirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.ManageUsers), title=L("Manage Users")))
         oc.add(
             DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "On" if Dict['debug'] else "Off")))
@@ -2828,12 +2828,9 @@ class Session:
 
 
 def checkAdmin(toke):
-    # import urllib2
     try:
         url = "https://plex.tv/users/account" if Prefs[
             'plextv'] else "http://" + Network.Address + ":32400/myplex/account"
-        # req = urllib2.Request(url, headers={'X-Plex-Token': toke})
-        # resp = urllib2.urlopen(req)
         html = HTTP.Request(url, headers={'X-Plex-Token': toke})
         if html.content:
             return True
