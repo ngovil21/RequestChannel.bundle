@@ -1445,81 +1445,60 @@ class Session:
                 imdb_id = movie.get('imdb')
             else:
                 try:
-                    json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
-                                          headers={'Accept': 'application/json'})
-                    if json.get('imdb_id'):
-                        imdb_id = json['imdb_id']
-                        Dict['movie'][movie_id]['imdb'] = imdb_id
-                        Dict.Save()
+                    check_id = TheMovieDatabase.getIMDB(movie_id)
+                except Exception as e:
+                    check_id = -1
+                if check_id > 0:
+                    imdb_id = check_id
+                else:
+                    Log.Debug("Unable to get IMDB id for " + str(movie_id))
+                    if isClient(MESSAGE_OVERLAY_CLIENTS):
+                        oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
                     else:
-                        if isClient(MESSAGE_OVERLAY_CLIENTS):
-                            oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
-                        else:
-                            oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-
+                        oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
                     oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
                     return oc
-                except Exception as e:
-                    Log.Debug('Unable to load TMDB!')
-
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
-                else:
-                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                return oc
+                # try:
+                #     json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
+                #                           headers={'Accept': 'application/json'})
+                #     if json.get('imdb_id'):
+                #         imdb_id = json['imdb_id']
+                #         Dict['movie'][movie_id]['imdb'] = imdb_id
+                #         Dict.Save()
+                #     else:
+                #         if isClient(MESSAGE_OVERLAY_CLIENTS):
+                #             oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                #         else:
+                #             oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                #
+                #         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                #         return oc
+                # except Exception as e:
+                #     Log.Debug('Unable to load TMDB!')
+                #     if isClient(MESSAGE_OVERLAY_CLIENTS):
+                #         oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                #     else:
+                #         oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                #     oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                #     return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
-        if not Prefs['couchpotato_url'].startswith("http"):
-            couchpotato_url = "http://" + Prefs['couchpotato_url']
-        else:
-            couchpotato_url = Prefs['couchpotato_url']
-        if not couchpotato_url.endswith("/"):
-            couchpotato_url += "/"
-        values = {'identifier': imdb_id}
+        profile_id = -1
+        category_id = -1
         if Prefs['couchpotato_profile']:
-            try:
-                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
-                if cat['success']:
-                    for key in cat['list']:
-                        if key['label'] == Prefs['couchpotato_profile']:
-                            values['profile_id'] = key['_id']
-                else:
-                    Log.Debug("Unable to open up Couchpotato Profile List")
-            except Exception as e:
-                Log.Debug("Unable to open up Couchpotato Profile List")
-                debug(str(traceback.format_exc()))
+            profile_id = Couchpotato.getProfileIdFromName(Prefs['couchpotato_profile'])
         if Prefs['couchpotato_category']:
-            try:
-                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
-                if cat['success']:
-                    for key in cat['categories']:
-                        if key['label'] == Prefs['couchpotato_category']:
-                            values['category_id'] = key['_id']
-                else:
-                    Log.Debug("Unable to open up Couchpotato Category List")
-            except Exception as e:
-                Log.Debug("Unable to open up Couchpotato Category List")
-                debug(str(traceback.format_exc()))
-        try:
-            json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/",
-                                      values=values)
-            if 'success' in json and json['success']:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Movie Request Sent to CouchPotato!"))
-                else:
-                    oc = ObjectContainer(title1="Couchpotato", title2=L("Success"))
-                Dict['movie'][movie_id]['automated'] = True
-                Dict.Save()
+            category_id = Couchpotato.getCategoryIdFromName(Prefs['couchpotato_category'])
+        if Couchpotato.addMovie(imdb_id, profile_id, category_id):
+
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Movie Request Sent to CouchPotato!"))
             else:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
-                else:
-                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-        except:
-            debug(str(traceback.format_exc()))
-            # raise e
+                oc = ObjectContainer(title1="Couchpotato", title2=L("Success"))
+            Dict['movie'][movie_id]['automated'] = True
+            Dict.Save()
+        else:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
             else:
@@ -1537,39 +1516,26 @@ class Session:
 
     def ManageCouchpotato(self):
         self.update_run()
-        if not Prefs['couchpotato_url'].startswith("http"):
-            couchpotato_url = "http://" + Prefs['couchpotato_url']
-        else:
-            couchpotato_url = Prefs['couchpotato_url']
-        if not couchpotato_url.endswith("/"):
-            couchpotato_url += "/"
-        try:
-            movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list",
-                                            values=dict(status="active"))
-        except Exception as e:
-            debug(str(traceback.format_exc()))  # raise e
-            Log.Debug(e.message)
+
+        movie_list = Couchpotato.getMovieList(status='active')
+        if not movie_list:
             return self.SMainMenu(message=L("Error loading CouchPotato"))
 
         oc = ObjectContainer(title2="Manage Couchpotato")
 
-        if movie_list['success'] and not movie_list['empty']:
-            for movie in movie_list['movies']:
-                if movie.get('title'):
-                    title = movie.get('title')
-                    movie_id = movie.get('_id')
-                    title_year = title
-                    movie_info = movie.get('info', {})
-                    year = movie_info.get('year')
-                    imdb_id = movie_info.get('imdb', "0")
-                    poster = movie_info.get('images', {}).get('poster')
-                    if poster:
-                        poster = poster[0]
-                    summary = movie_info.get('plot')
-                    title_year += " (" + str(year) + ")" if year else ""
-                    oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title),
-                                        rating_key=imdb_id, title=title_year,
-                                        thumb=poster, summary=summary))
+        for movie in movie_list:
+            if movie.get('title'):
+                title = movie.get('title')
+                title_year = title
+                movie_info = movie.get('info', {})
+                year = movie_info.get('year')
+                poster = movie_info.get('images', {}).get('poster')
+                if poster:
+                    poster = poster[0]
+                title_year += " (" + str(year) + ")" if year else ""
+                oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie.get('_id'), title=title),
+                                    rating_key=movie_info.get('imdb', "0"), title=title_year,
+                                    thumb=poster, summary=movie_info.get('plot')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
@@ -1587,26 +1553,14 @@ class Session:
 
     def DeleteCouchPotatoMovie(self, movie_id):
         self.update_run()
-        if not Prefs['couchpotato_url'].startswith("http"):
-            couchpotato_url = "http://" + Prefs['couchpotato_url']
-        else:
-            couchpotato_url = Prefs['couchpotato_url']
-        if not couchpotato_url.endswith("/"):
-            couchpotato_url += "/"
-        try:
-            movie_delete = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.delete",
-                                              values=dict(id=movie_id, delete_from="wanted"))
-        except Exception as e:
-            debug(str(traceback.format_exc()))  # raise e
-            Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
 
-        if movie_delete['success']:
+        if Couchpotato.deleteMovie(movie_id, "wanted"):
             return self.ManageCouchpotato()
         else:
             return MessageContainer(header=TITLE, message=L("Could not delete movie from Couchpotato"))
 
-            # Sonarr Methods
+
+    #Radarr Methods
 
     def SendToRadarr(self, movie_id, callback=None):
         self.update_run()
