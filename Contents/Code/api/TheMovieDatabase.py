@@ -46,7 +46,7 @@ def Search(query, language="English"):
             language, "en") + "&query=" + query
         request = JSON.ObjectFromURL(url, headers={'Accept': 'application/json'})
         if 'results' in request:
-            return request
+            return request['results']
     except Exception as e:
         Log.Debug("Error in Search: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
