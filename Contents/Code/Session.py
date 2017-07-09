@@ -437,7 +437,7 @@ class Session:
             search = TheMovieDatabase.Search(query, Prefs['search_language'])
             if len(search) > 0:
                 for result in search:
-                    info = TheMovieDatabase.parseResult(result)
+                    info = TheMovieDatabase.parseResult(search[result])
                     title_year = info['title']
                     title_year += (" (" + info['year'] + ")" if info.get('year', None) else "")
                     oc.add(TVShowObject(
