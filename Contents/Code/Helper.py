@@ -68,6 +68,7 @@ def setupApi():
     if Prefs['slack_api']:
         Slack.setAPI(Prefs['slack_api'])
         Slack.setUser(Prefs['slack_user'])
+    TheMovieDatabase.setAPI(TMDB_API_KEY)
 
 
 

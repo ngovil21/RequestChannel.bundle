@@ -1,3 +1,5 @@
+import traceback
+
 TMDB_API_URL = "http://api.themoviedb.org/3/"
 TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/"
 POSTER_SIZE = "w500/"
