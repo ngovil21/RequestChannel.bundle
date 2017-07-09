@@ -278,7 +278,7 @@ class Session:
                 title=L("Register Username")))
         else:
             oc.add(DirectoryObject(key=Callback(self.UserSettings), title=L("User Settings")))
-        oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard, currValue=self.use_dumb_keyboard),
+        oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard, setValue=not self.use_dumb_keyboard),
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
 
@@ -351,8 +351,11 @@ class Session:
             Dict['register'][self.user]['email'] = query
             return self.UserSettings(message="Email changed")
 
-    def SwitchKeyboard(self, currValue):
-        self.use_dumb_keyboard = not currValue
+    def SwitchKeyboard(self, setValue):
+        if setValue == 'True':
+         self.use_dumb_keyboard = True
+        elif setValue == 'False':
+            self.use_dumb_keyboard = False
         return self.SMainMenu("Keyboard has been changed")
 
     def AddNewMovie(self, title=None):
