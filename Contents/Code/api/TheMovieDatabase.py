@@ -44,9 +44,9 @@ def Search(query, language="English"):
     try:
         url = TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(
             language, "en") + "&query=" + query
-        request = JSON.ObjectFromURL(url, headers={'Accept': 'application/json'})
-        if 'results' in request:
-            return request['results']
+        search = JSON.ObjectFromURL(url, headers={'Accept': 'application/json'})
+        if 'results' in search:
+            return search['results']
     except Exception as e:
         Log.Debug("Error in Search: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error

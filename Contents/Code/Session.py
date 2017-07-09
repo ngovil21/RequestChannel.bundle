@@ -434,11 +434,11 @@ class Session:
                                        thumb=R('return.png')))
                 return oc
         else:           #Use TMDB by default
-            search = TheMovieDatabase.Search(query, Prefs['search_language'])
-            if len(search) > 0:
-                for result in search:
-                    info = TheMovieDatabase.parseResult(search[result])
-                    title_year = info['title']
+            results = TheMovieDatabase.Search(query, Prefs['search_language'])
+            if len(results) > 0:
+                for result in results:
+                    info = TheMovieDatabase.parseResult(results[result])
+                    title_year = info.get('title')
                     title_year += (" (" + info['year'] + ")" if info.get('year', None) else "")
                     oc.add(TVShowObject(
                         key=Callback(self.ConfirmMovieRequest, movie_id=info['id'], source='TMDB', title=info['title'],
