@@ -56,7 +56,7 @@ def Search(query, language="English"):
 def parseResult(result):
     info = {'id': result.get('id')}
     info['title'] = result.get('title')
-    if result['release_data']:
+    if result.get('release_date'):
         info['year'] = result['release_date'][0:4]
         date = result['release_date']
         rel_date = Datetime.ParseDate(date)
