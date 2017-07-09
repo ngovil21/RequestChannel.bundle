@@ -434,7 +434,7 @@ class Session:
                                        thumb=R('return.png')))
                 return oc
         else:           #Use TMDB by default
-            search = TheMovieDatabase.Search(query, Prefs['search_langauge'])
+            search = TheMovieDatabase.Search(query, Prefs['search_language'])
             if len(search) > 0:
                 for result in search:
                     info = TheMovieDatabase.parseResult(result)
