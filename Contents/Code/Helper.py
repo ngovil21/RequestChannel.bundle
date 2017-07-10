@@ -1,6 +1,6 @@
-### URL Constants for TheMovieDataBase ##################
 from api import *
 
+### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
 TMDB_API_URL = "http://api.themoviedb.org/3/"
 TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/"
@@ -26,6 +26,32 @@ PUSHALOT_API_URL = "https://pushalot.com/api/sendmessage"
 SLACK_API_URL = "https://slack.com/api/"
 ########################################################
 
+LANGUAGE_ABBREVIATIONS = {
+    "English": "en",
+    "Espanol": "es",
+    "Francais": "fr",
+    "Deutsch": "de",
+    "Italiano": "it",
+    "Chinese": "zh",
+    "Nederlands": "nl",
+    "Svenska": "sv",
+    "Norsk": "no",
+    "Dansk": "da",
+    "Suomeksi": "fi",
+    "Polski": "pl",
+    "Magyar": "hu",
+    "Greek": "el",
+    "Turkish": "tr",
+    "Russian": "ru",
+    "Hebrew": "he",
+    "Japanese": "ja",
+    "Portuguese": "pt",
+    "Czech": "cs",
+    "Slovenian": "sl",
+    "Croatian": "hr",
+    "Korean": "ko"
+}
+
 def setupApi():
     Plex.setIp("127.0.0.1")
     Plex.setPort("32400")
@@ -42,6 +68,9 @@ def setupApi():
     if Prefs['slack_api']:
         Slack.setAPI(Prefs['slack_api'])
         Slack.setUser(Prefs['slack_user'])
+    Email.setDefaultServer(Prefs['email_server'])
+    Email.setDefaultPort(Prefs['email_port'])
+    TheMovieDatabase.setAPI(TMDB_API_KEY)
 
 
 

@@ -28,6 +28,8 @@ def getProfiles():
 #return id for name else -1
 def getProfileIdFromName(name):
     profiles = getProfiles()
+    if not profiles:
+        return -1
     for key in profiles['list']:
         if key['label'] == name:
             return key['_id']
@@ -45,17 +47,19 @@ def getCategories():
 
 def getCategoryIdFromName(name):
     cat = getProfiles()
+    if not cat:
+        return -1
     for key in cat['list']:
         if key['label'] == name:
             return key['_id']
     return -1
 
 #add movie to Couchpotato with imdb, profile id, category id, return result page
-def addMovie(imdb, profile=None, category=None):
+def addMovie(imdb, profile=-1, category=-1):
     values = {'identifier': imdb}
-    if profile:
+    if profile > -1:
         values['profile_id'] = profile
-    if category:
+    if category > -1:
         values['category_id'] = category
     try:
         json = JSON.ObjectFromURL(COUCHPOTATO_URL + "api/" + COUCHPOTATO_API + "/movie.add/", values=values)
@@ -65,6 +69,32 @@ def addMovie(imdb, profile=None, category=None):
         Log.Debug("Error in addMovie: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return None
+
+
+def getMovieList(status=None):
+    if status:
+        values = {'status': status}
+    try:
+        movie_list = JSON.ObjectFromURL(COUCHPOTATO_URL + "api/" + COUCHPOTATO_API + "/movie.list/", values)
+        if movie_list['success'] and not movie_list['empty']:
+            return movie_list['movies']
+        elif movie_list['empty']:
+            return {}
+    except Exception as e:
+        Log.Debug("Error in getMovieList: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return None
+
+def deleteMovie(movie_id, delete_from="wanted"):
+    try:
+        movie_delete = JSON.ObjectFromURL(COUCHPOTATO_URL + "api/" + COUCHPOTATO_API + "/movie.delete",
+                                          values=dict(id=movie_id, delete_from=delete_from))
+        if movie_delete['success']:
+            return True
+    except Exception as e:
+        Log.Debug("Error in deleteMovie: " + e.message)
+        Log.error(str(traceback.format_exc()))  # raise e
+    return False
 
 
 

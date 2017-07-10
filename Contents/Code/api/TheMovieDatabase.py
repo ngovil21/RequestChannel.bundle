@@ -1,3 +1,5 @@
+import traceback
+
 TMDB_API_URL = "http://api.themoviedb.org/3/"
 TMDB_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/"
 POSTER_SIZE = "w500/"
@@ -39,29 +41,64 @@ def setAPI(key):
 
 # Searches TMDB and returns a json list of results
 def Search(query, language="English"):
-    url = TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(
-        language, "en") + "&query=" + query
-    request = JSON.ObjectFromURL(url, headers={'Accept': 'application/json'})
+    try:
+        url = TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(
+            language, "en") + "&query=" + query
+        search = JSON.ObjectFromURL(url, headers={'Accept': 'application/json'})
+        if 'results' in search:
+            return search['results']
+    except Exception as e:
+        Log.Debug("Error in Search: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return {}
 
-    if 'results' in request:
-        return request
+#parse a tmdb result to return a dict with title, year, poster, plot
+def parseResult(result):
+    info = {'id': result.get('id')}
+    info['title'] = result.get('title')
+    if result.get('release_date'):
+        info['year'] = result['release_date'][0:4]
+        date = result['release_date']
+        rel_date = Datetime.ParseDate(date)
+        if rel_date:
+            info['date'] = rel_date.date()
     else:
-        return {}
+        info['year'] = None
+        info['date'] = None
+    if result['poster_path']:
+        info['thumb'] = TMDB_IMAGE_BASE_URL + POSTER_SIZE + result['poster_path']
+    if result['backdrop_path']:
+        info['art'] = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + result['backdrop_path']
+    if result['overview']:
+        info['summary'] = result['overview']
+    return info
 
-
-#Query TMDB for a movie with IMDB id
-def getMovieByIMDB(imdb, language="English"):
-    json = JSON.ObjectFromURL(
-        TMDB_API_URL + "find/" + imdb + "?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(
-            language, "en") + "&external_source=imdb_id",
-        headers={'Accept': 'application/json'})
-    if json.get('movie_results'):                       #imdb id should be specific, return first result
-        return json['movie_results'][0]['id']
-    Log.Debug("IMDB " + imdb + " not found in TMDB!")
+# Query TMDB for a movie with IMDB id
+def findMovieByIMDB(imdb, language="English"):
+    try:
+        json = JSON.ObjectFromURL(
+            TMDB_API_URL + "find/" + imdb + "?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(
+                language, "en") + "&external_source=imdb_id",
+            headers={'Accept': 'application/json'})
+        if json.get('movie_results'):  # imdb id should be specific, return first result
+            return json['movie_results'][0]['id']
+        else:
+            Log.Debug("IMDB " + imdb + " not found in TMDB!")
+    except Exception as e:
+        Log.Debug("Error in getMovieByIMDB: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
     return None
 
 
+# returns IMDB id from tmdb id
 def getIMDB(tmdb):
-    json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + tmdb + "?api_key=" + TMDB_API_KEY,
-                              headers={'Accept': 'application/json'})
-    return json.get('imdb_id')
+    try:
+        json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + tmdb + "?api_key=" + TMDB_API_KEY,
+                                  headers={'Accept': 'application/json'})
+        return json.get('imdb_id', None)
+    except Exception as e:
+        Log.Debug("Error in getIMDB: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return None
+
+

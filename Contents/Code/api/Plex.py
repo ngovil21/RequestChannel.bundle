@@ -21,11 +21,12 @@ def getURL(secure=False):
         else:
             return "http://" + PLEX_IP + ":" + PLEX_PORT + "/"
 
+
 def getSections(secure=False, headers={}):
     return XML.ElementFromURL(url=getURL(secure) + "library/sections", headers=headers)
 
 
-#search library for query and return xml
+# search library for query and return xml
 def searchLibrary(query, local=1, secure=False, headers={}):
     try:
         return XML.ElementFromURL(url=getURL(secure) + "search?local=" + str(local) + "&query=" + String.Quote(query),
@@ -35,16 +36,36 @@ def searchLibrary(query, local=1, secure=False, headers={}):
         Log.Error(str(traceback.format_exc()))  # raise last error
 
 
-#try to match a movie locally in plex using title and year
+# try to match a movie locally in plex using title and year
 def matchMovie(title, year, local=1, secure=False, headers={}):
     search = searchLibrary(title, local, secure, headers)
     matches = []
     if search:
         videos = search.xpath("//Video")
         for video in videos:
-            if video.attrib['title'].lower() == title.lower() and video.attrib['year'] == year and video.attrib['type'] == 'movie':
+            if video.attrib['title'].lower() == title.lower() and video.attrib['year'] == year and video.attrib[
+                'type'] == 'movie':
                 matches.append(video.attrib['ratingKey'])
     return matches
+
+
+# add a movie to a collection, requires library key and rating key
+def addCollection(library_key, rating_key, collection_name, headers={}):
+    data = {
+        "type": 1,
+        "id": rating_key,
+        "collection[0].tag.tag": collection_name
+    }
+
+    try:
+        resp = HTTP.Request(url=getURL() + "library/sections/%s/all" % library_key, data=data, headers=headers,
+                            method='PUT', immediate=True)
+        if resp:
+            Log.Debug(resp.content)
+    except Exception as e:
+        Log.Debug("Error in addCollection: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+
 
 ########################################################################################################################
 ########################################################################################################################

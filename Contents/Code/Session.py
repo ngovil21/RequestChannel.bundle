@@ -17,7 +17,7 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 BRANCH = "master"
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
 ### URL Constants for TheMovieDataBase ##################
@@ -215,15 +215,18 @@ class Session:
             resetRegister()
         if self.use_dumb_keyboard:  # Clients in this list do not support InputDirectoryObjects
             Log.Debug("Client does not support Input. Using DumbKeyboard")
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
-                         dktitle=L("Request a Movie"),
-                         message=L("Enter the name of the Movie"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu),
-                         dktitle=L("Request a TV Show"),
-                         message=L("Enter the name of the TV Show"))
-            DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu),
-                         dktitle=L("Request an Album"),
-                         message=L("Enter the name of the Album"))
+            if Prefs['movierequests']:
+                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
+                             dktitle=L("Request a Movie"),
+                             message=L("Enter the name of the Movie"))
+            if Prefs['tvrequests']:
+                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchTV, parent_call=Callback(self.SMainMenu),
+                             dktitle=L("Request a TV Show"),
+                             message=L("Enter the name of the TV Show"))
+            if Prefs['musicrequests']:
+                DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMusic, parent_call=Callback(self.SMainMenu),
+                             dktitle=L("Request an Album"),
+                             message=L("Enter the name of the Album"))
         elif Client.Product == "Plex Web":  # Plex Web does not create a popup input directory object, so use an intermediate menu
             if Prefs['movierequests']:
                 oc.add(DirectoryObject(key=Callback(self.AddNewMovie, title=L("Request a Movie")),
@@ -275,7 +278,7 @@ class Session:
                 title=L("Register Username")))
         else:
             oc.add(DirectoryObject(key=Callback(self.UserSettings), title=L("User Settings")))
-        oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard),
+        oc.add(DirectoryObject(key=Callback(self.SwitchKeyboard, setValue=not self.use_dumb_keyboard),
                                title=L(
                                    'Switch to Device Keyboard' if self.use_dumb_keyboard else 'Switch to Alternate Keyboard')))
 
@@ -348,8 +351,11 @@ class Session:
             Dict['register'][self.user]['email'] = query
             return self.UserSettings(message="Email changed")
 
-    def SwitchKeyboard(self):
-        self.use_dumb_keyboard = not self.use_dumb_keyboard
+    def SwitchKeyboard(self, setValue):
+        if setValue == 'True':
+         self.use_dumb_keyboard = True
+        elif setValue == 'False':
+            self.use_dumb_keyboard = False
         return self.SMainMenu("Keyboard has been changed")
 
     def AddNewMovie(self, title=None):
@@ -393,66 +399,7 @@ class Session:
         if self.user in Dict['blocked'] or self.token in Dict['blocked']:
             return self.SMainMenu(message=L("Sorry you have been blocked."), title1=L("Main Menu"),
                                   title2=L("User Blocked"))
-        if Prefs['movie_db'] == "TheMovieDatabase":
-            headers = {
-                'Accept': 'application/json'
-            }
-            request = JSON.ObjectFromURL(
-                url=TMDB_API_URL + "search/movie?api_key=" + TMDB_API_KEY + "&language=" + LANGUAGE_ABBREVIATIONS.get(
-                    Prefs["search_language"],
-                    "en") + "&query=" + query,
-                headers=headers)
-            if 'results' in request:
-                results = request['results']
-                for key in results:
-                    if not key['title']:
-                        continue
-                    if key['release_date']:
-                        year = key['release_date'][0:4]
-                        date = key['release_date']
-                    else:
-                        year = ""
-                        date = None
-                    if key['poster_path']:
-                        thumb = TMDB_IMAGE_BASE_URL + POSTER_SIZE + key['poster_path']
-                    else:
-                        thumb = ""
-                    if key['backdrop_path']:
-                        art = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + key['backdrop_path']
-                    else:
-                        art = None
-                    title_year = key['title']
-                    title_year += (" (" + year + ")" if year else "")
-                    if date:
-                        rel_date = Datetime.ParseDate(date)
-                        if rel_date:
-                            date = rel_date.date()
-                        else:
-                            date = None
-                    oc.add(TVShowObject(
-                        key=Callback(self.ConfirmMovieRequest, movie_id=key['id'], source='TMDB', title=key['title'],
-                                     year=year, poster=thumb,
-                                     backdrop=art,
-                                     summary=key['overview']), rating_key=key['id'], title=title_year, thumb=thumb,
-                        summary=key['overview'], art=art, originally_available_at=date))
-            else:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
-                else:
-                    oc = ObjectContainer(title2=L("No results"))
-                Log.Debug("No Results Found")
-                if self.use_dumb_keyboard:
-                    Log.Debug("Client does not support Input. Using DumbKeyboard")
-                    DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
-                                 dktitle=L("Search Again"),
-                                 message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
-                else:
-                    oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Search Again"),
-                                                prompt=L("Enter the name of the Movie:")))
-                oc.add(
-                    DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
-                return oc
-        else:  # Use OMDB By Default
+        if Prefs['movie_db'] == "OpenMovieDatabase":  # OMDB does not work without paid API key anymore
             request = JSON.ObjectFromURL(url=OMDB_API_URL + "?s=" + query + "&r=json")
             if 'Search' in request:
                 results = request['Search']
@@ -488,6 +435,36 @@ class Session:
                                                 thumb=R('search.png')))
                 oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
                                        thumb=R('return.png')))
+                return oc
+        else:           #Use TMDB by default
+            results = TheMovieDatabase.Search(query, Prefs['search_language'])
+            if len(results) > 0:
+                for result in results:
+                    info = TheMovieDatabase.parseResult(result)
+                    title_year = info.get('title')
+                    title_year += (" (" + info['year'] + ")" if info.get('year', None) else "")
+                    oc.add(TVShowObject(
+                        key=Callback(self.ConfirmMovieRequest, movie_id=info['id'], source='TMDB', title=info['title'],
+                                     year=info.get('year'), poster=info.get('thumb'), backdrop=info.get('art'),
+                                     summary=info.get('summary')),
+                        rating_key=info['id'], title=title_year, thumb=info.get('thumb'), summary=info.get('summary'),
+                        art=info.get('art'), originally_available_at=info.get('date')))
+            else:
+                if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    oc = ObjectContainer(header=TITLE, message=L("Sorry there were no results found for your search."))
+                else:
+                    oc = ObjectContainer(title2=L("No results"))
+                Log.Debug("No Results Found")
+                if self.use_dumb_keyboard:
+                    Log.Debug("Client does not support Input. Using DumbKeyboard")
+                    DumbKeyboard(prefix=PREFIX, oc=oc, callback=self.SearchMovie, parent_call=Callback(self.SMainMenu),
+                                 dktitle=L("Search Again"),
+                                 message=L("Enter the name of the Movie"), dkthumb=R('search.png'))
+                else:
+                    oc.add(InputDirectoryObject(key=Callback(self.SearchMovie), title=L("Search Again"),
+                                                prompt=L("Enter the name of the Movie:")))
+                oc.add(
+                    DirectoryObject(key=Callback(self.SMainMenu), title=L("Back to Main Menu"), thumb=R('return.png')))
                 return oc
         if self.use_dumb_keyboard:
             Log.Debug("Client does not support Input. Using DumbKeyboard")
@@ -1445,81 +1422,60 @@ class Session:
                 imdb_id = movie.get('imdb')
             else:
                 try:
-                    json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
-                                          headers={'Accept': 'application/json'})
-                    if json.get('imdb_id'):
-                        imdb_id = json['imdb_id']
-                        Dict['movie'][movie_id]['imdb'] = imdb_id
-                        Dict.Save()
+                    check_id = TheMovieDatabase.getIMDB(movie_id)
+                except Exception as e:
+                    check_id = -1
+                if check_id > 0:
+                    imdb_id = check_id
+                else:
+                    Log.Debug("Unable to get IMDB id for " + str(movie_id))
+                    if isClient(MESSAGE_OVERLAY_CLIENTS):
+                        oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
                     else:
-                        if isClient(MESSAGE_OVERLAY_CLIENTS):
-                            oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
-                        else:
-                            oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-
+                        oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
                     oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
                     return oc
-                except Exception as e:
-                    Log.Debug('Unable to load TMDB!')
-
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
-                else:
-                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                return oc
+                    # try:
+                    #     json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
+                    #                           headers={'Accept': 'application/json'})
+                    #     if json.get('imdb_id'):
+                    #         imdb_id = json['imdb_id']
+                    #         Dict['movie'][movie_id]['imdb'] = imdb_id
+                    #         Dict.Save()
+                    #     else:
+                    #         if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    #             oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                    #         else:
+                    #             oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                    #
+                    #         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                    #         return oc
+                    # except Exception as e:
+                    #     Log.Debug('Unable to load TMDB!')
+                    #     if isClient(MESSAGE_OVERLAY_CLIENTS):
+                    #         oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
+                    #     else:
+                    #         oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
+                    #     oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                    #     return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
-        if not Prefs['couchpotato_url'].startswith("http"):
-            couchpotato_url = "http://" + Prefs['couchpotato_url']
-        else:
-            couchpotato_url = Prefs['couchpotato_url']
-        if not couchpotato_url.endswith("/"):
-            couchpotato_url += "/"
-        values = {'identifier': imdb_id}
+        profile_id = -1
+        category_id = -1
         if Prefs['couchpotato_profile']:
-            try:
-                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/profile.list/")
-                if cat['success']:
-                    for key in cat['list']:
-                        if key['label'] == Prefs['couchpotato_profile']:
-                            values['profile_id'] = key['_id']
-                else:
-                    Log.Debug("Unable to open up Couchpotato Profile List")
-            except Exception as e:
-                Log.Debug("Unable to open up Couchpotato Profile List")
-                debug(str(traceback.format_exc()))
+            profile_id = Couchpotato.getProfileIdFromName(Prefs['couchpotato_profile'])
         if Prefs['couchpotato_category']:
-            try:
-                cat = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/category.list/")
-                if cat['success']:
-                    for key in cat['categories']:
-                        if key['label'] == Prefs['couchpotato_category']:
-                            values['category_id'] = key['_id']
-                else:
-                    Log.Debug("Unable to open up Couchpotato Category List")
-            except Exception as e:
-                Log.Debug("Unable to open up Couchpotato Category List")
-                debug(str(traceback.format_exc()))
-        try:
-            json = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.add/",
-                                      values=values)
-            if 'success' in json and json['success']:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Movie Request Sent to CouchPotato!"))
-                else:
-                    oc = ObjectContainer(title1="Couchpotato", title2=L("Success"))
-                Dict['movie'][movie_id]['automated'] = True
-                Dict.Save()
+            category_id = Couchpotato.getCategoryIdFromName(Prefs['couchpotato_category'])
+        if Couchpotato.addMovie(imdb_id, profile_id, category_id):
+
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Movie Request Sent to CouchPotato!"))
             else:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
-                else:
-                    oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-        except:
-            debug(str(traceback.format_exc()))
-            # raise e
+                oc = ObjectContainer(title1="Couchpotato", title2=L("Success"))
+            Dict['movie'][movie_id]['automated'] = True
+            Dict.Save()
+        else:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("CouchPotato Send Failed!"))
             else:
@@ -1537,39 +1493,26 @@ class Session:
 
     def ManageCouchpotato(self):
         self.update_run()
-        if not Prefs['couchpotato_url'].startswith("http"):
-            couchpotato_url = "http://" + Prefs['couchpotato_url']
-        else:
-            couchpotato_url = Prefs['couchpotato_url']
-        if not couchpotato_url.endswith("/"):
-            couchpotato_url += "/"
-        try:
-            movie_list = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.list",
-                                            values=dict(status="active"))
-        except Exception as e:
-            debug(str(traceback.format_exc()))  # raise e
-            Log.Debug(e.message)
+
+        movie_list = Couchpotato.getMovieList(status='active')
+        if not movie_list:
             return self.SMainMenu(message=L("Error loading CouchPotato"))
 
         oc = ObjectContainer(title2="Manage Couchpotato")
 
-        if movie_list['success'] and not movie_list['empty']:
-            for movie in movie_list['movies']:
-                if movie.get('title'):
-                    title = movie.get('title')
-                    movie_id = movie.get('_id')
-                    title_year = title
-                    movie_info = movie.get('info', {})
-                    year = movie_info.get('year')
-                    imdb_id = movie_info.get('imdb', "0")
-                    poster = movie_info.get('images', {}).get('poster')
-                    if poster:
-                        poster = poster[0]
-                    summary = movie_info.get('plot')
-                    title_year += " (" + str(year) + ")" if year else ""
-                    oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie_id, title=title),
-                                        rating_key=imdb_id, title=title_year,
-                                        thumb=poster, summary=summary))
+        for movie in movie_list:
+            if movie.get('title'):
+                title = movie.get('title')
+                title_year = title
+                movie_info = movie.get('info', {})
+                year = movie_info.get('year')
+                poster = movie_info.get('images', {}).get('poster')
+                if poster:
+                    poster = poster[0]
+                title_year += " (" + str(year) + ")" if year else ""
+                oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie.get('_id'), title=title),
+                                    rating_key=movie_info.get('imdb', "0"), title=title_year,
+                                    thumb=poster, summary=movie_info.get('plot')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
@@ -1587,26 +1530,13 @@ class Session:
 
     def DeleteCouchPotatoMovie(self, movie_id):
         self.update_run()
-        if not Prefs['couchpotato_url'].startswith("http"):
-            couchpotato_url = "http://" + Prefs['couchpotato_url']
-        else:
-            couchpotato_url = Prefs['couchpotato_url']
-        if not couchpotato_url.endswith("/"):
-            couchpotato_url += "/"
-        try:
-            movie_delete = JSON.ObjectFromURL(couchpotato_url + "api/" + Prefs['couchpotato_api'] + "/movie.delete",
-                                              values=dict(id=movie_id, delete_from="wanted"))
-        except Exception as e:
-            debug(str(traceback.format_exc()))  # raise e
-            Log.Debug(e.message)
-            return MessageContainer(header=TITLE, message=L("Error loading CouchPotato"))
 
-        if movie_delete['success']:
+        if Couchpotato.deleteMovie(movie_id, "wanted"):
             return self.ManageCouchpotato()
         else:
             return MessageContainer(header=TITLE, message=L("Could not delete movie from Couchpotato"))
 
-            # Sonarr Methods
+    # Radarr Methods
 
     def SendToRadarr(self, movie_id, callback=None):
         self.update_run()
@@ -2339,7 +2269,7 @@ class Session:
             oc = ObjectContainer(header=TITLE, message=message)
         else:
             oc = ObjectContainer(title1=L("Manage"), title2=message)
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
+        oc.add(PopupDirectoryObject(key=Callback(self.Changelog), title=L("Changelog")))
         oc.add(DirectoryObject(key=Callback(self.ManageUsers), title=L("Manage Users")))
         oc.add(
             DirectoryObject(key=Callback(self.ToggleDebug), title=F("toggledebug", "On" if Dict['debug'] else "Off")))
@@ -2828,12 +2758,9 @@ class Session:
 
 
 def checkAdmin(toke):
-    # import urllib2
     try:
         url = "https://plex.tv/users/account" if Prefs[
             'plextv'] else "http://" + Network.Address + ":32400/myplex/account"
-        # req = urllib2.Request(url, headers={'X-Plex-Token': toke})
-        # resp = urllib2.urlopen(req)
         html = HTTP.Request(url, headers={'X-Plex-Token': toke})
         if html.content:
             return True
@@ -2852,7 +2779,7 @@ def resetRegister():
 
 # Notifications Functions
 
-#Format notification for req_id of req_type and return title and message in dict
+# Format notification for req_id of req_type and return title and message in dict
 def formatRequestNotification(req_id="", req_type=""):
     notification_types = {'movie': "Movie", 'tv': "TV Show", 'music': "Album"}
     if req_type in Dict and req_id in Dict[req_type]:
@@ -2886,22 +2813,25 @@ def formatRequestNotification(req_id="", req_type=""):
 # Notify user of requests
 def notifyRequest(req_id, req_type, title="", message=""):
     notification = formatRequestNotification(req_id, req_type)
-    if not notification:    # Unable to format notification so return
+    if not notification:  # Unable to format notification so return
         Log.Debug('Invalid request sent. Please send a bug report on GitHub')
         return
     if Prefs['pushbullet_api']:
         if Prefs['pushbullet_devices']:
             devices = Prefs['pushbullet_devices'].split(",")
             for d in devices:
-                response = Pushbullet.send(notification['title'], notification['message'], channel=Prefs['pushbullet_channel'], device_iden=d.strip())
+                response = Pushbullet.send(notification['title'], notification['message'],
+                                           channel=Prefs['pushbullet_channel'], device_iden=d.strip())
                 if response:
                     Log.Debug("Pushbullet notification sent to device: " + d + " for: " + req_id)
         else:
-            response = Pushbullet.send(notification['title'], notification['message'], channel=Prefs['pushbullet_channel'])
+            response = Pushbullet.send(notification['title'], notification['message'],
+                                       channel=Prefs['pushbullet_channel'])
             if response:
                 Log.Debug("Pushbullet notification sent for: " + req_id)
     if Prefs['pushover_user']:
-        response = Pushover.send(notification['title'], notification['message'], Prefs['pushover_user'], Prefs['pushover_sound'])
+        response = Pushover.send(notification['title'], notification['message'], Prefs['pushover_user'],
+                                 Prefs['pushover_sound'])
         if response:
             Log.Debug("Pushover notification sent for: " + req_id)
     if Prefs['pushalot_api']:
@@ -2912,8 +2842,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
         if Prefs['slack_channels']:
             channels = Prefs['slack_channels'].split(",")
             for c in channels:
-                c = c.strip()                   #remove leading and trailing spaces after split
-                if c.startswith('#'):           #remove leading hashtag
+                c = c.strip()  # remove leading and trailing spaces after split
+                if c.startswith('#'):  # remove leading hashtag
                     c = c[1:]
                 response = Slack.send(notification['message'], c)
                 if response:
@@ -2923,14 +2853,16 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if response:
                 Log.Debug("Slack notification sent for: " + req_id)
     if Prefs['email_to']:
-        Email.send(Prefs['email_from'], Prefs['email_to'], notification['title'], notification['message_html'], secure=Prefs['email_secure'], email_type='html')
+        Email.send(Prefs['email_from'], Prefs['email_to'], notification['title'], notification['message_html'],
+                   secure=Prefs['email_secure'], email_type='html')
         Log.Debug("Email notification sent for: " + req_id)
 
 
 def Notify(title, body):
     if Prefs['email_to']:
-            if not Email.send(Prefs['email_from'],Prefs['email_to'], title, body, secure=Prefs['email_secure'], email_type='html'):
-                Log.Debug("Email notification sent")
+        if not Email.send(Prefs['email_from'], Prefs['email_to'], title, body, secure=Prefs['email_secure'],
+                          email_type='html'):
+            Log.Debug("Email notification sent")
     if Prefs['pushbullet_api']:
         if Prefs['pushbullet_devices']:
             for d in Prefs['pushbullet_devices'].split(','):
