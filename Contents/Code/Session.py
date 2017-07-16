@@ -354,7 +354,7 @@ class Session:
 
     def SwitchKeyboard(self, setValue):
         if setValue == 'True':
-         self.use_dumb_keyboard = True
+            self.use_dumb_keyboard = True
         elif setValue == 'False':
             self.use_dumb_keyboard = False
         return self.SMainMenu("Keyboard has been changed")
@@ -437,7 +437,7 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"),
                                        thumb=R('return.png')))
                 return oc
-        else:           #Use TMDB by default
+        else:  # Use TMDB by default
             results = TheMovieDatabase.Search(query, Prefs['search_language'])
             if len(results) > 0:
                 for result in results:
@@ -2293,8 +2293,8 @@ class Session:
 
     def SendTestEmail(self):
         if Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=L("Request Channel - Test"),
-                   body=L("This is a test email from the Request Channel!"), username=Prefs['email_username'], password=Prefs['email_password'],
-                   secure=Prefs['email_secure'], email_type='html'):
+                      body=L("This is a test email from the Request Channel!"), username=Prefs['email_username'],
+                      password=Prefs['email_password'], secure=Prefs['email_secure'], email_type='plain'):
             return self.ManageChannel(L("Email sent successfully!"))
         else:
             return self.ManageChannel(L("There was a problem sending the email."))
@@ -2864,7 +2864,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
                 Log.Debug("Slack notification sent for: " + req_id)
     if Prefs['email_to']:
         Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=notification['title'],
-                   body=notification['message_html'], username=Prefs['email_username'], password=Prefs['email_password'],
+                   body=notification['message_html'], username=Prefs['email_username'],
+                   password=Prefs['email_password'],
                    secure=Prefs['email_secure'], email_type='html')
         Log.Debug("Email notification sent for: " + req_id)
 
@@ -2872,8 +2873,8 @@ def notifyRequest(req_id, req_type, title="", message=""):
 def Notify(title, body):
     if Prefs['email_to']:
         if not Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=title,
-                   body=body, username=Prefs['email_username'], password=Prefs['email_password'],
-                   secure=Prefs['email_secure'], email_type='html'):
+                          body=body, username=Prefs['email_username'], password=Prefs['email_password'],
+                          secure=Prefs['email_secure'], email_type='html'):
             Log.Debug("Email notification sent")
     if Prefs['pushbullet_api']:
         if Prefs['pushbullet_devices']:
@@ -3065,18 +3066,18 @@ def checkCompletedMovies():
                         if Dict['debug']:
                             Log.Debug(str(Dict['register'][movie['user']].get('email')))
                         if not Email.send(Prefs['email_from'], Dict['register'][movie['user']].get('email'),
-                                               subject, message, Prefs['email_server'],
-                                               Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
-                                               Prefs['email_secure']):
+                                          subject, message, Prefs['email_server'],
+                                          Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                          Prefs['email_secure']):
                             Log.Debug(
                                 "Email sent to " + Dict['register'][movie['user']].get('email') + " for request " + str(
                                     movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
                     if not Email.send(Prefs['email_from'], Prefs['email_to'], subject,
-                                           message, Prefs['email_server'],
-                                           Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
-                                           Prefs['email_secure']):
+                                      message, Prefs['email_server'],
+                                      Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                      Prefs['email_secure']):
                         Log.Debug("Email sent to " + Prefs['email_to'] + " for request " + str(movie_id))
                     else:
                         Log.Debug("Unable to send email notification to " + Prefs['email_to'])

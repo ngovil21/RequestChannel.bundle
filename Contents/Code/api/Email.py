@@ -50,7 +50,7 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
         if smtp:
             smtp.quit()
         Log.Debug("Error in sendEMail: " + e.message)
-        Log(email_from + ", " + email_to + ", " + subject + ", " + body + ", " + str(server) + ", " + str(port) + ", " +
-            username + ", " + password + ", " + str(secure) + ", " + email_type)
+        #Log(email_from + ", " + email_to + ", " + subject + ", " + body + ", " + str(server) + ", " + str(port) + ", " +
+        #    username + ", " + password + ", " + str(secure) + ", " + email_type)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return False
