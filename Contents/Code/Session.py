@@ -3065,7 +3065,7 @@ def checkCompletedMovies():
                     if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
                         if Dict['debug']:
                             Log.Debug(str(Dict['register'][movie['user']].get('email')))
-                        if not Email.send(Prefs['email_from'], Dict['register'][movie['user']].get('email'),
+                        if Email.send(Prefs['email_from'], Dict['register'][movie['user']].get('email'),
                                           subject, message, Prefs['email_server'],
                                           Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
                                           Prefs['email_secure']):
@@ -3074,7 +3074,7 @@ def checkCompletedMovies():
                                     movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
-                    if not Email.send(Prefs['email_from'], Prefs['email_to'], subject,
+                    if Email.send(Prefs['email_from'], Prefs['email_to'], subject,
                                       message, Prefs['email_server'],
                                       Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
                                       Prefs['email_secure']):
