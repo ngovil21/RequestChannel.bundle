@@ -2292,7 +2292,8 @@ class Session:
         return oc
 
     def SendTestEmail(self):
-        if Email.send(Prefs['email_from'], Prefs['email_to'], "Request Channel - Test", "This is a test email from the Request Channel!",
+        if Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=L("Request Channel - Test"),
+                   body=L("This is a test email from the Request Channel!"), username=Prefs['email_username'], password=Prefs['email_password'],
                    secure=Prefs['email_secure'], email_type='html'):
             return self.ManageChannel(L("Email sent successfully!"))
         else:
@@ -2862,15 +2863,17 @@ def notifyRequest(req_id, req_type, title="", message=""):
             if response:
                 Log.Debug("Slack notification sent for: " + req_id)
     if Prefs['email_to']:
-        Email.send(Prefs['email_from'], Prefs['email_to'], notification['title'], notification['message_html'],
+        Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=notification['title'],
+                   body=notification['message_html'], username=Prefs['email_username'], password=Prefs['email_password'],
                    secure=Prefs['email_secure'], email_type='html')
         Log.Debug("Email notification sent for: " + req_id)
 
 
 def Notify(title, body):
     if Prefs['email_to']:
-        if not Email.send(Prefs['email_from'], Prefs['email_to'], title, body, secure=Prefs['email_secure'],
-                          email_type='html'):
+        if not Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=title,
+                   body=body, username=Prefs['email_username'], password=Prefs['email_password'],
+                   secure=Prefs['email_secure'], email_type='html'):
             Log.Debug("Email notification sent")
     if Prefs['pushbullet_api']:
         if Prefs['pushbullet_devices']:

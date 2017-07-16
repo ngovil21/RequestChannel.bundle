@@ -32,22 +32,23 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
     msg['Subject'] = subject
     msg['Date'] = formatdate(localtime=True)
     msg.attach(MIMEText(body, email_type))
+    smtp = None
     try:
-        server = smtplib.SMTP(server, port)
+        smtp = smtplib.SMTP(server, port)
         if secure:
             #server.ehlo()
-            server.starttls()
+            smtp.starttls()
             #server.ehlo()
         if username:
-            server.login(username, password)
+            smtp.login(username, password)
         text = msg.as_string()
-        senders = server.sendmail(email_from, email_to, text)
-        server.quit()
+        senders = smtp.sendmail(email_from, email_to, text)
+        smtp.quit()
         if not senders:
             return True
     except Exception as e:
-        if server:
-            server.quit()
+        if smtp:
+            smtp.quit()
         Log.Debug("Error in sendEMail: " + e.message)
         Log(email_from + ", " + email_to + ", " + subject + ", " + body + ", " + str(server) + ", " + str(port) + ", " +
             username + ", " + password + ", " + str(secure) + ", " + email_type)
