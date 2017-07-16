@@ -34,7 +34,7 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
     msg['Date'] = formatdate(localtime=True)
     smtp = None
     try:
-        msg.attach(MIMEText(body, email_type))
+        msg.attach(MIMEText(body.encode('ascii', 'r'), email_type))
         smtp = smtplib.SMTP(server, port)
         if secure:
             #server.ehlo()
@@ -51,7 +51,7 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
         if smtp:
             smtp.quit()
         Log.Debug("Error in sendEMail: " + e.message)
-        #Log(email_from + ", " + email_to + ", " + subject + ", " + body + ", " + str(server) + ", " + str(port) + ", " +
-        #    username + ", " + password + ", " + str(secure) + ", " + email_type)
+        Log(email_from + ", " + email_to + ", " + subject + ", " + body + ", " + str(server) + ", " + str(port) + ", " +
+            username + ", " + password + ", " + str(secure) + ", " + email_type)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return False
