@@ -2286,7 +2286,7 @@ class Session:
             DirectoryObject(key=Callback(self.AllowedSections),
                             title=L("Allow Sections for Reporting") + sections))
         if Prefs['email_to']:
-            DirectoryObject(key=Callback(self.SendTestEmail), title=L("Send Test Email"))
+            oc.add(DirectoryObject(key=Callback(self.SendTestEmail), title=L("Send Test Email")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
