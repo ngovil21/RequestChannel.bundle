@@ -1,5 +1,6 @@
 import ssl
 import urllib2
+import traceback
 
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 
@@ -20,5 +21,10 @@ def send(title, body, pb_type='note', channel="", device_iden=""):
         data['channel_tag'] = channel
     values = JSON.StringFromObject(data)
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    pushbulletrequest = urllib2.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
-    return urllib2.urlopen(pushbulletrequest, context=ctx)
+    try:
+        pushbulletrequest = urllib2.Request(PUSHBULLET_API_URL + "pushes", data=values, headers=api_header)
+        return urllib2.urlopen(pushbulletrequest, context=ctx)
+    except Exception as e:
+        Log.Debug("Error in send: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return
