@@ -46,6 +46,8 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
         if not senders:
             return True
     except Exception as e:
+        if server:
+            server.quit()
         Log.Debug("Error in sendEMail: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return False
