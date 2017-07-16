@@ -3070,7 +3070,7 @@ def checkCompletedMovies():
                                     movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
-                    if not Email.sendPrefs['email_from'], Prefs['email_to'], subject,
+                    if not Email.send(Prefs['email_from'], Prefs['email_to'], subject,
                                            message, Prefs['email_server'],
                                            Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
                                            Prefs['email_secure']):
