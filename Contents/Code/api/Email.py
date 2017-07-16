@@ -35,9 +35,9 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
     try:
         server = smtplib.SMTP(server, port)
         if secure:
-            server.ehlo()
+            #server.ehlo()
             server.starttls()
-            server.ehlo()
+            #server.ehlo()
         if username:
             server.login(username, password)
         text = msg.as_string()
