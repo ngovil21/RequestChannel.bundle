@@ -2294,7 +2294,7 @@ class Session:
     def SendTestEmail(self):
         if Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=L("Request Channel - Test"),
                       body=L("This is a test email from the Request Channel!"), username=Prefs['email_username'],
-                      password=Prefs['email_password'], secure=Prefs['email_secure'], email_type='plain'):
+                      password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
             return self.ManageChannel(L("Email sent successfully!"))
         else:
             return self.ManageChannel(L("There was a problem sending the email."))
@@ -2866,7 +2866,7 @@ def notifyRequest(req_id, req_type, title="", message=""):
         Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=notification['title'],
                    body=notification['message_html'], username=Prefs['email_username'],
                    password=Prefs['email_password'],
-                   secure=Prefs['email_secure'], email_type='html')
+                   secure=Prefs['email_secure'], email_type="html")
         Log.Debug("Email notification sent for: " + req_id)
 
 
@@ -2874,7 +2874,7 @@ def Notify(title, body):
     if Prefs['email_to']:
         if not Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=title,
                           body=body, username=Prefs['email_username'], password=Prefs['email_password'],
-                          secure=Prefs['email_secure'], email_type='html'):
+                          secure=Prefs['email_secure'], email_type="html"):
             Log.Debug("Email notification sent")
     if Prefs['pushbullet_api']:
         if Prefs['pushbullet_devices']:

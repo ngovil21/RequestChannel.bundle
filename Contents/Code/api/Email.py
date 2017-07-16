@@ -21,7 +21,8 @@ def setDefaultPort(port):
     global DEFAULT_PORT
     DEFAULT_PORT = port
 
-def send(email_from, email_to, subject, body, server=None, port=-1, username="", password="", secure=False, email_type='html'):
+
+def send(email_from, email_to, subject, body, server=None, port=-1, username="", password="", secure=False, email_type="html"):
     if not server:
         server = DEFAULT_SERVER
     if port < 0:
@@ -31,9 +32,9 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
     msg['To'] = email_to
     msg['Subject'] = subject
     msg['Date'] = formatdate(localtime=True)
-    msg.attach(MIMEText(body, email_type))
     smtp = None
     try:
+        msg.attach(MIMEText(body, email_type))
         smtp = smtplib.SMTP(server, port)
         if secure:
             #server.ehlo()
