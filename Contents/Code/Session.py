@@ -16,7 +16,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 BRANCH = "test"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
@@ -137,6 +137,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/sickbeardshowexists' % session_id, self.SickbeardShowExists)
         Route.Connect(PREFIX + '/%s/sendtoheadphones' % session_id, self.SendToHeadphones)
         Route.Connect(PREFIX + '/%s/managechannel' % session_id, self.ManageChannel)
+        Route.Connect(PREFIX + '/%s/sendtestemail' % session_id, self.SendTestEmail)
         Route.Connect(PREFIX + '/%s/manageusers' % session_id, self.ManageUsers)
         Route.Connect(PREFIX + '/%s/manageuser' % session_id, self.ManageUser)
         Route.Connect(PREFIX + '/%s/renameuser' % session_id, self.RenameUser)
@@ -2018,7 +2019,6 @@ class Session:
         try:
             resp = JSON.ObjectFromURL(sickbeard_url + "api/" + Prefs['sickbeard_api'], values=data,
                                       method='GET' if use_sickrage else 'POST')
-            Log.Debug(str(JSON.StringFromObject(resp)))
             if 'result' in resp and resp['result'] == "success":
                 for show_id in resp['data']:
                     poster = sickbeard_url + "api/" + Prefs['sickbeard_api'] + "/?cmd=show.getposter&tvdbid=" + show_id
@@ -2285,9 +2285,18 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.AllowedSections),
                             title=L("Allow Sections for Reporting") + sections))
+        if Prefs['email_to']:
+            DirectoryObject(key=Callback(self.SendTestEmail), title=L("Send Test Email"))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
+
+    def SendTestEmail(self):
+        if Email.send(Prefs['email_from'], Prefs['email_to'], "Request Channel - Test", "This is a test email from the Request Channel!",
+                   secure=Prefs['email_secure'], email_type='html'):
+            return self.ManageChannel(L("Email sent successfully!"))
+        else:
+            return self.ManageChannel(L("There was a problem sending the email"))
 
     def AllowedSections(self, message=None):
         self.update_run()
