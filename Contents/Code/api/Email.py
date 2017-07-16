@@ -23,19 +23,21 @@ def setDefaultPort(port):
     DEFAULT_PORT = port
 
 
-def send(email_from, email_to, subject, body, server=None, port=-1, username="", password="", secure=False, email_type="html"):
+def send(email_from, email_to, subject, body, server=None, port=-1, username="", password="", secure=False, email_type="html", plain_body=None):
     if not server:
         server = DEFAULT_SERVER
     if port < 0:
         port = DEFAULT_PORT
-    # msg = MIMEMultipart()
-    msg = Message()
+    msg = MIMEMultipart()
     msg['From'] = email_from
     msg['To'] = email_to
     msg['Subject'] = subject
     msg['Date'] = formatdate(localtime=True)
-    msg.add_header('Content-Type', 'text/' + email_type)
-    msg.set_payload(body)
+    if email_type == "html" and plain_body:
+        msg.attach(MIMEText(plain_body, 'plain'))
+    msg.attach(MIMEText(body, email_type))
+    # msg.add_header('Content-Type', 'text/' + email_type)
+    # msg.set_payload(str(body))
     smtp = None
     try:
         smtp = smtplib.SMTP(server, port)

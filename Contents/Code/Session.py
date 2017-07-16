@@ -2292,8 +2292,8 @@ class Session:
         return oc
 
     def SendTestEmail(self):
-        if Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject=L("Request Channel - Test"),
-                      body=L("This is a test email from the Request Channel!"), username=Prefs['email_username'],
+        if Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject="Request Channel - Test",
+                      body="This is a test email from the Request Channel!", username=Prefs['email_username'],
                       password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
             return self.ManageChannel(L("Email sent successfully!"))
         else:
