@@ -34,7 +34,7 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
     msg['Date'] = formatdate(localtime=True)
     smtp = None
     try:
-        mt = MIMEText(body, _subtype=email_type, _charset='utf-8')
+        mt = MIMEText(str(body), _subtype=email_type, _charset='utf-8')
         msg.attach(mt)
         smtp = smtplib.SMTP(server, port)
         if secure:
