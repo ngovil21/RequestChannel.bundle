@@ -1,6 +1,5 @@
 from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
-from email.message import Message
 from email.Utils import formatdate
 import smtplib
 import traceback
@@ -36,15 +35,11 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
     if email_type == "html" and plain_body:
         msg.attach(MIMEText(plain_body, 'plain'))
     msg.attach(MIMEText(body, email_type))
-    # msg.add_header('Content-Type', 'text/' + email_type)
-    # msg.set_payload(str(body))
     smtp = None
     try:
         smtp = smtplib.SMTP(server, port)
         if secure:
-            #server.ehlo()
             smtp.starttls()
-            #server.ehlo()
         if username:
             smtp.login(username, password)
         senders = smtp.sendmail(email_from, email_to, msg.as_string())
@@ -55,7 +50,5 @@ def send(email_from, email_to, subject, body, server=None, port=-1, username="",
         if smtp:
             smtp.quit()
         Log.Debug("Error in sendEMail: " + e.message)
-        # Log(email_from + ", " + email_to + ", " + subject + ", " + body + ", " + str(server) + ", " + str(port) + ", " +
-        #     username + ", " + password + ", " + str(secure) + ", " + email_type)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return False
