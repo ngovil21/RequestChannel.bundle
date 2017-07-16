@@ -2296,7 +2296,7 @@ class Session:
                    secure=Prefs['email_secure'], email_type='html'):
             return self.ManageChannel(L("Email sent successfully!"))
         else:
-            return self.ManageChannel(L("There was a problem sending the email"))
+            return self.ManageChannel(L("There was a problem sending the email."))
 
     def AllowedSections(self, message=None):
         self.update_run()
