@@ -1406,7 +1406,7 @@ class Session:
             Dict[req_type][req_id]['watched'] = True
             if debug:
                 Log.Debug(req_id + " set to watched")
-            return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash,
+            return self.ViewRequest(req_id=req_id, req_type=req_type, token_hash=token_hash,
                                     message=L("Movie marked as watched"))
         else:
             Log.Debug("Unknown value for watch status!")
