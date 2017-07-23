@@ -1045,10 +1045,12 @@ class Session:
                     continue
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('completed', False):  # Use * for completed
-                    title_year = "* " + title_year
-                elif d.get('automated', False):  # Use + for automated
-                    title_year = "+ " + title_year
+                if d.get('watched', False):     # Use ⌚ for watched
+                    title_year = "\u231A " + title_year
+                elif d.get('completed', False):  # Use ⬇ for completed
+                    title_year = "\u2B07 " + title_year
+                elif d.get('automated', False):  # Use ⏳ for automated
+                    title_year = "/u23F3 " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 date = ""
                 if d.get('created_on'):
@@ -1315,18 +1317,21 @@ class Session:
         else:
             return self.ViewRequests(message=L("All " + req_type + " have been cleared"))
 
-    def ViewRequest(self, req_id, req_type, token_hash=None):
+    def ViewRequest(self, req_id, req_type, token_hash=None, message=None):
         self.update_run()
         key = Dict[req_type][req_id]
         title_year = key['title']
-        title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else \
+        title_year += ' (' + key.get('year') + ')' if not re.search(' \(/d/d/d/d\)', key['title']) and key['year'] else \
             key['title']  # If there is already a year in the title, just use title
         date = ""
         if key.get('created_on'):
-            date = " on " + Datetime.FromTimestamp(key.get('created_on')).strftime("%m-%d-%Y")
+            date = " on " + Datetime.FromTimestamp(key.get('created_on')).strftime('%m-%d-%Y')
         summary = "(Requested by " + (key.get('user') if key.get('user') else 'Unknown') + date + ")   " + (
             key.get('summary', "") if key.get("summary") else "")
         oc = ObjectContainer(title2=title_year)
+        if message and isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
@@ -1343,7 +1348,9 @@ class Session:
                 title=L("Delete Request"), thumb=R('x-mark.png')))
         if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
-                oc.add(DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id),
+                oc.add(DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id,
+                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='movie',
+                                                                      token_hash=token_hash)),
                                        title=F("sendto", "CouchPotato"), thumb=R('couchpotato.png')))
             if Prefs['radarr_url'] and Prefs['radarr_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToRadarr, movie_id=req_id,
@@ -1368,6 +1375,14 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
                                        title=F("sendto", "Headphones"),
                                        thumb=R('headphones.png')))
+        if key.get('token_hash') == Hash.SHA1(self.token) or key.get('user') == self.user:
+                if key.get("watched", False):
+                    oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id, req_type=req_type, token_hash=token_hash),
+                                           title=L("Mark as Watched"), thumb=R('watched.png')))
+                else:
+                    oc.add(DirectoryObject(
+                        key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type, token_hash=token_hash),
+                        title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
                                    title=L("Return to Movie Requests"), thumb=R('return.png')))
@@ -1378,6 +1393,23 @@ class Session:
             oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
                                    title=L("Return to Music Requests"), thumb=R('return.png')))
         return oc
+
+    def MarkWatched(self, value, req_id, req_type, token_hash=None):
+        if value == "False":
+            Dict[req_type][req_id]['watched'] = False
+            if debug:
+                Log.Debug(req_id + " set to unwatched")
+            return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash,
+                                    message=L("Movie marked as unwatched"))
+        elif value == "True":
+            Dict[req_type][req_id]['watched'] = True
+            if debug:
+                Log.Debug(req_id + " set to watched")
+            return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash,
+                                    message=L("Movie marked as watched"))
+        else:
+            Log.Debug("Unknown value for watch status!")
+        return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash, message=L("Unable to change watch status"))
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
         self.update_run()
@@ -1412,7 +1444,7 @@ class Session:
             return self.ViewRequests(message=message, token_hash=token_hash)
 
     # CouchPotato Functions
-    def SendToCouchpotato(self, movie_id):
+    def SendToCouchpotato(self, movie_id, callback=None):
         self.update_run()
         if movie_id not in Dict['movie']:
             return MessageContainer(L("Error"), L("The movie id was not found in the database"))
@@ -1434,8 +1466,12 @@ class Session:
                         oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
                     else:
                         oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                    oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                    return oc
+                    if callback:
+                        oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+                        return oc
+                    else:
+                        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                        return oc
                     # try:
                     #     json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
                     #                           headers={'Accept': 'application/json'})
@@ -1484,6 +1520,9 @@ class Session:
         key = Dict['movie'][movie_id]
         title_year = key['title']
         title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
+        if callback:
+            oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+            return oc
         if self.is_admin:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year),

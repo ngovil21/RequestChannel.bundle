@@ -14,16 +14,20 @@ def setPort(port):
     PLEX_PORT = port
 
 
-def getURL(secure=False):
+def getURL(secure=False, localhost=False):
+    if localhost:
+        ip = "127.0.0.1"
+    else:
+        ip = PLEX_IP
     if PLEX_IP and PLEX_PORT:
         if secure:
-            return "https://" + PLEX_IP + ":" + PLEX_PORT + "/"
+            return "https://" + ip + ":" + PLEX_PORT + "/"
         else:
-            return "http://" + PLEX_IP + ":" + PLEX_PORT + "/"
+            return "http://" + ip + ":" + PLEX_PORT + "/"
 
 
-def getSections(secure=False, headers={}):
-    return XML.ElementFromURL(url=getURL(secure) + "library/sections", headers=headers)
+def getSections(secure=False, headers={}, localhost=False):
+    return XML.ElementFromURL(url=getURL(secure, localhost) + "library/sections", headers=headers)
 
 
 # search library for query and return xml
@@ -80,4 +84,14 @@ def getPlexTVUser(token):
         plexTVUser = xml.get("myPlexUsername")
         return plexTVUser
     except:
-        return None
+        return
+
+def checkAdminUser(token, usePlexTv=True):
+    try:
+        url = "https://plex.tv/users/account" if usePlexTv else getURL() + "/myplex/account"
+        html = HTTP.Request(url, headers={'X-Plex-Token': toke})
+        if html.content:
+            return True
+    except:
+        pass
+    return False
