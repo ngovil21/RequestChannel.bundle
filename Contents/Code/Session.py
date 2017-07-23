@@ -1046,12 +1046,12 @@ class Session:
                     continue
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('watched', False):     # Use ⌚ for watched
-                    title_year = u"👁 " + title_year
-                elif d.get('completed', False):  # Use ⬇ for completed
-                    title_year = u"⬇ " + title_year
-                elif d.get('automated', False):  # Use ⏳ for automated
-                    title_year = u"⏳ " + title_year
+                if d.get('watched', False):     # Use ⌚ for watched, other considerations: 𓁿,👁
+                    title_year = u"⌚ " + title_year
+                elif d.get('completed', False):  # Use ⬇ for completed (downloaded) others: ⬇, 🍿
+                    title_year = u"⭳ " + title_year
+                elif d.get('automated', False):  # Use 🔍 for automated, other: 🔍, ⏳
+                    title_year = u"🔍 " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 date = ""
                 if d.get('created_on'):
