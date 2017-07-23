@@ -1400,7 +1400,7 @@ class Session:
             Dict[req_type][req_id]['watched'] = False
             if debug:
                 Log.Debug(req_id + " set to unwatched")
-            return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash,
+            return self.ViewRequest(req_id=req_id, req_type=req_type, token_hash=token_hash,
                                     message=L("Movie marked as unwatched"))
         elif value == "True":
             Dict[req_type][req_id]['watched'] = True
