@@ -116,6 +116,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
         Route.Connect(PREFIX + '/%s/clearrequests' % session_id, self.ClearRequests)
         Route.Connect(PREFIX + '/%s/viewrequest' % session_id, self.ViewRequest)
+        Route.Connect(PREFIX + '/%s/markwatched' % session_id, self.MarkWatched)
         Route.Connect(PREFIX + '/%s/confirmallrequests' % session_id, self.ConfirmAllRequests)
         Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
         Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
@@ -1059,11 +1060,9 @@ class Session:
                     d.get('summary', "") if d.get("summary") else "")
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
-                    rating_key=req_id,
-                    title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+                    rating_key=req_id, title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
-                                   title=L("Return to Requests Menu"),
-                                   thumb=R('return.png')))
+                                   title=L("Return to Requests Menu"), thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmAllRequests, req_type='movie'),
@@ -1375,8 +1374,10 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
                                        title=F("sendto", "Headphones"),
                                        thumb=R('headphones.png')))
-        if key.get('token_hash') == Hash.SHA1(self.token) or key.get('user') == self.user:
-                if key.get("watched", False):
+
+
+        if key.get('token_hash') == token_hash or key.get('user') == self.user:
+                if not key.get("watched", False):
                     oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id, req_type=req_type, token_hash=token_hash),
                                            title=L("Mark as Watched"), thumb=R('watched.png')))
                 else:
