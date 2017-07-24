@@ -1064,7 +1064,8 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id, title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             if c == 1:      # If there is only one request, show the request menu for that item
-                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash)
+                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
+                                        parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"), thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
@@ -1125,7 +1126,8 @@ class Session:
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             if c == 1:      # If there is only one request, show the request menu for that item
-                return self.ViewRequest(req_id=req_id, req_type='tv',token_hash=token_hash)
+                return self.ViewRequest(req_id=req_id, req_type='tv',token_hash=token_hash,
+                                        parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1177,7 +1179,8 @@ class Session:
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
             if c == 1:      # If there is only one request, show the request menu for that item
-                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash)
+                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
+                                        parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1328,7 +1331,7 @@ class Session:
         else:
             return self.ViewRequests(message=L("All " + req_type + " have been cleared"))
 
-    def ViewRequest(self, req_id, req_type, token_hash=None, message=None):
+    def ViewRequest(self, req_id, req_type, token_hash=None, message=None, parent=None):
         self.update_run()
         key = Dict[req_type][req_id]
         title_year = key['title']
@@ -1397,15 +1400,18 @@ class Session:
                         key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
                                      token_hash=token_hash),
                         title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
-        if req_type == 'movie':
-            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
-                                   title=L("Return to Movie Requests"), thumb=R('return.png')))
-        elif req_type == 'tv':
-            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
-                                   title=L("Return to TV Requests"), thumb=R('return.png')))
-        elif req_type == 'music':
-            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
-                                   title=L("Return to Music Requests"), thumb=R('return.png')))
+        if not parent:
+            if req_type == 'movie':
+                oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
+                                       title=L("Return to Movie Requests"), thumb=R('return.png')))
+            elif req_type == 'tv':
+                oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
+                                       title=L("Return to TV Requests"), thumb=R('return.png')))
+            elif req_type == 'music':
+                oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
+                                       title=L("Return to Music Requests"), thumb=R('return.png')))
+        else:
+            oc.add(DirectoryObject(key=parent, title=L("Return to Previous"), thumb=R('return.png')))
         return oc
 
     def MarkWatched(self, value, req_id, req_type, token_hash=None):
