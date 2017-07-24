@@ -16,7 +16,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.9.3"
+VERSION = "0.9.4"
 BRANCH = "test"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
@@ -1040,10 +1040,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
+            c = 0   #counter to keep track of number of requests
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
+                c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('watched', False):     # Use ⌚ for watched, other considerations: 𓁿,👁,✪,★
@@ -1061,6 +1063,8 @@ class Session:
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id, title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            if c == 1:      # If there is only one request, show the request menu for that item
+                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash)
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"), thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
@@ -1100,10 +1104,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
+            c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
+                c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -1118,6 +1124,8 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            if c == 1:      # If there is only one request, show the request menu for that item
+                return self.ViewRequest(req_id=req_id, req_type='tv',token_hash=token_hash)
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1148,10 +1156,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
+            c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if token_hash and token_hash != d.get('token_hash'):
                     continue
+                c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -1166,6 +1176,8 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            if c == 1:      # If there is only one request, show the request menu for that item
+                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash)
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1340,7 +1352,7 @@ class Session:
                                 summary=summary, title=title_year))
 
         Log.Debug("Req Type: " + req_type + "  Key Type: " + key['type'] + "  Req ID: " + req_id)
-        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token) or key.get('user') == self.user:
+        if self.is_admin or key.get('token_hash') == token_hash or key.get('user') == self.user:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year,
                              token_hash=token_hash),
@@ -1375,14 +1387,15 @@ class Session:
                                        title=F("sendto", "Headphones"),
                                        thumb=R('headphones.png')))
 
-
-        if key.get('token_hash') == token_hash or key.get('user') == self.user:
+        if (key.get('token_hash') == token_hash) or (key.get('user') == self.user):
                 if not key.get("watched", False):
-                    oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id, req_type=req_type, token_hash=token_hash),
+                    oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id,
+                                                        req_type=req_type, token_hash=token_hash),
                                            title=L("Mark as Watched"), thumb=R('watched.png')))
                 else:
                     oc.add(DirectoryObject(
-                        key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type, token_hash=token_hash),
+                        key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
+                                     token_hash=token_hash),
                         title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
         if req_type == 'movie':
             oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
