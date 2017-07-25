@@ -1040,12 +1040,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
-            c = 0   #counter to keep track of number of requests
+            # c = 0   #counter to keep track of number of requests
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if not self.admin and (not token_hash or token_hash != d.get('token_hash')):
+                if not self.admin and (token_hash is None or token_hash != d.get('token_hash')):
                     continue
-                c += 1
+                # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('watched', False):     # Use ⌚ for watched, other considerations: 𓁿,👁,✪,★
@@ -1063,9 +1063,9 @@ class Session:
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id, title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
-            if c == 1:      # If there is only one request, show the request menu for that item
-                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
-                                        parent=Callback(self.ViewRequests, token_hash=token_hash))
+            # if c == 1:      # If there is only one request, show the request menu for that item
+            #     return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
+            #                             parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"), thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
@@ -1105,12 +1105,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
-            c = 0
+            # c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
                 if not self.admin and (not token_hash or token_hash != d.get('token_hash')):
                     continue
-                c += 1
+                # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -1125,9 +1125,9 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
-            if c == 1:      # If there is only one request, show the request menu for that item
-                return self.ViewRequest(req_id=req_id, req_type='tv',token_hash=token_hash,
-                                        parent=Callback(self.ViewRequests, token_hash=token_hash))
+            # if c == 1:      # If there is only one request, show the request menu for that item
+            #     return self.ViewRequest(req_id=req_id, req_type='tv',token_hash=token_hash,
+            #                             parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1158,12 +1158,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
-            c = 0
+            # c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if not self.admin and (not token_hash or token_hash != d.get('token_hash')):
+                if not self.admin and (token_hash is None or token_hash != d.get('token_hash')):
                     continue
-                c += 1
+                # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -1178,9 +1178,9 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
-            if c == 1:      # If there is only one request, show the request menu for that item
-                return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
-                                        parent=Callback(self.ViewRequests, token_hash=token_hash))
+            # if c == 1:      # If there is only one request, show the request menu for that item
+            #     return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
+            #                             parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
