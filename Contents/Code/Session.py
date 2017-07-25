@@ -1043,7 +1043,7 @@ class Session:
             # c = 0   #counter to keep track of number of requests
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if not self.admin and (token_hash is None or token_hash != d.get('token_hash')):
+                if not self.is_admin and (not token_hash or token_hash != d.get('token_hash')):
                     continue
                 # c += 1
                 title_year = d['title']
@@ -1108,7 +1108,7 @@ class Session:
             # c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if not self.admin and (not token_hash or token_hash != d.get('token_hash')):
+                if not self.is_admin and (not token_hash or token_hash != d.get('token_hash')):
                     continue
                 # c += 1
                 title_year = d['title']
@@ -1161,7 +1161,7 @@ class Session:
             # c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if not self.admin and (token_hash is None or token_hash != d.get('token_hash')):
+                if not self.is_admin and (token_hash is None or token_hash != d.get('token_hash')):
                     continue
                 # c += 1
                 title_year = d['title']
