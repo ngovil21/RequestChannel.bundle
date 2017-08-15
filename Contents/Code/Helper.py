@@ -53,7 +53,7 @@ LANGUAGE_ABBREVIATIONS = {
 }
 
 def setupApi():
-    Plex.setIp("127.0.0.1")
+    Plex.setIp(Network.Address)
     Plex.setPort("32400")
     Radarr.setAPI(Prefs['radarr_api'])
     Radarr.setURL(Prefs['radarr_url'])

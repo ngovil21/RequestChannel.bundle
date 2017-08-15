@@ -12,7 +12,7 @@ def send(title, message, user, sound=None):
     try:
         return HTTP.Request(PUSHOVER_API_URL, values=data)
     except Exception as e:
-        Log.Debug("Error in sendPushover: " + e.message)
+        Log.Debug("Error in send: " + e.message)
         Log.Error(str(traceback.format_exc()))  # raise last error
     return
 
