@@ -1,3 +1,4 @@
+7/09/17 - 0.9.4 - Added menu to report requests as watched, and use unicode characters to denote request status
 7/09/17 - 0.9.3 - Fixed bugs with Couchpotato, Sending Email, and begin to compartamentalize code
 6/02/17 - 0.9.2 - Fixed authentication locally, users will only see libraries they have access to when reporting problems.
 5/02/17 - 0.9.1 - Added admin email notifcations when requests completed and ability to restrict sections for reporting media

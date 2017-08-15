@@ -16,7 +16,7 @@ PREFIX = '/video/requestchannel'
 ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
-VERSION = "0.9.3"
+VERSION = "0.9.4"
 BRANCH = "development"
 CHANGELOG_URL = "https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/" + BRANCH + "/CHANGELOG"
 
@@ -116,6 +116,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/confirmdeleterequests' % session_id, self.ConfirmDeleteRequests)
         Route.Connect(PREFIX + '/%s/clearrequests' % session_id, self.ClearRequests)
         Route.Connect(PREFIX + '/%s/viewrequest' % session_id, self.ViewRequest)
+        Route.Connect(PREFIX + '/%s/markwatched' % session_id, self.MarkWatched)
         Route.Connect(PREFIX + '/%s/confirmallrequests' % session_id, self.ConfirmAllRequests)
         Route.Connect(PREFIX + '/%s/deleterequest' % session_id, self.DeleteRequest)
         Route.Connect(PREFIX + '/%s/sendtocouchpotato' % session_id, self.SendToCouchpotato)
@@ -1039,16 +1040,20 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
+            # c = 0   #counter to keep track of number of requests
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if token_hash and token_hash != d.get('token_hash'):
+                if not self.is_admin and (not token_hash or token_hash != d.get('token_hash')):
                     continue
+                # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('completed', False):  # Use * for completed
-                    title_year = "* " + title_year
-                elif d.get('automated', False):  # Use + for automated
-                    title_year = "+ " + title_year
+                if d.get('watched', False):     # Use ⌚ for watched, other considerations: 𓁿,👁,✪,★
+                    title_year = u"⌚ " + title_year
+                elif d.get('completed', False):  # Use ⭳ for completed (downloaded) others: ⬇,🍿,⏵
+                    title_year = u"⭳ " + title_year
+                elif d.get('automated', False):  # Use 🔍 for automated (searching), other: 🔍, ⏳
+                    title_year = u"🔍 " + title_year
                 thumb = d.get('poster', R('no-poster.jpg'))
                 date = ""
                 if d.get('created_on'):
@@ -1057,11 +1062,12 @@ class Session:
                     d.get('summary', "") if d.get("summary") else "")
                 oc.add(TVShowObject(
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
-                    rating_key=req_id,
-                    title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+                    rating_key=req_id, title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            # if c == 1:      # If there is only one request, show the request menu for that item
+            #     return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
+            #                             parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
-                                   title=L("Return to Requests Menu"),
-                                   thumb=R('return.png')))
+                                   title=L("Return to Requests Menu"), thumb=R('return.png')))
             oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu"), thumb=R('return.png')))
             if len(oc) > 1 and self.is_admin:
                 oc.add(DirectoryObject(key=Callback(self.ConfirmAllRequests, req_type='movie'),
@@ -1099,10 +1105,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
+            # c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if token_hash and token_hash != d.get('token_hash'):
+                if not self.is_admin and (not token_hash or token_hash != d.get('token_hash')):
                     continue
+                # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -1117,6 +1125,9 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            # if c == 1:      # If there is only one request, show the request menu for that item
+            #     return self.ViewRequest(req_id=req_id, req_type='tv',token_hash=token_hash,
+            #                             parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1147,10 +1158,12 @@ class Session:
                 criteria = lambda k: requests[k].get('title', "")
             else:
                 criteria = lambda k: requests[k].get('created_on', 0)
+            # c = 0
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if token_hash and token_hash != d.get('token_hash'):
+                if not self.is_admin and (token_hash is None or token_hash != d.get('token_hash')):
                     continue
+                # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
                 if d.get('automated', False):
@@ -1165,6 +1178,9 @@ class Session:
                     key=Callback(self.ViewRequest, req_id=req_id, req_type=d['type'], token_hash=token_hash),
                     rating_key=req_id,
                     title=title_year, thumb=thumb, summary=summary, art=d.get('backdrop', None)))
+            # if c == 1:      # If there is only one request, show the request menu for that item
+            #     return self.ViewRequest(req_id=req_id, req_type='movie',token_hash=token_hash,
+            #                             parent=Callback(self.ViewRequests, token_hash=token_hash))
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=token_hash),
                                    title=L("Return to Requests Menu"),
                                    thumb=R('return.png')))
@@ -1315,18 +1331,21 @@ class Session:
         else:
             return self.ViewRequests(message=L("All " + req_type + " have been cleared"))
 
-    def ViewRequest(self, req_id, req_type, token_hash=None):
+    def ViewRequest(self, req_id, req_type, token_hash=None, message=None, parent=None):
         self.update_run()
         key = Dict[req_type][req_id]
         title_year = key['title']
-        title_year += " (" + key.get("year") + ")" if not re.search(" \(/d/d/d/d\)", key['title']) and key['year'] else \
+        title_year += ' (' + key.get('year') + ')' if not re.search(' \(/d/d/d/d\)', key['title']) and key['year'] else \
             key['title']  # If there is already a year in the title, just use title
         date = ""
         if key.get('created_on'):
-            date = " on " + Datetime.FromTimestamp(key.get('created_on')).strftime("%m-%d-%Y")
+            date = " on " + Datetime.FromTimestamp(key.get('created_on')).strftime('%m-%d-%Y')
         summary = "(Requested by " + (key.get('user') if key.get('user') else 'Unknown') + date + ")   " + (
             key.get('summary', "") if key.get("summary") else "")
         oc = ObjectContainer(title2=title_year)
+        if message and isClient(MESSAGE_OVERLAY_CLIENTS):
+            oc.header = TITLE
+            oc.message = message
         if Client.Platform in TV_SHOW_OBJECT_FIX_CLIENTS:  # If an android, add an empty first item because it gets truncated for some reason
             oc.add(DirectoryObject(key=None, title=""))
         if Client.Product == "Plex Web":  # If Plex Web then add an item with the poster
@@ -1336,14 +1355,16 @@ class Session:
                                 summary=summary, title=title_year))
 
         Log.Debug("Req Type: " + req_type + "  Key Type: " + key['type'] + "  Req ID: " + req_id)
-        if self.is_admin or key.get('token_hash') == Hash.SHA1(self.token) or key.get('user') == self.user:
+        if self.is_admin or key.get('token_hash') == token_hash or key.get('user') == self.user:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=req_id, req_type=req_type, title_year=title_year,
                              token_hash=token_hash),
                 title=L("Delete Request"), thumb=R('x-mark.png')))
         if key['type'] == 'movie' and (self.is_admin or Prefs['usersviewrequests']):
             if Prefs['couchpotato_url'] and Prefs['couchpotato_api']:
-                oc.add(DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id),
+                oc.add(DirectoryObject(key=Callback(self.SendToCouchpotato, movie_id=req_id,
+                                                    callback=Callback(self.ViewRequest, req_id=req_id, req_type='movie',
+                                                                      token_hash=token_hash)),
                                        title=F("sendto", "CouchPotato"), thumb=R('couchpotato.png')))
             if Prefs['radarr_url'] and Prefs['radarr_api']:
                 oc.add(DirectoryObject(key=Callback(self.SendToRadarr, movie_id=req_id,
@@ -1368,16 +1389,47 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.SendToHeadphones, music_id=req_id),
                                        title=F("sendto", "Headphones"),
                                        thumb=R('headphones.png')))
-        if req_type == 'movie':
-            oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
-                                   title=L("Return to Movie Requests"), thumb=R('return.png')))
-        elif req_type == 'tv':
-            oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
-                                   title=L("Return to TV Requests"), thumb=R('return.png')))
-        elif req_type == 'music':
-            oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
-                                   title=L("Return to Music Requests"), thumb=R('return.png')))
+
+        if (key.get('token_hash') == token_hash) or (key.get('user') == self.user):
+                if not key.get("watched", False):
+                    oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id,
+                                                        req_type=req_type, token_hash=token_hash),
+                                           title=L("Mark as Watched"), thumb=R('watched.png')))
+                else:
+                    oc.add(DirectoryObject(
+                        key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
+                                     token_hash=token_hash),
+                        title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
+        if not parent:
+            if req_type == 'movie':
+                oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
+                                       title=L("Return to Movie Requests"), thumb=R('return.png')))
+            elif req_type == 'tv':
+                oc.add(DirectoryObject(key=Callback(self.ViewTVRequests, token_hash=token_hash),
+                                       title=L("Return to TV Requests"), thumb=R('return.png')))
+            elif req_type == 'music':
+                oc.add(DirectoryObject(key=Callback(self.ViewMusicRequests, token_hash=token_hash),
+                                       title=L("Return to Music Requests"), thumb=R('return.png')))
+        else:
+            oc.add(DirectoryObject(key=parent, title=L("Return to Previous"), thumb=R('return.png')))
         return oc
+
+    def MarkWatched(self, value, req_id, req_type, token_hash=None):
+        if value == "False":
+            Dict[req_type][req_id]['watched'] = False
+            if debug:
+                Log.Debug(req_id + " set to unwatched")
+            return self.ViewRequest(req_id=req_id, req_type=req_type, token_hash=token_hash,
+                                    message=L("Movie marked as unwatched"))
+        elif value == "True":
+            Dict[req_type][req_id]['watched'] = True
+            if debug:
+                Log.Debug(req_id + " set to watched")
+            return self.ViewRequest(req_id=req_id, req_type=req_type, token_hash=token_hash,
+                                    message=L("Movie marked as watched"))
+        else:
+            Log.Debug("Unknown value for watch status!")
+        return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash, message=L("Unable to change watch status"))
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
         self.update_run()
@@ -1412,7 +1464,7 @@ class Session:
             return self.ViewRequests(message=message, token_hash=token_hash)
 
     # CouchPotato Functions
-    def SendToCouchpotato(self, movie_id):
+    def SendToCouchpotato(self, movie_id, callback=None):
         self.update_run()
         if movie_id not in Dict['movie']:
             return MessageContainer(L("Error"), L("The movie id was not found in the database"))
@@ -1434,8 +1486,12 @@ class Session:
                         oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
                     else:
                         oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                    oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                    return oc
+                    if callback:
+                        oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+                        return oc
+                    else:
+                        oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
+                        return oc
                     # try:
                     #     json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
                     #                           headers={'Accept': 'application/json'})
@@ -1484,6 +1540,9 @@ class Session:
         key = Dict['movie'][movie_id]
         title_year = key['title']
         title_year += (" (" + key['year'] + ")" if key.get('year', None) else "")
+        if callback:
+            oc.add(DirectoryObject(key=callback, title=L("Return"), thumb=R('return.png')))
+            return oc
         if self.is_admin:
             oc.add(DirectoryObject(
                 key=Callback(self.ConfirmDeleteRequest, req_id=movie_id, req_type='movie', title_year=title_year),
