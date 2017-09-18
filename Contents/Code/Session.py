@@ -655,7 +655,7 @@ class Session:
                         poster = TVDB_BANNER_URL + poster_text[0]
                 except Exception as e:
                     Log.Debug(e)
-                    debug(str(traceback.format_exc()))
+                    Log.Error(str(traceback.format_exc()))
                     # raise e
                 count += 1
             if series_id == '':
@@ -870,7 +870,7 @@ class Session:
         try:
             results = JSON.ObjectFromURL(url)
         except:
-            Log.Debug(str(traceback.format_exc()))
+            Log.Error(str(traceback.format_exc()))
             return oc
         searches = results.get('releases')
         for e in searches:
@@ -1281,7 +1281,7 @@ class Session:
                 Dict[req_type].pop(i)
         except Exception as e:
             Log.Debug(e.message)
-            debug(str(traceback.format_exc()))
+            Log.Error(str(traceback.format_exc()))
         Dict.Save()
         if req_type == 'movie':
             return self.ViewMovieRequests(message=L("All completed " + req_type + " requests have been cleared"))
@@ -1411,14 +1411,12 @@ class Session:
     def MarkWatched(self, value, req_id, req_type, token_hash=None):
         if value == "False":
             Dict[req_type][req_id]['watched'] = False
-            if debug:
-                Log.Debug(req_id + " set to unwatched")
+            Log.Debug(req_id + " set to unwatched")
             return self.ViewRequest(req_id=req_id, req_type=req_type, token_hash=token_hash,
                                     message=L("Movie marked as unwatched"))
         elif value == "True":
             Dict[req_type][req_id]['watched'] = True
-            if debug:
-                Log.Debug(req_id + " set to watched")
+            Log.Debug(req_id + " set to watched")
             return self.ViewRequest(req_id=req_id, req_type=req_type, token_hash=token_hash,
                                     message=L("Movie marked as watched"))
         else:
@@ -2038,7 +2036,7 @@ class Session:
         except Exception as e:
             Log.Debug(e.message)
             debug(str(data))
-            debug(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             oc = ObjectContainer(header=TITLE, message=F("sickbeardfail", Prefs['sickbeard_fork']))
         # Thread.Sleep(2)
         if Prefs['sickbeard_status'] == "manual":  # and SickbeardShowExists(tvdbid):
@@ -2083,7 +2081,7 @@ class Session:
         except Exception as e:
             Log.Debug(e.message)
             debug(str(data))
-            debug(str(traceback.format_exc()))  # raise e
+            Log.Error(str(traceback.format_exc()))  # raise e
             return MessageContainer(header=TITLE, message=F("sickbeardshowserror", Prefs['sickbeard_fork']))
         oc.objects.sort(key=lambda obj: obj.title.lower())
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
@@ -2210,7 +2208,7 @@ class Session:
                                                method='GET' if use_sickrage else 'POST')
                         except:
                             debug(str(resp))
-                            debug(str(traceback.format_exc()))  # raise e
+                            Log.Error(str(traceback.format_exc()))  # raise e
                             Log.Debug("Error changing season status for (%s - S%s" % (series_id, s))
                 else:
                     Log.Debug(JSON.StringFromObject(resp))
@@ -2828,8 +2826,7 @@ def checkAdmin(toke):
         if html.content:
             return True
     except:
-        if Dict['debug']:
-            Log.Error(str(traceback.format_exc()))  # raise e
+        debug(str(traceback.format_exc()))  # raise e
     return False
 
 
@@ -3071,7 +3068,7 @@ def checkCompletedMovieRequests():
             Log.Debug("Unable to load Radarr movie list")
     for req_id in Dict['movie']:
         if Dict['movie'][req_id].get('completed', False):
-            debug(str(req_id) + " is already completed.")
+            Log.Debug(str(req_id) + " is already completed.")
             continue
         debug(Dict['movie'][req_id]['title'] + " (" + Dict['movie'][req_id]['id'] + ")")
         if Prefs['couchpotato_url'] and Prefs["couchpotato_api"] and cp_movie_list:
@@ -3094,7 +3091,7 @@ def checkCompletedMovieRequests():
 
 def checkCompletedMovies():
     if 'movie' not in Dict:
-        debug("movie is not in Dict structure!")
+        Log.Debug("Movie is not in Dict structure!")
         return
     for movie_id in Dict['movie']:
         movie = Dict['movie'][movie_id]
@@ -3102,12 +3099,10 @@ def checkCompletedMovies():
             matches = Plex.matchMovie(movie.get('title'), movie.get('year'), local=1, secure=False, )
             if len(matches) == 1:
                 movie['completed'] = True
-                if Dict['debug']:
-                    Log.Debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
+                debug("Request id " + str(movie_id) + " matches Plex key " + matches[0])
                 if Prefs['email_server'] and Prefs['email_port'] and Prefs['notifyusercompletedmovie'] and movie.get(
                         'user'):
-                    if Dict['debug']:
-                        Log.Debug(str(movie.get('user')))
+                    debug(str(movie.get('user')))
                     subject = "Request Channel - " + movie.get('title') + " in now on Plex!"
                     message = "Request for " + movie.get('title') + " has been completed! <br><br>\n" + \
                               "<font style='font-size:20px; font-weight:bold'> " + movie.get(
@@ -3116,8 +3111,7 @@ def checkCompletedMovies():
                               movie.get('summary', "") + " <br>\n" \
                                                          "<Poster:><img src= '" + movie.get('poster') + "' width='300'>"
                     if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
-                        if Dict['debug']:
-                            Log.Debug(str(Dict['register'][movie['user']].get('email')))
+                        debug(str(Dict['register'][movie['user']].get('email')))
                         if Email.send(Prefs['email_from'], Dict['register'][movie['user']].get('email'),
                                           subject, message, Prefs['email_server'],
                                           Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
@@ -3139,7 +3133,7 @@ def checkCompletedMovies():
                 Log.Debug("Multiple library matches found for " + str(movie_id) + "!")
                 debug(str(matches))
             else:
-                debug("No library matches found for " + str(movie_id))
+                Log.Debug("No library matches found for " + str(movie_id))
 
 
 def debug(message):
