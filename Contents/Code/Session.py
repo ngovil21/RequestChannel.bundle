@@ -2353,10 +2353,15 @@ class Session:
                           password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
                 check = False
         if Prefs['pushbullet_api']:
-            devices = Prefs['pushbullet_devices'].split(",")
-            for d in devices:
-                if not Pushbullet.send("Request Channel - Test", notification['message'],
-                                           channel="This is a test notification from the Request Channel!", device_iden=d.strip()):
+            if Prefs['pushbullet_devices']:
+                devices = Prefs['pushbullet_devices'].split(",")
+                for d in devices:
+                    if not Pushbullet.send("Request Channel - Test", "This is a test notification from the Request Channel!",
+                                               channel=Prefs['pushbullet_channel'], device_iden=d.strip()):
+                        check = False
+            else:
+                if not Pushbullet.send("Request Channel - Test", "This is a test notification from the Request Channel!",
+                                       channel=Prefs['pushbullet_channel']):
                     check = False
         if Prefs['pushover_user']:
             if not Pushover.send("Request Channel - Test", "This is a test notification from the Request Channel", Prefs['pushover_user'],
