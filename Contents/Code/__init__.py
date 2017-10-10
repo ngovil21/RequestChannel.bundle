@@ -38,6 +38,7 @@ from LocalePatch import SetAvailableLanguages
 
 LANGUAGES = ['en', 'fr', 'nl', 'de', 'it']
 
+scanthread = None
 runs = 0
 lastrun = Datetime.Now()
 
@@ -112,7 +113,7 @@ sessions = {}
 def MainMenu():
     toke = Request.Headers.get("X-Plex-Token", "")
     if toke:
-        session_id = Hash.MD5(toke)       #Hash by token to create user session.
+        session_id = Hash.MD5(toke)       #Hash by token to create client session.
     else:
         session_id = Hash.MD5(str(Datetime.Now()))
     if session_id in sessions:  # Prior session started, continue
@@ -126,11 +127,12 @@ def MainMenu():
 
 def PeriodicScan():
     RemoveOldSessions()
+    global scanthread
     if Prefs['checkcompletedmoviesperiod'] and Prefs['checkcompletedmoviesperiod'].isdigit() and int(Prefs['checkcompletedmoviesperiod']) > 0:
-        checkCompletedMovies()
+        Thread.Create(checkCompletedMovies) #Create new thread to not block current process
         if Dict['debug']:
             Log.Debug("Scanning library every %s hours for completed movies." % Prefs['checkcompletedmoviesperiod'])
-        Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
+        scanthread = Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
 
 
 def RemoveOldSessions():
