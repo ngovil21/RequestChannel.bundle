@@ -75,10 +75,14 @@ def setupApi():
     TheMovieDatabase.setAPI(TMDB_API_KEY)
 
 def validateAPI():
+    if Prefs['debug']:
+        Log.Debug("Validating Preferences")
     validation = ""
     if not Couchpotato.check():
+        Log.Debug("CouchPotato not setup correctly!")
         validation += "CouchPotato not setup correctly! "
     if not Radarr.check():
+        Log.Debug("Radarr not setup correctly!")
         validation += "Radarr not setup correctly! "
     return validation
 
