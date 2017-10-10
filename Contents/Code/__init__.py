@@ -119,9 +119,9 @@ def MainMenu():
     if session_id in sessions:  # Prior session started, continue
         sesh = sessions[session_id]
     else:  # Create a new session
+        RemoveOldSessions()
         sesh = Session(session_id=session_id)
         sessions[session_id] = sesh
-        RemoveOldSessions()
     return sesh.SMainMenu()
 
 
