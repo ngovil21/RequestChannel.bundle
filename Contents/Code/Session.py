@@ -17,6 +17,7 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 VERSION = '0.9.4'
+DEBUG_VERSION = '1000'
 BRANCH = 'test'
 CHANGELOG_URL = 'https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/' + BRANCH + '/CHANGELOG'
 
@@ -138,7 +139,7 @@ class Session:
         Route.Connect(PREFIX + '/%s/sickbeardshowexists' % session_id, self.SickbeardShowExists)
         Route.Connect(PREFIX + '/%s/sendtoheadphones' % session_id, self.SendToHeadphones)
         Route.Connect(PREFIX + '/%s/managechannel' % session_id, self.ManageChannel)
-        Route.Connect(PREFIX + '/%s/sendtestemail' % session_id, self.SendTestEmail)
+        Route.Connect(PREFIX + '/%s/sendtestemail' % session_id, self.TestNotifications)
         Route.Connect(PREFIX + '/%s/manageusers' % session_id, self.ManageUsers)
         Route.Connect(PREFIX + '/%s/manageuser' % session_id, self.ManageUser)
         Route.Connect(PREFIX + '/%s/renameuser' % session_id, self.RenameUser)
@@ -2336,19 +2337,47 @@ class Session:
         oc.add(
             DirectoryObject(key=Callback(self.AllowedSections),
                             title=L("Allow Sections for Reporting") + sections))
-        if Prefs['email_to']:
-            oc.add(DirectoryObject(key=Callback(self.SendTestEmail), title=L("Send Test Email")))
+        oc.add(DirectoryObject(key=Callback(self.TestNotifications), title=L("Test Notifications")))
         oc.add(PopupDirectoryObject(key=Callback(self.ResetDict), title=L("Reset Dictionary Settings")))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
         return oc
 
-    def SendTestEmail(self):
-        if Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject="Request Channel - Test",
-                      body="This is a test email from the Request Channel!", username=Prefs['email_username'],
-                      password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
-            return self.ManageChannel(L("Email sent successfully!"))
+    def TestNotifications(self):
+        if not self.is_admin:
+            return self.SMainMenu(L("Only an admin can manage the channel!"), title1=L("Main Menu"),
+                                  title2=L("Admin only"))
+        check = True
+        if Prefs['email_to']:
+            if not Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject="Request Channel - Test",
+                          body="This is a test notification from the Request Channel!", username=Prefs['email_username'],
+                          password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
+                check = False
+        if Prefs['pushbullet_api']:
+            devices = Prefs['pushbullet_devices'].split(",")
+            for d in devices:
+                if not Pushbullet.send("Request Channel - Test", notification['message'],
+                                           channel="This is a test notification from the Request Channel!", device_iden=d.strip()):
+                    check = False
+        if Prefs['pushover_user']:
+            if not Pushover.send("Request Channel - Test", "This is a test notification from the Request Channel", Prefs['pushover_user'],
+                                 Prefs['pushover_sound']):
+                check = False
+        if Prefs['pushalot_api']:
+            if not Pushalot.send("Request Channel - Test", "This is a test notification from the Request Channel"):
+                check = False
+        if Prefs['slack_channels']:
+            channels = Prefs['slack_channels'].split(",")
+            for c in channels:
+                c = c.strip()  # remove leading and trailing spaces after split
+                if c.startswith('#'):  # remove leading hashtag
+                    c = c[1:]
+                if not Slack.send("Request Channel - This is a test notification from the Request Channel", c):
+                    check = False
+        if check:
+            return self.ManageChannel(L("Notifications sent successfully!"))
         else:
-            return self.ManageChannel(L("There was a problem sending the email."))
+            return self.ManageChannel(L("There was a problem sending one or more notifications. Please check the logs."))
+
 
     def AllowedSections(self, message=None):
         self.update_run()
@@ -2574,8 +2603,11 @@ class Session:
         clog = HTTP.Request(CHANGELOG_URL)
         changes = clog.content
         changes = changes.splitlines()
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title="Current Version: " + str(VERSION),
-                               thumb=R('plexrequestchannel.png')))
+        if Prefs['debug']:
+            d_version = "." + DEBUG_VERSION
+        else:
+            d_version = ""
+        oc.add(DirectoryObject(key=Callback(self.Changelog), title="Current Version: " + str(VERSION) + d_version, thumb=R('plexrequestchannel.png')))
         for change in changes[:10]:
             csplit = change.split("-")
             title = csplit[0].strip() + " - v" + csplit[1].strip()
