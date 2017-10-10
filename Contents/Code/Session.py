@@ -2603,7 +2603,7 @@ class Session:
         clog = HTTP.Request(CHANGELOG_URL)
         changes = clog.content
         changes = changes.splitlines()
-        if Prefs['debug']:
+        if Dict['debug']:
             d_version = "." + DEBUG_VERSION
         else:
             d_version = ""
