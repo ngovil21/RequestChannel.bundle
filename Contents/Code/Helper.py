@@ -21,7 +21,7 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 ### Notification Constants #############################
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
-PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
+TELEGRAM_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 PUSHALOT_API_URL = "https://pushalot.com/api/sendmessage"
 SLACK_API_URL = "https://slack.com/api/"
 ########################################################
@@ -68,9 +68,17 @@ def setupApi():
     if Prefs['slack_api']:
         Slack.setAPI(Prefs['slack_api'])
         Slack.setUser(Prefs['slack_user'])
+    if Prefs['telegram_api']:
+        Telegram.setAPI(Prefs['telegram_api'])
     Email.setDefaultServer(Prefs['email_server'])
     Email.setDefaultPort(Prefs['email_port'])
     TheMovieDatabase.setAPI(TMDB_API_KEY)
 
+def validateAPI():
+    if not Couchpotato.check():
+        return "CouchPotato not setup correctly!"
+    if not Radarr.check():
+        return "Radarr not setup correctly!"
+    return None
 
 

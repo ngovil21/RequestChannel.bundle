@@ -42,7 +42,7 @@ TVDB_BANNER_URL = 'http://thetvdb.com/banners/'
 ### Notification Constants #############################
 PUSHBULLET_API_URL = 'https://api.pushbullet.com/v2/'
 PUSHOVER_API_URL = 'https://api.pushover.net/1/messages.json'
-PUSHOVER_API_KEY = 'ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi'
+TELEGRAM_API_KEY = 'ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi'
 PUSHALOT_API_URL = 'https://pushalot.com/api/sendmessage'
 SLACK_API_URL = 'https://slack.com/api/'
 ########################################################

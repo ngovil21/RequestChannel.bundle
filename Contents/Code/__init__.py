@@ -6,6 +6,7 @@ ICON = 'plexrequestchannel.png'
 
 from Session import VERSION, checkCompletedMovies
 from api import Plex, Email
+import Helper
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -28,7 +29,7 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 ### Notification Constants #############################
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
-PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
+TELEGRAM_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 ########################################################
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
@@ -91,7 +92,12 @@ def Start():
 
 
 def ValidatePrefs():
-    return
+    Helper.setupApi()
+    check = Helper.validateAPI()
+    if check:
+        return MessageContainer(L("Error"), check)
+    else:
+        return MessageContainer("Success", "Preferences Saved")
 
 
 from Session import Session
