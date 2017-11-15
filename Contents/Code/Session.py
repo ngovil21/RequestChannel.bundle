@@ -1395,6 +1395,16 @@ class Session:
                         key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
                                      token_hash=token_hash),
                         title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
+        elif self.is_admin:
+            if not key.get("completed", False):
+                oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id,
+                                                    req_type=req_type, token_hash=token_hash),
+                                       title=L("Mark as Watched"), thumb=R('watched.png')))
+            else:
+                oc.add(DirectoryObject(
+                    key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
+                                 token_hash=token_hash),
+                    title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
         if not parent:
             if req_type == 'movie':
                 oc.add(DirectoryObject(key=Callback(self.ViewMovieRequests, token_hash=token_hash),
@@ -1408,6 +1418,7 @@ class Session:
         else:
             oc.add(DirectoryObject(key=parent, title=L("Return to Previous"), thumb=R('return.png')))
         return oc
+
 
     def MarkWatched(self, value, req_id, req_type, token_hash=None):
         if value == "False":
@@ -1423,6 +1434,7 @@ class Session:
         else:
             Log.Debug("Unknown value for watch status!")
         return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash, message=L("Unable to change watch status"))
+
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
         self.update_run()
