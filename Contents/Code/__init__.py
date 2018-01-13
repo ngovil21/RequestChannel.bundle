@@ -132,7 +132,7 @@ def PeriodicScan():
         Thread.Create(checkCompletedMovies) #Create new thread to not block current process
         if Dict['debug']:
             Log.Debug("Scanning library every %s hours for completed movies." % Prefs['checkcompletedmoviesperiod'])
-        scanthread = Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
+        scanthread = Thread.CreateTimer(float(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
 
 
 def RemoveOldSessions():
