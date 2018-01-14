@@ -424,7 +424,8 @@ class Session:
             else:
                 Log.Debug('No Results Found')
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(title2=L("No results"), header=TITLE, message=L("Sorry there were no results found for your search."))
+                    oc = ObjectContainer(title2=L("No results"), header=TITLE,
+                                         message=L("Sorry there were no results found for your search."))
                 else:
                     oc = ObjectContainer(title2=L("No results"))
                 if self.use_dumb_keyboard:
@@ -454,7 +455,8 @@ class Session:
                         art=info.get('art'), originally_available_at=info.get('date')))
             else:
                 if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(title2=L("No results"), header=TITLE, message=L("Sorry there were no results found for your search."))
+                    oc = ObjectContainer(title2=L("No results"), header=TITLE,
+                                         message=L("Sorry there were no results found for your search."))
                 else:
                     oc = ObjectContainer(title2=L("No results"))
                 Log.Debug('No Results Found')
@@ -1043,7 +1045,7 @@ class Session:
                 # c += 1
                 title_year = d['title']
                 title_year += (" (" + d['year'] + ")" if d.get('year', None) else "")
-                if d.get('watched', False):     # Use ⌚ for watched, other considerations: 𓁿,👁,✪,★
+                if d.get('watched', False):  # Use ⌚ for watched, other considerations: 𓁿,👁,✪,★
                     title_year = u"⌚ " + title_year
                 elif d.get('completed', False):  # Use ⭳ for completed (downloaded) others: ⬇,🍿,⏵
                     title_year = u"⭳ " + title_year
@@ -1386,15 +1388,15 @@ class Session:
                                        thumb=R('headphones.png')))
 
         if (key.get('token_hash') == token_hash) or (key.get('user') == self.user):
-                if not key.get("watched", False):
-                    oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id,
-                                                        req_type=req_type, token_hash=token_hash),
-                                           title=L("Mark as Watched"), thumb=R('watched.png')))
-                else:
-                    oc.add(DirectoryObject(
-                        key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
-                                     token_hash=token_hash),
-                        title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
+            if not key.get("watched", False):
+                oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id,
+                                                    req_type=req_type, token_hash=token_hash),
+                                       title=L("Mark as Watched"), thumb=R('watched.png')))
+            else:
+                oc.add(DirectoryObject(
+                    key=Callback(self.MarkWatched, value="False", req_id=req_id, req_type=req_type,
+                                 token_hash=token_hash),
+                    title=L("Mark as Unwatched"), thumb=R('unwatched.png')))
         elif self.is_admin:
             if not key.get("completed", False):
                 oc.add(DirectoryObject(key=Callback(self.MarkWatched, value="True", req_id=req_id,
@@ -1419,7 +1421,6 @@ class Session:
             oc.add(DirectoryObject(key=parent, title=L("Return to Previous"), thumb=R('return.png')))
         return oc
 
-
     def MarkWatched(self, value, req_id, req_type, token_hash=None):
         if value == "False":
             Dict[req_type][req_id]['watched'] = False
@@ -1433,8 +1434,8 @@ class Session:
                                     message=L("Movie marked as watched"))
         else:
             Log.Debug("Unknown value for watch status!")
-        return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash, message=L("Unable to change watch status"))
-
+        return self.ViewRequest(req_id=req_type, req_type=req_type, token_hash=token_hash,
+                                message=L("Unable to change watch status"))
 
     def ConfirmDeleteRequest(self, req_id, req_type, title_year="", token_hash=None):
         self.update_run()
@@ -1497,29 +1498,6 @@ class Session:
                     else:
                         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
                         return oc
-                    # try:
-                    #     json = JSON.ObjectFromURL(TMDB_API_URL + "movie/" + movie_id + "?api_key=" + TMDB_API_KEY,
-                    #                           headers={'Accept': 'application/json'})
-                    #     if json.get('imdb_id'):
-                    #         imdb_id = json['imdb_id']
-                    #         Dict['movie'][movie_id]['imdb'] = imdb_id
-                    #         Dict.Save()
-                    #     else:
-                    #         if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    #             oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
-                    #         else:
-                    #             oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                    #
-                    #         oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                    #         return oc
-                    # except Exception as e:
-                    #     Log.Debug('Unable to load TMDB!')
-                    #     if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    #         oc = ObjectContainer(header=TITLE, message=L("Unable to get IMDB id for movie, add failed..."))
-                    #     else:
-                    #         oc = ObjectContainer(title1="CouchPotato", title2=L("Send Failed"))
-                    #     oc.add(DirectoryObject(key=Callback(self.ViewRequests), title=L("Return to View Requests")))
-                    #     return oc
         else:  # Assume we have an imdb_id by default
             imdb_id = movie_id
         # we have an imdb id, add to couchpotato
@@ -1576,8 +1554,8 @@ class Session:
                     poster = poster[0]
                 title_year += " (" + str(year) + ")" if year else ""
                 oc.add(TVShowObject(key=Callback(self.ManageCouchPotatoMovie, movie_id=movie.get('_id'), title=title),
-                                    rating_key=movie_info.get('imdb', "0"), title=title_year,
-                                    thumb=poster, summary=movie_info.get('plot')))
+                                    rating_key=movie_info.get('imdb') or (movie_info.get('tmdb_id') or movie.get('_id')),
+                                    title=title_year, thumb=poster, summary=movie_info.get('plot')))
         oc.add(DirectoryObject(key=Callback(self.SMainMenu), title=L("Return to Main Menu")))
 
         return oc
@@ -2360,23 +2338,28 @@ class Session:
                                   title2=L("Admin only"))
         check = True
         if Prefs['email_to']:
-            if not Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'], subject="Request Channel - Test",
-                          body="This is a test notification from the Request Channel!", username=Prefs['email_username'],
-                          password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
+            if not Email.send(email_from=Prefs['email_from'], email_to=Prefs['email_to'],
+                              subject="Request Channel - Test",
+                              body="This is a test notification from the Request Channel!",
+                              username=Prefs['email_username'],
+                              password=Prefs['email_password'], secure=Prefs['email_secure'], email_type="plain"):
                 check = False
         if Prefs['pushbullet_api']:
             if Prefs['pushbullet_devices']:
                 devices = Prefs['pushbullet_devices'].split(",")
                 for d in devices:
-                    if not Pushbullet.send("Request Channel - Test", "This is a test notification from the Request Channel!",
-                                               channel=Prefs['pushbullet_channel'], device_iden=d.strip()):
+                    if not Pushbullet.send("Request Channel - Test",
+                                           "This is a test notification from the Request Channel!",
+                                           channel=Prefs['pushbullet_channel'], device_iden=d.strip()):
                         check = False
             else:
-                if not Pushbullet.send("Request Channel - Test", "This is a test notification from the Request Channel!",
+                if not Pushbullet.send("Request Channel - Test",
+                                       "This is a test notification from the Request Channel!",
                                        channel=Prefs['pushbullet_channel']):
                     check = False
         if Prefs['pushover_user']:
-            if not Pushover.send("Request Channel - Test", "This is a test notification from the Request Channel", Prefs['pushover_user'],
+            if not Pushover.send("Request Channel - Test", "This is a test notification from the Request Channel",
+                                 Prefs['pushover_user'],
                                  Prefs['pushover_sound']):
                 check = False
         if Prefs['pushalot_api']:
@@ -2393,8 +2376,8 @@ class Session:
         if check:
             return self.ManageChannel(L("Notifications sent successfully!"))
         else:
-            return self.ManageChannel(L("There was a problem sending one or more notifications. Please check the logs."))
-
+            return self.ManageChannel(
+                L("There was a problem sending one or more notifications. Please check the logs."))
 
     def AllowedSections(self, message=None):
         self.update_run()
@@ -2624,7 +2607,8 @@ class Session:
             d_version = "." + DEBUG_VERSION
         else:
             d_version = ""
-        oc.add(DirectoryObject(key=Callback(self.Changelog), title="Current Version: " + str(VERSION) + d_version, thumb=R('plexrequestchannel.png')))
+        oc.add(DirectoryObject(key=Callback(self.Changelog), title="Current Version: " + str(VERSION) + d_version,
+                               thumb=R('plexrequestchannel.png')))
         for change in changes[:10]:
             csplit = change.split("-")
             title = csplit[0].strip() + " - v" + csplit[1].strip()
@@ -3162,18 +3146,18 @@ def checkCompletedMovies():
                     if movie.get('user') in Dict['register'] and Dict['register'][movie['user']].get('email'):
                         debug(str(Dict['register'][movie['user']].get('email')))
                         if Email.send(Prefs['email_from'], Dict['register'][movie['user']].get('email'),
-                                          subject, message, Prefs['email_server'],
-                                          Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
-                                          Prefs['email_secure']):
+                                      subject, message, Prefs['email_server'],
+                                      Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                      Prefs['email_secure']):
                             Log.Debug(
                                 "Email sent to " + Dict['register'][movie['user']].get('email') + " for request " + str(
                                     movie_id))
                         else:
                             Log.Debug("Unable to send email notification to " + movie.get('user'))
                     if Email.send(Prefs['email_from'], Prefs['email_to'], subject,
-                                      message, Prefs['email_server'],
-                                      Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
-                                      Prefs['email_secure']):
+                                  message, Prefs['email_server'],
+                                  Prefs['email_port'], Prefs['email_username'], Prefs['email_password'],
+                                  Prefs['email_secure']):
                         Log.Debug("Email sent to " + Prefs['email_to'] + " for request " + str(movie_id))
                     else:
                         Log.Debug("Unable to send email notification to " + Prefs['email_to'])
@@ -3199,6 +3183,6 @@ def validateEmail(email):
 
 def createObjectContainer(title1=None, title2=None, header=None, message=None):
     if isClient(MESSAGE_OVERLAY_CLIENTS):
-        return ObjectContainer(title1=title1,title2=title2,header=header,message=message)
+        return ObjectContainer(title1=title1, title2=title2, header=header, message=message)
     else:
-        return ObjectContainer(title1=title1,title2=title2)
+        return ObjectContainer(title1=title1, title2=title2)
