@@ -17,6 +17,14 @@ def setAPI(api):
     global RADARR_API
     RADARR_API = api
 
+def check():
+    try:
+        available = JSON.ObjectFromURL(RADARR_URL + "api/system/status", headers={'X-Api-Key': RADARR_API})
+        return "version" in available
+    except Exception as e:
+        Log.Debug("Error in checkConnection: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return False
 
 def getMovies():
     try:

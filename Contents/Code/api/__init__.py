@@ -21,6 +21,9 @@ sys.modules["api.Pushbullet"] = Pushbullet
 import Pushover
 sys.modules["api.Pushover"] = Pushover
 
+import Telegram
+sys.modules["api.Telegram"] = Telegram
+
 import Radarr
 sys.modules["api.Radarr"] = Radarr
 
