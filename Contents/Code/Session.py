@@ -253,7 +253,7 @@ class Session:
                                             thumb=R('search.png')))
 
         if Prefs['usersviewrequests'] or self.is_admin:
-            if not self.locked or Prefs['password'] is None or Prefs['password'] == '':
+            if not self.locked or not Prefs['password']:
                 if self.locked:
                     self.locked = False
                 oc.add(DirectoryObject(key=Callback(self.ViewRequests),
@@ -262,6 +262,7 @@ class Session:
                 oc.add(DirectoryObject(key=Callback(self.ViewRequestsPassword),
                                        title=L("View Requests")))  # Set View Requests to locked and ask for password
         else:
+            #Only allow user to view requests they have made based on token
             oc.add(DirectoryObject(key=Callback(self.ViewRequests, token_hash=Hash.SHA1(self.token)),
                                    title=L("View My Requests")))
         if Prefs['couchpotato_api'] and (self.is_admin or self.user in Dict['sonarr_users']):
@@ -1040,7 +1041,7 @@ class Session:
             # c = 0   #counter to keep track of number of requests
             for req_id in sorted(requests, key=criteria):
                 d = requests[req_id]
-                if not self.is_admin and (not token_hash or token_hash != d.get('token_hash')):
+                if self.locked and not self.is_admin and (not token_hash or token_hash != d.get('token_hash')):
                     continue
                 # c += 1
                 title_year = d['title']
