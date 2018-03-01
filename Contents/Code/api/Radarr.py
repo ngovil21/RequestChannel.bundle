@@ -93,7 +93,7 @@ def lookupMovie(term):
         return resp
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
-        Log.Debug("Options: " + str(options))
+        Log.Debug("Options: " + str(test))
         Log.Debug("Error in addMovie: " + e.message)
         Log.Debug("Response Status: " + str(Response.Status))
     return []
