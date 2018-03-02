@@ -6,6 +6,7 @@ ICON = 'plexrequestchannel.png'
 
 from Session import VERSION, checkCompletedMovies
 from api import Plex, Email
+import Helper
 
 ### URL Constants for TheMovieDataBase ##################
 TMDB_API_KEY = "096c49df1d0974ee573f0295acb9e3ce"
@@ -28,7 +29,7 @@ TVDB_BANNER_URL = "http://thetvdb.com/banners/"
 ### Notification Constants #############################
 PUSHBULLET_API_URL = "https://api.pushbullet.com/v2/"
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
-PUSHOVER_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
+TELEGRAM_API_KEY = "ajMtuYCg8KmRQCNZK2ggqaqiBw2UHi"
 ########################################################
 
 TV_SHOW_OBJECT_FIX_CLIENTS = ["Android", "Plex for Android"]
@@ -37,6 +38,7 @@ from LocalePatch import SetAvailableLanguages
 
 LANGUAGES = ['en', 'fr', 'nl', 'de', 'it']
 
+scanthread = None
 runs = 0
 lastrun = Datetime.Now()
 
@@ -91,7 +93,12 @@ def Start():
 
 
 def ValidatePrefs():
-    return
+    Helper.setupApi()
+    check = Helper.validateAPI()
+    if check:
+        return MessageContainer(L("Error"), check)
+    else:
+        return MessageContainer("Success", "Preferences Saved")
 
 
 from Session import Session
@@ -106,25 +113,26 @@ sessions = {}
 def MainMenu():
     toke = Request.Headers.get("X-Plex-Token", "")
     if toke:
-        session_id = Hash.MD5(toke)       #Hash by token to create user session.
+        session_id = Hash.MD5(toke)       #Hash by token to create client session.
     else:
         session_id = Hash.MD5(str(Datetime.Now()))
     if session_id in sessions:  # Prior session started, continue
         sesh = sessions[session_id]
     else:  # Create a new session
+        RemoveOldSessions()
         sesh = Session(session_id=session_id)
         sessions[session_id] = sesh
-        RemoveOldSessions()
     return sesh.SMainMenu()
 
 
 def PeriodicScan():
     RemoveOldSessions()
+    global scanthread
     if Prefs['checkcompletedmoviesperiod'] and Prefs['checkcompletedmoviesperiod'].isdigit() and int(Prefs['checkcompletedmoviesperiod']) > 0:
-        checkCompletedMovies()
+        Thread.Create(checkCompletedMovies) #Create new thread to not block current process
         if Dict['debug']:
             Log.Debug("Scanning library every %s hours for completed movies." % Prefs['checkcompletedmoviesperiod'])
-        Thread.CreateTimer(int(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
+        scanthread = Thread.CreateTimer(float(Prefs['checkcompletedmoviesperiod'])*3600, PeriodicScan)
 
 
 def RemoveOldSessions():

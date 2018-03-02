@@ -6,6 +6,15 @@ def setAPI(api):
     global PUSHALOT_API_KEY
     PUSHALOT_API_KEY = api
 
+def check():
+    try:
+        available = JSON.ObjectFromURL(getURL("app.available"))
+        return 'success' in available
+    except Exception as e:
+        Log.Debug("Error in checkConnection: " + e.message)
+        Log.Error(str(traceback.format_exc()))  # raise last error
+    return False
+
 def send(title, message, isimportant=False, isSilent=False):
     data = {'AuthorizationToken': PUSHALOT_API_KEY, 'Title': title, 'Body': message, 'IsImportant': isimportant,
             'IsSilent': isSilent}

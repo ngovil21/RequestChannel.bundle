@@ -345,6 +345,18 @@
     "default": "#general"
   },
   {
+    "id": "telegram_api",
+    "label": "Telegram Bot Token",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "telegram_chat_id",
+    "label": "Telegram Chat Name (@channelname)",
+    "type": "text",
+    "default": "#general"
+  },
+  {
     "id": "email_from",
     "label": "Email to send from",
     "type": "text",
