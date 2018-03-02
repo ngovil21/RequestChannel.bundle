@@ -93,8 +93,8 @@ def lookupMovie(term):
         return resp
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
-        Log.Debug("Options: " + str(options))
-        Log.Debug("Error in addMovie: " + e.message)
+        Log.Debug("Term: " + term)
+        Log.Debug("Error in lookupMovie: " + e.message)
         Log.Debug("Response Status: " + str(Response.Status))
     return []
 
@@ -108,8 +108,8 @@ def lookupMovieId(id, imdb=False):
         return JSON.ObjectFromURL(url=url, headers={'X-Api-Key': RADARR_API})
     except Exception as e:
         Log.Error(str(traceback.format_exc()))  # raise e
-        Log.Debug("Options: " + str(options))
-        Log.Debug("Error in addMovie: " + e.message)
+        Log.Debug("Movie ID:" + str(id))
+        Log.Debug("Error in lookupMovieId: " + e.message)
         Log.Debug("Response Status: " + str(Response.Status))
     return None
 
