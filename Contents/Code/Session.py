@@ -1614,35 +1614,31 @@ class Session:
 
         Log.Debug("Profile id: " + str(profile_id))
 
-        lookup = Radarr.lookupMovieId(movie_id, imdb=movie_id.startswith('tt'))
-        # Log.Debug(str(lookup))
-        if not lookup:
+        if movie['id'].startswith("tt"):    #IMDB id, get tmdb_id
+            tmdb = TheMovieDatabase.findMovieByIMDB(movie['id'], Prefs['search_language'])
+        else:
+            tmdb = movie['id']
+
+
+
+        result = Radarr.addMovie(tmdb=tmdb, title=movie.get('title'), year=movie.get('year'),
+                                 titleSlug=movie.get('titleSlug'),
+                                 profileId=profile_id, monitored=True, rootPath=rootFolderPath,
+                                 cleanTitle=movie.get('cleanTitle'), images=movie.get('images'),
+                                 searchNow=Prefs['radarr_searchnow'])
+        if result:
+            if isClient(MESSAGE_OVERLAY_CLIENTS):
+                oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
+            else:
+                oc = ObjectContainer(title1="Radarr", title2=L("Success"))
+            Log.Debug("Setting movie automated to true")
+            Dict['movie'][movie_id]['automated'] = True
+            Dict.Save()
+        else:
             if isClient(MESSAGE_OVERLAY_CLIENTS):
                 oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
             else:
                 oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
-        else:
-            if not movie.get('tmdb'):
-                movie['tmdb'] = lookup['tmdbId']
-
-            result = Radarr.addMovie(tmdb=lookup.get('tmdbId', 0), title=lookup.get('title'), year=lookup.get('year'),
-                                     titleSlug=lookup.get('titleSlug'),
-                                     profileId=profile_id, monitored=True, rootPath=rootFolderPath,
-                                     cleanTitle=lookup.get('cleanTitle'), images=lookup.get('images'),
-                                     searchNow=Prefs['radarr_searchnow'])
-            if result:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Movie has been sent to Radarr"))
-                else:
-                    oc = ObjectContainer(title1="Radarr", title2=L("Success"))
-                Log.Debug("Setting movie automated to true")
-                Dict['movie'][movie_id]['automated'] = True
-                Dict.Save()
-            else:
-                if isClient(MESSAGE_OVERLAY_CLIENTS):
-                    oc = ObjectContainer(header=TITLE, message=L("Could not send movie to Radarr!"))
-                else:
-                    oc = ObjectContainer(title1="Radarr", title2=L("Send Failed"))
 
         if self.is_admin:
             oc.add(DirectoryObject(

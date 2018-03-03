@@ -70,7 +70,7 @@ def parseResult(result):
     if result['backdrop_path']:
         info['art'] = TMDB_IMAGE_BASE_URL + BACKDROP_SIZE + result['backdrop_path']
     if result['overview']:
-        info['summary'] = result['overview']
+        info['summary'] = result.get('overview',"")
     return info
 
 # Query TMDB for a movie with IMDB id
