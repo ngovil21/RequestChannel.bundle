@@ -1619,12 +1619,13 @@ class Session:
         else:
             tmdb = movie['id']
 
+        images = [{'coverType': 'poster', 'url': movie.get('poster')}]
 
 
         result = Radarr.addMovie(tmdb=tmdb, title=movie.get('title'), year=movie.get('year'),
                                  titleSlug=movie.get('titleSlug'),
                                  profileId=profile_id, monitored=True, rootPath=rootFolderPath,
-                                 cleanTitle=movie.get('cleanTitle'), images=movie.get('images'),
+                                 cleanTitle=movie.get('cleanTitle'), images=images,
                                  searchNow=Prefs['radarr_searchnow'])
         if result:
             if isClient(MESSAGE_OVERLAY_CLIENTS):

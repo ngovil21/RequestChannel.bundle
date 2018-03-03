@@ -68,7 +68,7 @@ def getRootFolderPath():
 
 
 #add movie to Radarr, returns Radarr response
-def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searchNow=False, cleanTitle=None, images=None):
+def addMovie(tmdb, title, year, profileId, titleSlug, monitored, rootPath, searchNow=False, cleanTitle=None, images=[]):
     if not titleSlug:
         titleSlug = title.lower().replace(" ", "-")
     options = {'tmdbId': tmdb, 'title': title, 'profileId': profileId, 'titleSlug': titleSlug,
