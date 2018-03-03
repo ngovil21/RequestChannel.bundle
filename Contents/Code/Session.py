@@ -17,7 +17,7 @@ ART = 'art-default.jpg'
 ICON = 'plexrequestchannel.png'
 
 VERSION = '0.9.5'
-DEBUG_VERSION = '1002'
+DEBUG_VERSION = '1003'
 BRANCH = 'test'
 CHANGELOG_URL = 'https://raw.githubusercontent.com/ngovil21/RequestChannel.bundle/' + BRANCH + '/CHANGELOG'
 
