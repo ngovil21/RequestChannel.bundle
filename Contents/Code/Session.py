@@ -543,7 +543,7 @@ class Session:
             if self.is_admin:
                 user = 'Admin'
             elif self.user == self.token:
-                user = 'guest_' + Hash.SHA1(token)[:10]
+                user = 'guest_' + Hash.SHA1(self.token)[:10]
             else:
                 user = self.user
             if self.user in Dict['register']:
@@ -755,7 +755,7 @@ class Session:
             if self.is_admin:
                 user = 'Admin'
             elif self.user == self.token:
-                user = 'guest_' + Hash.SHA1(token)[:10]
+                user = 'guest_' + Hash.SHA1(self.token)[:10]
             else:
                 user = self.user
             if self.user in Dict['register']:
@@ -956,7 +956,7 @@ class Session:
             if self.is_admin:
                 user = 'Admin'
             elif self.user == self.token:
-                user = 'guest_' + Hash.SHA1(token)[:10]
+                user = 'guest_' + Hash.SHA1(self.token)[:10]
             else:
                 user = self.user
             if self.user in Dict['register']:
