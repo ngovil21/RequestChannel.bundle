@@ -893,7 +893,7 @@ class Session:
             title = e_name
             if e_date:
                 title += ' (' + e_date[:4] + ')'
-            title += ' +' + e_score
+            title += ' +' + str(e_score)
             # if searchtype == 'artist':
             #     if count < 10:
             #         try:
